@@ -15,9 +15,31 @@
           <%- include('blocks/menu') -%>
         </div>
         <div class="col-10">
-          <div class="buttonblox">
-            <a href="/add" class="btn btn-primary">Создать</a>
+          <div class="input-group mb-3">
+            <input class="form-control" type="text" placeholder="Default input" aria-label="default input example">
           </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Наминклатура</th>
+                <th scope="col">Кол-во</th>
+                <th scope="col">Ед.и</th>
+                <th scope="col">Цена</th>
+                <th scope="col">Сумма</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">1</th>
+                <td>Прокладка для арматуры Siamp ЭКО Силикон ЗАВОД (2 КНОПКИ)</td>
+                <td><input class="form-control" width="50px" type="text"  value="2" aria-label="default input example"></td>
+                <td>Шт</td>
+                <td>500</td>
+                <td>1000</td>
+              </tr>
+            </tbody>
+          </table>
           
         </div>
       </div>
