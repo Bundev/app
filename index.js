@@ -22,14 +22,16 @@ const data = XLSX.utils.sheet_to_json(sheet, {
 const products = data.map((row, index) => ({
   id: index + 1,
   name: row[4],
-  price: row[13],
-  stock: row[14],
+  // price: row[13],
+  // stock: row[14],
 })).filter(item => item.name);
 
 
 const fuse = new Fuse(products, {
   keys: ['name'],
-  threshold: 0.3
+  threshold: 0.25,
+  ignoreLocation: true,
+  minMatchCharLength: 2
 });
 
 app.get('/', (req, res) => {
