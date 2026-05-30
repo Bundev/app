@@ -63,6 +63,12 @@ app.get('/search', (req, res) => {
     
 });
 
+app.get('/add', (req, res) => {
+  res.render('add', {
+    title: 'Поиск товаров'
+  });
+});
+
 
 
 app.listen(port, () => {
