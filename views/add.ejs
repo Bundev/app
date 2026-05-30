@@ -46,7 +46,7 @@ searchInput.addEventListener('input', () => {
 
     resultsDiv.innerHTML = products.map(product => `
       <div class="product">
-        <b>${product.name}</b><br>
+        <b>${product.name}</b>
         Цена: ${product.price}
       </div>
     `).join('');
