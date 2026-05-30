@@ -19,7 +19,19 @@
             <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
             <div id="results"></div>
 
-            
+            <script>
+const input = document.getElementById('search');
+
+input.addEventListener('input', async () => {
+  const response = await fetch(
+    `/search?q=${encodeURIComponent(input.value)}`
+  );
+
+  const products = await response.json();
+
+  console.log(products);
+});
+</script>
           </div>
           <table class="table">
             <thead>
