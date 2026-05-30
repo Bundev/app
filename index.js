@@ -16,6 +16,8 @@ app.get('/add', (req, res) => {
     res.render('add', { title: 'Add Page' });
 });
 
+
+
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });
@@ -46,3 +48,4 @@ const fuse = new Fuse(products, {
 
 console.log(fuse.search('клаппн'));
 
+console.log();
