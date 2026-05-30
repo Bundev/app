@@ -22,39 +22,6 @@
           </div>
           
           <div id="results"></div>
-
-<script>
-const searchInput = document.getElementById('search');
-const resultsDiv = document.getElementById('results');
-
-let timer;
-
-searchInput.addEventListener('input', () => {
-  clearTimeout(timer);
-
-  timer = setTimeout(async () => {
-    const q = searchInput.value;
-
-    if (q.length < 2) {
-      resultsDiv.innerHTML = '';
-      return;
-    }
-
-    const response = await fetch(
-      `/search?q=${encodeURIComponent(q)}`
-    );
-
-    const products = await response.json();
-
-    resultsDiv.innerHTML = products.map(product => `
-      <div class="product">
-        <b>${product.name}</b>
-        Цена: ${product.price}
-      </div>
-    `).join('');
-  }, 300);
-});
-</script>
           <table class="table">
             <thead>
               <tr>
@@ -82,5 +49,37 @@ searchInput.addEventListener('input', () => {
       </div>
     </div>
     <%- include('blocks/footer') -%>
+<script>
+  const searchInput = document.getElementById('search');
+  const resultsDiv = document.getElementById('results');
+
+  let timer;
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(timer);
+
+    timer = setTimeout(async () => {
+      const q = searchInput.value;
+
+      if (q.length < 2) {
+        resultsDiv.innerHTML = '';
+        return;
+      }
+
+      const response = await fetch(
+        `/search?q=${encodeURIComponent(q)}`
+      );
+
+      const products = await response.json();
+
+      resultsDiv.innerHTML = products.map(product => `
+        <div class="product">
+          <b>${product.name}</b>
+          Цена: ${product.price}
+        </div>
+      `).join('');
+    }, 300);
+  });
+</script>
   </body>
 </html>
