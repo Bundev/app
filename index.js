@@ -59,7 +59,7 @@ app.get('/add', (req, res) => {
     }
   }
 
-  res.render('add', { title: 'Поиск товаров' });
+ res.json(result);
     
 });
 
