@@ -36,6 +36,8 @@ const products = data
 app.get('/', (req, res) => {
     res.render('index');
 });
+
+
 app.get('/add', (req, res) => {
 
     const q = (req.query.q || '').toLowerCase();
