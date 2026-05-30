@@ -85,5 +85,20 @@ searchInput.addEventListener('input', () => {
       </div>
     </div>
     <%- include('blocks/footer') -%>
+    <!-- jQuery (требуется для Select2) -->
+<script src="https://jsdelivr.net"></script>
+<!-- Bootstrap 5 JS -->
+<script src="https://jsdelivr.net"></script>
+<!-- Select2 JS -->
+<script src="https://jsdelivr.net"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#mySelect').select2({
+            theme: 'bootstrap-5' // Применение темы Bootstrap 5
+        });
+    });
+</script>
+
   </body>
 </html>
