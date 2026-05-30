@@ -50,3 +50,4 @@ console.log(fuse.search('клаппн'));
 
 console.log();
 console.log();
+console.log("dgfgdfg");
