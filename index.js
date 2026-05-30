@@ -2,14 +2,6 @@ const express = require('express');
 const XLSX = require('xlsx');
 const Fuse = require('fuse.js');
 
-const app = express();
-
-app.set('view engine', 'ejs');
-app.use(express.static('public')); 
-
-const port = 3000;
-
-
 
 const workbook = XLSX.readFile('./namiclothura.xls');
 const sheet = workbook.Sheets['TDSheet'];
@@ -33,6 +25,18 @@ const fuse = new Fuse(products, {
   ignoreLocation: true,
   minMatchCharLength: 2
 });
+
+
+
+const app = express();
+
+app.set('view engine', 'ejs');
+app.use(express.static('public')); 
+
+const port = 3000;
+
+
+
 
 app.get('/', (req, res) => {
     res.render('index');
