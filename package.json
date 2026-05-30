@@ -11,9 +11,9 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "bootstrap": "^5.3.8",
     "ejs": "^5.0.2",
     "express": "^5.2.1",
-    "mongodb": "^7.2.0"
+    "fuse.js": "^7.3.0",
+    "xlsx": "^0.18.5"
   }
 }
