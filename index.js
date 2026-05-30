@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
 });
 
 
-app.get('/add', (req, res) => {
+app.get('/search', (req, res) => {
 
     const q = (req.query.q || '').toLowerCase();
 
