@@ -58,7 +58,7 @@ app.get('/add', (req, res) => {
   }
 
   res.render('add', {
-    products: result
+    products : "sd"
   });
     
 });
