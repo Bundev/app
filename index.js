@@ -9,20 +9,6 @@ app.use(express.static('public'));
 
 const port = 3000;
 
-app.get('/', (req, res) => {
-    res.render('index');
-});
-app.get('/add', (req, res) => {
-    res.render('add', { title: 'Add Page' });
-});
-
-
-
-app.listen(port, () => {
-    console.log(`Server started on port ${port}`);
-});
-
-
 
 
 const workbook = XLSX.readFile('./namiclothura.xls');
@@ -46,4 +32,21 @@ const fuse = new Fuse(products, {
   threshold: 0.3
 });
 
-console.log(fuse.search('клаппн'));
+app.get('/', (req, res) => {
+    res.render('index');
+});
+app.get('/add', (req, res) => {
+    res.render('add', { title: 'Add Page' });
+});
+
+
+
+app.listen(port, () => {
+    console.log(`Server started on port ${port}`);
+});
+
+
+
+
+
+// console.log(fuse.search('клаппн'));
