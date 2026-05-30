@@ -51,7 +51,7 @@ app.get('/add', (req, res) => {
 
     res.render('add', { 
       title: 'Add Page',
-      products: result
+      products: json(result)
     });
     
     
