@@ -42,19 +42,6 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-app.get('/add', (req, res) => {
-  res.render('add', { title: 'Поиск товаров' });
-});
-
-app.get('/search', (req, res) => {
-  const q = (req.query.q || '').toLowerCase();
-
-  const result = products.filter(p =>
-    p.name.toLowerCase().includes(q)
-  );
-
-  res.json(result.slice(0, 20));
-});
 
 
 
