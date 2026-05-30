@@ -18,6 +18,36 @@
           <div class="input-group mb-3">
             <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
             <div id="results"></div>
+
+            <script>
+              const input = document.getElementById('search');
+              const results = document.getElementById('results');
+
+              let timer;
+
+              input.addEventListener('input', () => {
+                clearTimeout(timer);
+
+                timer = setTimeout(async () => {
+                  const q = input.value;
+
+                  if (!q.trim()) {
+                    results.innerHTML = '';
+                    return;
+                  }
+
+                  const response = await fetch(
+                    `/search?q=${encodeURIComponent(q)}`
+                  );
+
+                  const products = await response.json();
+
+                  results.innerHTML = products
+                    .map(p => `<div>${p.name}</div>`)
+                    .join('');
+                }, 300);
+              });
+              </script>
           </div>
           <table class="table">
             <thead>
