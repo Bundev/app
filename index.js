@@ -57,16 +57,16 @@ app.get('/', (req, res) => {
 
 // });
 
+app.get('/add', (req, res) => {
+  res.render('add', { title: 'Поиск товаров' });
+});
+
 app.get('/search', (req, res) => {
   const q = req.query.q || '';
 
-  if (!q.trim()) {
-    return res.json([]);
-  }
-
-  const result = fuse
-    .search(q, { limit: 10 })
-    .map(r => r.item);
+  const result = products.filter(p =>
+    p.name.toLowerCase().includes(q.toLowerCase())
+  );
 
   res.json(result);
 });
