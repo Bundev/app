@@ -19,17 +19,36 @@
             <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
             <div id="results"></div>
 
-            <script>
-const input = document.getElementById('search');
+<script>
+const searchInput = document.getElementById('search');
+const resultsDiv = document.getElementById('results');
 
-input.addEventListener('input', async () => {
-  const response = await fetch(
-    `/search?q=${encodeURIComponent(input.value)}`
-  );
+let timer;
 
-  const products = await response.json();
+searchInput.addEventListener('input', () => {
+  clearTimeout(timer);
 
-  console.log(products);
+  timer = setTimeout(async () => {
+    const q = searchInput.value;
+
+    if (q.length < 2) {
+      resultsDiv.innerHTML = '';
+      return;
+    }
+
+    const response = await fetch(
+      `/search?q=${encodeURIComponent(q)}`
+    );
+
+    const products = await response.json();
+
+    resultsDiv.innerHTML = products.map(product => `
+      <div class="product">
+        <b>${product.name}</b><br>
+        Цена: ${product.price}
+      </div>
+    `).join('');
+  }, 300);
 });
 </script>
           </div>
