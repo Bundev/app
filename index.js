@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 app.get('/add', (req, res) => {
-  res.render('add', { title: 'Add Page' });
+  // res.render('add', { title: 'Add Page' });
   const q = req.query.q || '';
 
     if (!q.trim()) {
