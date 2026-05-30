@@ -47,7 +47,7 @@ app.get('/add', (req, res) => {
       .search(q, { limit: 10 })
       .map(r => r.item);
 
-    res.json(result);
+    res.json(result).render('add', { title: 'Add Page' });;
     
 
 });
