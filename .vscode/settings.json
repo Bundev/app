@@ -3,7 +3,7 @@
     "commands": [
       {
         "match": ".*",
-        "cmd": "./autopush.sh"
+        "cmd": "${workspaceFolder}/autopush.sh"
       }
     ]
   }
