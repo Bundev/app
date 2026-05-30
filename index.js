@@ -37,7 +37,17 @@ app.get('/', (req, res) => {
 });
 app.get('/add', (req, res) => {
     // res.render('add', { title: 'Add Page' });
+  const q = req.query.q || '';
 
+    if (!q.trim()) {
+      return res.json([]);
+    }
+
+    const result = fuse
+      .search(q, { limit: 10 })
+      .map(r => r.item);
+
+    res.json(result);
 
 });
 
