@@ -46,8 +46,11 @@ app.get('/add', (req, res) => {
     const result = fuse
       .search(q, { limit: 10 })
       .map(r => r.item);
-
-    res.json(result).render('add', { title: 'Add Page' });;
+    res.render('add', { 
+      title: 'Add Page',
+      result
+    });
+    
     
 
 });
