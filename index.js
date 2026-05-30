@@ -31,6 +31,29 @@ const products = data
   }))
   .filter(item => item.name);
 
+  app.get('/search', (req, res) => {
+  const q = (req.query.q || '').toLowerCase();
+
+  if (q.length < 2) {
+    return res.json([]);
+  }
+
+  const result = [];
+  const limit = 20;
+
+  for (let i = 0; i < products.length; i++) {
+    if (products[i].searchName.includes(q)) {
+      result.push(products[i]);
+
+      if (result.length === limit) {
+        break;
+      }
+    }
+  }
+
+  res.json(result);
+});
+
 
 app.get('/', (req, res) => {
     res.render('index');
