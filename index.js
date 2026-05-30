@@ -37,25 +37,15 @@ const fuse = new Fuse(products, {
 app.get('/', (req, res) => {
     res.render('index');
 });
-// app.get('/add', (req, res) => {
-//   const q = req.query.q || '';
-
-//     if (!q.trim()) {
-//       return res.json([]);
-//     }
-
-//     const result = fuse
-//       .search(q, { limit: 10 })
-//       .map(r => r.item);
-
-
-//     res.render('add', { 
-//       title: 'Add Page',
-//     });
+ app.get('/add', (req, res) => {
+   
+    res.render('add', { 
+       title: 'Add Page',
+    });
     
     
 
-// });
+ });
 
 app.get('/add', (req, res) => {
   res.render('add', { title: 'Поиск товаров' });
