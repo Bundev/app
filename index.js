@@ -37,15 +37,6 @@ const fuse = new Fuse(products, {
 app.get('/', (req, res) => {
     res.render('index');
 });
- app.get('/add', (req, res) => {
-   
-    res.render('add', { 
-       title: 'Add Page',
-    });
-    
-    
-
- });
 
 app.get('/add', (req, res) => {
   res.render('add', { title: 'Поиск товаров' });
