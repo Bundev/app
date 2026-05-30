@@ -17,15 +17,10 @@
         <div class="col-10">
           <div class="input-group mb-3">
             <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
+            
           </div>
-          <table>
-            <tbody>
-              <tr id="results">
-                
-              </tr>
-            </tbody>
-          </table>
-          <!-- <div id="results"></div> -->
+          
+          <div id="results"></div>
 
 <script>
 const searchInput = document.getElementById('search');
@@ -52,9 +47,8 @@ searchInput.addEventListener('input', () => {
 
     resultsDiv.innerHTML = products.map(product => `
       <div class="product">
-        <td>${product.name}</td>
-        <td>Цена: ${product.price}</td>
-        <td>Остатки: ${product.stock}</td>
+        <b>${product.name}</b>
+        Цена: ${product.price}
       </div>
     `).join('');
   }, 300);
