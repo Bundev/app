@@ -59,9 +59,7 @@ app.get('/add', (req, res) => {
     }
   }
 
-  res.render('add', {
-    products : "sd"
-  });
+  res.render('add', { title: 'Поиск товаров' });
     
 });
 
