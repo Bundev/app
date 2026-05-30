@@ -22,8 +22,8 @@ const data = XLSX.utils.sheet_to_json(sheet, {
 const products = data.map((row, index) => ({
   id: index + 1,
   name: row[4],
-  // price: row[13],
-  // stock: row[14],
+  price: row[13],
+  stock: row[14],
 })).filter(item => item.name);
 
 
@@ -62,13 +62,13 @@ app.get('/add', (req, res) => {
 });
 
 app.get('/search', (req, res) => {
-  const q = req.query.q || '';
+  const q = (req.query.q || '').toLowerCase();
 
   const result = products.filter(p =>
-    p.name.toLowerCase().includes(q.toLowerCase())
+    p.name.toLowerCase().includes(q)
   );
 
-  res.json(result);
+  res.json(result.slice(0, 20));
 });
 
 
