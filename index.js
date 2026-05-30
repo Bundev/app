@@ -36,7 +36,6 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 app.get('/add', (req, res) => {
-  // res.render('add', { title: 'Add Page' });
   const q = req.query.q || '';
 
     if (!q.trim()) {
@@ -47,7 +46,7 @@ app.get('/add', (req, res) => {
       .search(q, { limit: 10 })
       .map(r => r.item);
 
-      
+
     res.render('add', { 
       title: 'Add Page',
       result
