@@ -75,7 +75,7 @@
       resultsDiv.innerHTML = products.map(product => `
         <div class="product">
           <b>${product.name}</b>
-          Цена: ${product.price}
+          Цена: ${product.price+20}
           Остатки: ${product.stock}
         </div>
       `).join('');
