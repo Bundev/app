@@ -3,28 +3,6 @@ const XLSX = require('xlsx');
 const Fuse = require('fuse.js');
 
 
-const workbook = XLSX.readFile('./namiclothura.xls');
-const sheet = workbook.Sheets['TDSheet'];
-
-const data = XLSX.utils.sheet_to_json(sheet, {
-  range: 3, // начать чтение с 4-й строки
-  header: 1
-});
-
-const products = data.map((row, index) => ({
-  id: index + 1,
-  name: row[4],
-  price: row[13],
-  stock: row[14],
-})).filter(item => item.name);
-
-
-const fuse = new Fuse(products, {
-  keys: ['name'],
-  threshold: 0.25,
-  ignoreLocation: true,
-  minMatchCharLength: 2
-});
 
 
 
@@ -35,7 +13,23 @@ app.use(express.static('public'));
 
 const port = 3000;
 
+const workbook = XLSX.readFile('./namiclothura.xls');
+const sheet = workbook.Sheets['TDSheet'];
 
+const data = XLSX.utils.sheet_to_json(sheet, {
+  range: 3,
+  header: 1
+});
+
+const products = data
+  .map((row, index) => ({
+    id: index + 1,
+    name: row[4],
+    searchName: row[4]?.toLowerCase(),
+    price: row[13],
+    stock: row[14]
+  }))
+  .filter(item => item.name);
 
 
 app.get('/', (req, res) => {
