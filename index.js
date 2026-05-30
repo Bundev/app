@@ -47,4 +47,3 @@ const fuse = new Fuse(products, {
 });
 
 console.log(fuse.search('клаппн'));
-
