@@ -17,14 +17,24 @@
         </div>
         <div class="col-10">
           <div class="searchbox">
-            <div class="input-group mb-3">
-            <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
-          </div>
-          
-            <div id="results"></div>
+            <div class="input-group">
+              <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
+            </div>
+            <div id="producttop">
+              <div class="nomin"><b>Номенклатура</b></div>
+              <div class="price"><b>Цена</b></div>
+              <div class="stock"><b>Остатки</b></div>
+            </div>
+            <div id="results">
+              <!-- <div class="product">
+                <div class="nomin">Клапан нижнего подвода воды 1/2" пласт SOLOPLAST АНн-02 (24537), шт</div>
+                <div class="price">Цена: 160</div>
+                <div class="stock">Остатки: 2</div>
+              </div> -->
+            </div>
         </div>
           
-          <!-- <table class="table">
+          <table class="table">
             <thead>
               <tr>
                 <th scope="col">#</th>
@@ -35,7 +45,7 @@
                 <th scope="col">Сумма</th>
               </tr>
             </thead>
-            <tbody>
+            <!-- <tbody>
               <tr>
                 <th scope="row">1</th>
                 <td>Прокладка для арматуры Siamp ЭКО Силикон ЗАВОД (2 КНОПКИ)</td>
@@ -44,8 +54,8 @@
                 <td>500</td>
                 <td>1000</td>
               </tr>
-            </tbody>
-          </table> -->
+            </tbody> -->
+          </table>
           
         </div>
       </div>
@@ -54,6 +64,7 @@
 <script>
   const searchInput = document.getElementById('search');
   const resultsDiv = document.getElementById('results');
+  const productTop = document.getElementById('producttop');
 
   let timer;
 
@@ -65,6 +76,8 @@
 
       if (q.length < 2) {
         resultsDiv.innerHTML = '';
+        productTop.style.display = 'none';
+        resultsDiv.style.display = 'none';
         return;
       }
 
@@ -73,16 +86,38 @@
       );
 
       const products = await response.json();
-
+      
       resultsDiv.innerHTML = products.map(product => `
         <div class="product">
-          ${product.name}
-          Цена: ${product.price}
-          Остатки: ${product.stock}
+          <div class="nomin" data-name='${product.name}'>${product.name}</div>
+          <div class="price">${product.price}</div>
+          <div class="stock">${product.stock}</div>
         </div>
       `).join('');
+      resultsDiv.style.display = 'block';
+      productTop.style.display = 'block';
     }, 300);
   });
+
+  resultsDiv.addEventListener('click', (e) => {
+  const product = e.target.closest('.nomin');
+
+  if (!product) return;
+
+  const text = product.dataset.name;
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  document.execCommand('copy');
+
+  document.body.removeChild(textarea);
+
+  // console.log('Скопировано:', text);
+});
 </script>
   </body>
 </html>

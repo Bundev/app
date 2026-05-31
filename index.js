@@ -14,7 +14,7 @@ app.use(express.static('public'));
 const port = 3000;
 
 
-const workbook = XLSX.readFile('./namiclothura.xls');
+const workbook = XLSX.readFile('./db/db.xls');
 const sheet = workbook.Sheets['TDSheet'];
 
 const data = XLSX.utils.sheet_to_json(sheet, {
@@ -25,8 +25,15 @@ const data = XLSX.utils.sheet_to_json(sheet, {
 const products = data
   .map((row, index) => ({
     id: index + 1,
-    name: row[4],
-    searchName: row[4]?.toLowerCase(),
+    name: row[4]
+      ?.replace(/,\s*шт\.?$/i, '')
+      .trim(),
+    searchName: row[4]?.toLowerCase()
+      ?.toLowerCase()
+      .replace(/,\s*шт\.?$/i, '')
+      .replace(/[(),№]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim(),
     price: row[13],
     stock: row[14]
   }))
@@ -47,7 +54,7 @@ app.get('/search', (req, res) => {
   }
 
   const result = [];
-  const limit = 20;
+  const limit = 200;
 
   for (let i = 0; i < products.length; i++) {
     if (products[i].searchName.includes(q)) {

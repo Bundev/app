@@ -8,6 +8,71 @@
     padding-top: 10px;
  }
 
+ .searchbox {
+   position: relative;
+ }
+
+ #results{
+   border-left: 1px solid #ccc;
+   border-right: 1px solid #ccc;
+   border-bottom: 1px solid #ccc;
+   border-radius: 0 0 5px 5px;
+   max-height: 200px;
+   overflow-y: auto;
+   display: block;
+   position: absolute;
+   width: 100%;
+   background-color: #fff;
+   z-index: 1000;
+   display: none;
+   
+ }
+
  .product {
-    padding: 0 0 10px 0;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    
+ }
+
+  .product:hover {
+    background-color: #f0f0f0;
+  }
+
+  .product:last-child {
+    border-bottom: none;
+  }
+
+  #producttop {
+   border-left: 1px solid #ccc;
+   border-right: 1px solid #ccc;
+   display: none;
+   padding: 10px;
+   border-bottom: 1px solid #ccc;
+  }
+
+ .nomin{
+   float: left;
+   width: 60%;
+   white-space: nowrap; /* Запрещаем перенос текста на новую строку */
+   overflow: hidden; /* Скрываем текст, который не помещается в блок */
+   text-overflow: ellipsis; /* Добавляем троеточие (...) в конце */
+   cursor: pointer;
+ }
+
+ .price{
+   float: left;
+   width: 20%;
+ }
+
+ table.table{
+   margin-top: 30px;
+ }
+
+ #search{
+   border-radius:0;
+ }
+ 
+ #search:focus{
+   box-shadow: none;
+   border-color: #007bff;
  }
