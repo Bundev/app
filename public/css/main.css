@@ -4,6 +4,10 @@
     padding-right: 0;
 } */
 
+body{
+  overflow: hidden;
+}
+
  #bradcrumbblox{
     padding-top: 10px;
  }
@@ -16,10 +20,8 @@
    border-left: 1px solid #ccc;
    border-right: 1px solid #ccc;
    border-bottom: 1px solid #ccc;
-   border-radius: 0 0 5px 5px;
    max-height: 200px;
    overflow-y: auto;
-   display: block;
    position: absolute;
    width: 100%;
    background-color: #fff;
@@ -59,6 +61,8 @@
    cursor: pointer;
  }
 
+
+
  .price{
    float: left;
    width: 20%;
@@ -66,6 +70,7 @@
 
  table.table{
    margin-top: 30px;
+   border-top: 1px solid #ccc;
  }
 
  #search{
@@ -76,3 +81,82 @@
    box-shadow: none;
    border-color: #007bff;
  }
+ .footer-product{
+  position: relative;
+  bottom: 0; /* Прижимаем к нижнему краю родителя */
+  left: 0;
+ }
+
+ 
+#item-products {
+    display: block;
+    height: 50vh;
+    overflow-y: auto;
+}
+
+#item-products tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+table {
+    width: 100%;
+}
+
+thead,
+tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+tbody {
+    display: block;
+    height: 300px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+th:nth-child(1),
+td:nth-child(1) {
+    width: 30px;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+    width: 600px;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+    width: 80px;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+    width: 50px;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+    width: 100px;
+}
+
+th:nth-child(6),
+td:nth-child(6) {
+    width: 120px;
+}
+td:nth-child(2) {
+    white-space: normal;
+    word-break: normal;
+}
+td:nth-child(2) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
