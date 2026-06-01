@@ -41,7 +41,30 @@ const products = data
 
 
 app.get('/', (req, res) => {
-    res.render('index');
+    res.render('index',{
+      breadcrumbs: [
+      {
+        title: 'Главная',
+        url: '/'
+      }
+    ]
+    });
+});
+
+
+app.get('/sales', (req, res) => {
+  res.render('sales', {
+    breadcrumbs: [
+      {
+        title: 'Главная',
+        url: '/'
+      },
+      {
+        title: 'Продажи',
+        url: '/sales'
+      }
+    ]
+  });
 });
 
 
@@ -70,9 +93,37 @@ app.get('/search', (req, res) => {
     
 });
 
-app.get('/add', (req, res) => {
-  res.render('add', {
-    title: 'Поиск товаров'
+app.get('/new', (req, res) => {
+  res.render('new', {
+    title: 'Поиск товаров',
+    breadcrumbs: [
+      {
+        title: 'Главная',
+        url: '/'
+      },
+      {
+        title: 'Продажи',
+        url: '/sales'
+      },
+      {
+        title: "Новый счет"
+      }
+    ]
+  });
+});
+
+app.get('/products', (req, res) => {
+  res.render('products', {
+    breadcrumbs: [
+      {
+        title: 'Главная',
+        url: '/'
+      },
+      {
+        title: 'Товары',
+        url: '/products'
+      }
+    ]
   });
 });
 

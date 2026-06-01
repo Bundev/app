@@ -31,37 +31,57 @@
               <div id="results"></div>
             </div>
           </div>
-          <div class="table-container">
+          <div class="table-scroll">
             <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Наминклатура</th>
-                  <th scope="col">Кол-во</th>
-                  <th scope="col">Ед.и</th>
-                  <th scope="col">Цена</th>
-                  <th scope="col">Сумма</th>
-                </tr>
-              </thead>
-              <tbody id="item-products">
-                
-              </tbody>
+                <thead class="table-dark">
+                  <tr>
+                      <th style="width: 60px;">№</th>
+                      <th>Номенклатура</th>
+                      <th style="width: 120px;">Кол-во</th>
+                      <th style="width: 80px;">Ед.</th>
+                      <th style="width: 120px;">Цена</th>
+                      <th style="width: 140px;">Сумма</th>
+                      <th style="width: 80px;">Действие</th>
+                  </tr>
+                </thead>
+
+                <tbody id="item-products">
+                </tbody>
+                <tfoot>
+                  <tr>
+                      <th colspan="4" class="text-end">
+                          Итого:
+                      </th>
+
+                      <th id="total-sum">
+                          500
+                      </th>
+
+                      <th><input type="text" placeholder="Сдача" size="10"></th>
+                      <th>0</th>
+                  </tr>
+              </tfoot>
             </table>
-          </div>
+        </div>
+          
+        
+          
           <script>
             const itemProducts = document.getElementById('item-products');
             let html = '';
-            for (let i = 0; i < 0; i++) {
+            let title = 'Обратный клапан вент. "Ветерок" 170х170 мм, фланец d 80-150 мм Air 61-283';
+            for (let i = 0; i < 20; i++) {
               html += `
               <tr>
                 <th scope="row">${i}</th>
-                <td>Прокладка для арматуры Siamp ЭКО Силикон ЗАВОД (2 КНОПКИ)</td>
+                <td title='${title}'>Обратный клапан вент. "Ветерок" 170х170 мм, фланец d 80-150 мм Air 61-283</td>
                 <td>
-                  <input class="form-control" size="4" type="text" value="2">
+                  <input class="form-control" size="4" type="text" value="1">
                 </td>
                 <td>Шт</td>
                 <td>500</td>
                 <td>1000</td>
+                <td>х</td>
               </tr>
             `;
               
@@ -71,15 +91,7 @@
 
             itemProducts.innerHTML = html;
           </script> 
-          <div class="footer-product">
-          <div id="block-semma">
-            <div class="sdach">
-              <input type="text" placeholder="Здача">
-              <div class="summasdachi">350</div>
-            </div>
-            <div class="summa">Сумма: 500</div>
-          </div>
-      </div>
+        
         </div>
         
       </div>

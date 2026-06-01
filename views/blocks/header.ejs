@@ -1,26 +1,49 @@
-<header><!-- Header -->
-<nav class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">CRM</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-link active" aria-current="page" href="/">Главная</a>
-        <!-- <a class="nav-link" href="#">Features</a>
-        <a class="nav-link" href="#">Pricing</a>
-        <a class="nav-link disabled" aria-disabled="true">Disabled</a> -->
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+
+      <a class="navbar-brand fw-bold" href="/">
+        ◈ CRM
+      </a>
+
+      <div class="ms-auto">
+        <span class="navbar-text text-light">
+          👤 Администратор
+        </span>
       </div>
+
     </div>
-  </div>
-</nav>
-<div class="container-fluid" id="bradcrumbblox">
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Library</li>
-    </ol>
   </nav>
-</div>
 </header>
+
+<% if (typeof breadcrumbs !== 'undefined' && breadcrumbs.length) { %>
+<div class="container-fluid">
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+
+    <% breadcrumbs.forEach((item, index) => { %>
+
+      <% if(index === breadcrumbs.length - 1) { %>
+
+        <li class="breadcrumb-item active">
+          <%= item.title %>
+        </li>
+
+      <% } else { %>
+
+        <li class="breadcrumb-item">
+          <a href="<%= item.url %>">
+            <%= item.title %>
+          </a>
+        </li>
+
+      <% } %>
+
+    <% }) %>
+
+  </ol>
+</nav>
+
+</div>
+
+<% } %>
