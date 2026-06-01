@@ -22,20 +22,16 @@
             <div class="input-group">
               <input class="form-control" id="search" type="text" placeholder="Введите название товара" aria-label="default input example">
             </div>
-            <div id="producttop">
-              <div class="nomin"><b>Номенклатура</b></div>
-              <div class="price"><b>Цена</b></div>
-              <div class="stock"><b>Остатки</b></div>
-            </div>
-            <div id="results">
-              <!-- <div class="product">
-                <div class="nomin">Клапан нижнего подвода воды 1/2" пласт SOLOPLAST АНн-02 (24537), шт</div>
-                <div class="price">Цена: 160</div>
-                <div class="stock">Остатки: 2</div>
-              </div> -->
+            <div id="searchresults">
+              <div id="producttop">
+                <div class="nomin"><b>Номенклатура</b></div>
+                <div class="price"><b>Цена</b></div>
+                <div class="stock"><b>Остатки</b></div>
+              </div>
+              <div id="results"></div>
             </div>
           </div>
-          <!-- <div class="table-container">
+          <div class="table-container">
             <table class="table">
               <thead>
                 <tr>
@@ -51,11 +47,11 @@
                 
               </tbody>
             </table>
-          </div> -->
+          </div>
           <script>
             const itemProducts = document.getElementById('item-products');
             let html = '';
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 0; i++) {
               html += `
               <tr>
                 <th scope="row">${i}</th>
@@ -75,25 +71,25 @@
 
             itemProducts.innerHTML = html;
           </script> 
-          
-        </div>
-        <!-- <div class="container footer-product">
-            <div class="row">
-              <div class="col-8">
-
-              </div>
-              <div class="col-2"><button type="button" class="btn btn-primary">Сдача</button></div>
-              <div class="col-2"><div class="summa">Сумма: 500</div></div>
+          <div class="footer-product">
+          <div id="block-semma">
+            <div class="sdach">
+              <input type="text" placeholder="Здача">
+              <div class="summasdachi">350</div>
             </div>
-            
-          </div> -->
+            <div class="summa">Сумма: 500</div>
+          </div>
       </div>
+        </div>
+        
+      </div>
+      
     </div>
     <%- include('blocks/footer') -%>
 <script>
   const searchInput = document.getElementById('search');
   const resultsDiv = document.getElementById('results');
-  const productTop = document.getElementById('producttop');
+  const productSearchResult = document.getElementById('searchresults');
 
   let timer;
 
@@ -105,8 +101,7 @@
 
       if (q.length < 2) {
         resultsDiv.innerHTML = '';
-        productTop.style.display = 'none';
-        resultsDiv.style.display = 'none';
+        productSearchResult.style.display = 'none';
         return;
       }
 
@@ -115,16 +110,21 @@
       );
 
       const products = await response.json();
+
+      if (products.length === 0) {
+        resultsDiv.innerHTML = '';
+        productSearchResult.style.display = 'none';
+        return;
+      }
       
       resultsDiv.innerHTML = products.map(product => `
         <div class="product">
-          <div class="nomin" data-name='${product.name}' data-price="${product.price}">${product.name}</div>
-          <div class="price">${product.price}</div>
+          <div class="nomin" data-name='${product.name}' data-price="${product.price+(product.price * 20 / 100)}">${product.name}</div>
+          <div class="price">${product.price+(product.price * 20 / 100)}</div>
           <div class="stock">${product.stock}</div>
         </div>
       `).join('');
-      resultsDiv.style.display = 'block';
-      productTop.style.display = 'block';
+      productSearchResult.style.display = 'block';
     }, 300);
   });
 

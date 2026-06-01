@@ -1,13 +1,3 @@
-/* #cont{
-    padding-top: 30px;
-    padding-left: 0;
-    padding-right: 0;
-} */
-
-body{
-  overflow: hidden;
-}
-
  #bradcrumbblox{
     padding-top: 10px;
  }
@@ -16,17 +6,29 @@ body{
    position: relative;
  }
 
- #results{
-   border-left: 1px solid #ccc;
-   border-right: 1px solid #ccc;
-   border-bottom: 1px solid #ccc;
-   max-height: 200px;
-   overflow-y: auto;
-   position: absolute;
-   width: 100%;
-   background-color: #fff;
+ #searchresults{
+  position: absolute;
+  width: 100%;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  background-color: #fff;
    z-index: 1000;
    display: none;
+ }
+
+#producttop {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  
+}
+ 
+ #results{
+   max-height: 200px;
+   overflow-y: auto;
+   width: 100%;
+   
+   
    
  }
 
@@ -44,13 +46,7 @@ body{
     border-bottom: none;
   }
 
-  #producttop {
-   border-left: 1px solid #ccc;
-   border-right: 1px solid #ccc;
-   display: none;
-   padding: 10px;
-   border-bottom: 1px solid #ccc;
-  }
+  
 
  .nomin{
    float: left;
@@ -58,6 +54,9 @@ body{
    white-space: nowrap; /* Запрещаем перенос текста на новую строку */
    overflow: hidden; /* Скрываем текст, который не помещается в блок */
    text-overflow: ellipsis; /* Добавляем троеточие (...) в конце */
+ }
+
+ .product .nomin{
    cursor: pointer;
  }
 
@@ -69,8 +68,8 @@ body{
  }
 
  table.table{
-   margin-top: 30px;
-   border-top: 1px solid #ccc;
+    margin-top: 20px;
+  /* border-bottom: 1px solid #ccc; */
  }
 
  #search{
@@ -81,16 +80,13 @@ body{
    box-shadow: none;
    border-color: #007bff;
  }
- .footer-product{
-  position: relative;
-  bottom: 0; /* Прижимаем к нижнему краю родителя */
-  left: 0;
- }
+
+
 
  
 #item-products {
     display: block;
-    height: 50vh;
+    height: 300px;
     overflow-y: auto;
 }
 
@@ -98,6 +94,10 @@ body{
     display: table;
     width: 100%;
     table-layout: fixed;
+}
+
+#item-products tr:last-child{
+  border-bottom: 0;
 }
 
 table {
@@ -135,21 +135,25 @@ td:nth-child(2) {
 th:nth-child(3),
 td:nth-child(3) {
     width: 80px;
+    
 }
 
 th:nth-child(4),
 td:nth-child(4) {
     width: 50px;
+    text-align: right;
 }
 
 th:nth-child(5),
 td:nth-child(5) {
     width: 100px;
+    text-align: right;
 }
 
 th:nth-child(6),
 td:nth-child(6) {
-    width: 120px;
+    width: 100px;
+    text-align: right;
 }
 td:nth-child(2) {
     white-space: normal;
@@ -159,4 +163,27 @@ td:nth-child(2) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+#block-semma {
+  float: right;
+  width: 400px;
+}
+
+.footer-product{
+  overflow: hidden;
+
+  
+}
+
+.sdach{
+  float: left;
+  margin-right: 20px;
+}
+
+.sdach input{
+  margin-right: 30px;
+}
+
+.summasdachi{
+  float: right;
 }
