@@ -3,13 +3,16 @@ const XLSX = require('xlsx');
 const Fuse = require('fuse.js');
 
 
-
+const fs = require('fs');
+const path = require('path');
 
 
 const app = express();
 
 app.set('view engine', 'ejs');
 app.use(express.static('public')); 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const port = 3000;
 
@@ -34,7 +37,7 @@ const products = data
       .replace(/[(),№]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim(),
-    price: row[13],
+    price: row[13]+(row[13] * 20 / 100),
     stock: row[14]
   }))
   .filter(item => item.name);
@@ -51,20 +54,63 @@ app.get('/', (req, res) => {
     });
 });
 
-
+// Продажи
 app.get('/sales', (req, res) => {
-  res.render('sales', {
-    breadcrumbs: [
-      {
-        title: 'Главная',
-        url: '/'
-      },
-      {
+
+    const nextInvoiceNumber =
+        getNextInvoiceNumber();
+
+    const invoicesDir = path.join(
+        __dirname,
+        'data',
+        'invoices'
+    );
+
+    let invoices = [];
+
+    if (fs.existsSync(invoicesDir)) {
+
+        const files =
+            fs.readdirSync(invoicesDir);
+
+        invoices = files.map(file => {
+
+            const filePath = path.join(
+                invoicesDir,
+                file
+            );
+
+            return JSON.parse(
+                fs.readFileSync(
+                    filePath,
+                    'utf8'
+                )
+            );
+
+        });
+
+        invoices.sort((a, b) =>
+            Number(b.number) -
+            Number(a.number)
+        );
+    }
+
+    res.render('sales', {
         title: 'Продажи',
-        url: '/sales'
-      }
-    ]
-  });
+        nextInvoiceNumber,
+        invoices,
+        breadcrumbs: [
+            {
+                title: 'Главная',
+                url: '/'
+            },
+            {
+                title: 'Продажи',
+                url: '/sales'
+            }
+        ]
+    });
+
 });
 
 
@@ -93,9 +139,12 @@ app.get('/search', (req, res) => {
     
 });
 
-app.get('/new', (req, res) => {
+app.get('/new/:id', (req, res) => {
+  const id = req.params.id;
+
   res.render('new', {
-    title: 'Поиск товаров',
+    title: `Новый чек №${id}`,
+    invoiceId: id,
     breadcrumbs: [
       {
         title: 'Главная',
@@ -106,7 +155,7 @@ app.get('/new', (req, res) => {
         url: '/sales'
       },
       {
-        title: "Новый счет"
+        title: `Новый чек №${id}`, 
       }
     ]
   });
@@ -128,7 +177,74 @@ app.get('/products', (req, res) => {
 });
 
 
+// Сохранение чека
+function getNextInvoiceNumber() {
 
+    const dir = path.join(__dirname, 'data', 'invoices');
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(dir);
+
+    let max = 0;
+
+    files.forEach(file => {
+
+        if (file.endsWith('.json')) {
+
+            const num = parseInt(
+                file.replace('.json', '')
+            );
+
+            if (!isNaN(num) && num > max) {
+                max = num;
+            }
+        }
+
+    });
+
+    return String(max + 1).padStart(6, '0');
+}
+
+app.post('/save-invoice', (req, res) => {
+
+    const invoice = req.body;
+
+    const invoiceNumber = getNextInvoiceNumber();
+
+    invoice.number = invoiceNumber;
+
+    const filePath = path.join(
+        __dirname,
+        'data',
+        'invoices',
+        `${invoiceNumber}.json`
+    );
+
+    fs.writeFile(
+        filePath,
+        JSON.stringify(invoice, null, 2),
+        err => {
+
+            if (err) {
+                console.error(err);
+
+                return res.status(500).json({
+                    success: false
+                });
+            }
+
+            res.json({
+                success: true,
+                number: invoiceNumber
+            });
+
+        }
+    );
+
+});
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CRM</title>
+    <title><%=title %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="/css/main.css">
   </head>
@@ -16,7 +16,7 @@
         </div>
         <div class="col-10">
           <div class="buttonblox">
-            <a href="/new" class="btn btn-primary">Создать</a>
+            <a href="/new/<%= nextInvoiceNumber %>" class="btn btn-primary">+ Новый чек</a>
           </div>
           <table class="table table-hover">
             <thead>
@@ -32,41 +32,66 @@
 
             <tbody>
 
+              <% invoices.forEach(invoice => { %>
+
               <tr>
-                <td>1</td>
-                <td>01.06.2026</td>
-                <td>Иван Иванов</td>
-                <td>450 ₴</td>
-                <td>
+
+                  <td><%= invoice.number %></td>
+
+                  <td><%= invoice.date %></td>
+
+                  <td><%= invoice.customer %></td>
+
+                  <td>
+                      <%= Number(invoice.total).toFixed(2) %> ₴
+                  </td>
+
+                  <td>
+                      <% if (invoice.status === 'Новый') { %>
+
                   <span class="badge bg-success">
-                    Оплачено
+                      Новый
                   </span>
-                </td>
-                <td>
-                  <a href="/sales/1" class="btn btn-sm btn-primary">
-                    Открыть
-                  </a>
-                </td>
+
+              <% } else if (invoice.status === 'processing') { %>
+
+                  <span class="badge bg-warning text-dark">
+                      В обработке
+                  </span>
+
+              <% } else if (invoice.status === 'paid') { %>
+
+                  <span class="badge bg-success">
+                      Оплачен
+                  </span>
+
+              <% } %>
+                  </td>
+
+                  <td>
+                      <a
+                        href="/invoices/<%= invoice.number %>"
+                        class="btn btn-sm btn-outline-primary"
+                        title="Открыть">
+
+                        👁
+
+                    </a>
+
+                    <button
+                        class="btn btn-sm btn-outline-danger"
+                        title="Удалить">
+
+                        🗑
+
+                    </button>
+                  </td>
+
               </tr>
 
-              <tr>
-                <td>2</td>
-                <td>01.06.2026</td>
-                <td>Петр Петров</td>
-                <td>1200 ₴</td>
-                <td>
-                  <span class="badge bg-warning">
-                    В обработке
-                  </span>
-                </td>
-                <td>
-                  <a href="/sales/2" class="btn btn-sm btn-primary">
-                    Открыть
-                  </a>
-                </td>
-              </tr>
+              <% }) %>
 
-            </tbody>
+          </tbody>
           </table>
         </div>
       </div>

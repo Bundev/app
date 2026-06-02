@@ -1,7 +1,5 @@
- #bradcrumbblox{
-    padding-top: 10px;
- }
 
+ /*Выпадающи список в поиске в новом счете  */
  .searchbox {
    position: relative;
  }
@@ -50,7 +48,7 @@
 
  .nomin{
    float: left;
-   width: 60%;
+   width: 87%;
    white-space: nowrap; /* Запрещаем перенос текста на новую строку */
    overflow: hidden; /* Скрываем текст, который не помещается в блок */
    text-overflow: ellipsis; /* Добавляем троеточие (...) в конце */
@@ -61,91 +59,149 @@
  }
 
 
+ /*Выпадающи список в поиске в новом счете  */
 
- .price{
-   float: left;
-   width: 20%;
- }
-
- table.table{
-    margin-top: 20px;
-  /* border-bottom: 1px solid #ccc; */
- }
+ /* Пойск в новом счете */
+.searchbox {
+  width: 500px;
+}
 
  #search{
-   border-radius:0;
+   border-radius:0 5px 0 0;
  }
  
  #search:focus{
    box-shadow: none;
    border-color: #007bff;
  }
-
-
-
-
-
-.table-scroll {
-    height: 500px;
-    overflow-y: auto;
-    margin-top: 20px;
-}
-
-.table-scroll thead th {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: #212529;
-    color: white;
-}
-
-.table-scroll tfoot th {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    z-index: 100;
-}
-
-tfoot {
-    background: white;
-}
-
-tfoot th,
-tfoot td {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    font-weight: bold;
-}
-
-
-#item-products td:nth-child(2) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    
-}
-
-th:nth-child(2),
-td:nth-child(2) {
-    max-width: 400px;
-}
-
-
-
-
-
-
-
-
-
-
-
+ 
+ /* Пойск в новом счете */
+/* Хлебные крошки */
 .navbar-brand {
     font-size: 24px;
     font-weight: 700;
 }
 .breadcrumb{
   margin-top: 10px;
+  font-size: 14px;
 }
+/* Хлебные крошки */
+
+/* Таблица в новом счете */
+.table-sales thead {
+    background: #f8f9fa;
+}
+
+.table-sales thead th {
+    color: #495057;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-sales tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.table-sales td,
+.table-sales th {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+.product-name {
+    max-width: 500px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor:pointer;
+}
+
+.qty {
+    width: 90px;
+    text-align: center;
+}
+
+.pricepoduct,
+.sum {
+    font-weight: 500;
+}
+
+.remove {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    padding: 0;
+}
+
+.card-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}
+
+.card {
+  margin-top: 20px;
+}
+
+.table-container {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+}
+
+.table-sales {
+    background: white;
+}
+
+.table-sales tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.table-sales td,
+.table-sales th {
+    vertical-align: middle;
+}
+
+
+
+.table-sales thead th {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    background: #ffffff;
+    color: #212529;
+
+    font-weight: 600;
+
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-sales tbody tr:hover {
+    background: #f8f9fa;
+}
+
+
+.card-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 100;
+    border-top: 1px solid #dee2e6;
+}
+
+
+/* Таблица в новом счете */
+/* Боковое меню */
+
+.flex-column{
+  font-size: 14px;
+}
+/* Боковое меню */
+
+
+/* Кнопка новый чек в разделе продажи */
+.buttonblox {
+  margin-bottom: 20px;
+}
+/* Кнопка новый чек в разделе продажи */
