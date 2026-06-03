@@ -1,0 +1,47 @@
+/* Кнопка новый чек в разделе продажи */
+.buttonblox {
+  margin-bottom: 20px;
+}
+/* Кнопка новый чек в разделе продажи */
+
+.invoice-row {
+    cursor: pointer;
+}
+
+.invoice-row:hover {
+    background-color: #f8f9fa;
+}
+
+.invoice-list thead th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    padding: 14px;
+}
+
+.invoice-row {
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.invoice-row:hover {
+    background: #f8f9fa;
+}
+
+.invoice-row td {
+    padding: 14px;
+}
+
+.invoice-number {
+    background: #eef4ff;
+    color: #0d6efd;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.invoice-total {
+    font-weight: 700;
+    color: #212529;
+}

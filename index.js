@@ -161,6 +161,46 @@ app.get('/new/:id', (req, res) => {
   });
 });
 
+app.get('/invoices/:id', (req, res) => {
+
+    const id = req.params.id;
+
+    const filePath = path.join(
+        __dirname,
+        'data',
+        'invoices',
+        `${id}.json`
+    );
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send('Чек не найден');
+    }
+
+    const invoice = JSON.parse(
+        fs.readFileSync(filePath, 'utf8')
+    );
+
+    res.render('invoices', {
+        title: `Чек №${id}`,
+        invoice,
+        invoiceId: id,
+        breadcrumbs: [
+            {
+                title: 'Главная',
+                url: '/'
+            },
+            {
+                title: 'Продажи',
+                url: '/sales'
+            },
+            {
+                title: `Чек №${id}`
+            }
+        ]
+    });
+
+});
+
 app.get('/products', (req, res) => {
   res.render('products', {
     breadcrumbs: [
@@ -207,7 +247,7 @@ function getNextInvoiceNumber() {
 
     return String(max + 1).padStart(6, '0');
 }
-
+// Сохранение чека
 app.post('/save-invoice', (req, res) => {
 
     const invoice = req.body;
