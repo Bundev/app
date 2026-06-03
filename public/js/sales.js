@@ -40,10 +40,6 @@ function filterInvoices() {
                 .value
         ) || 0;
 
-    const formattedDate = date
-        ? date.split('-').reverse().join('.')
-        : '';
-
     document
         .querySelectorAll('#invoice-table tr')
         .forEach(row => {
@@ -52,7 +48,7 @@ function filterInvoices() {
                 row.cells[0].textContent.toLowerCase();
 
             const rowDate =
-                row.cells[1].textContent;
+                row.cells[1].dataset.date;
 
             const rowCustomer =
                 row.cells[2].textContent.toLowerCase();
@@ -69,7 +65,7 @@ function filterInvoices() {
 
                 rowNumber.includes(number) &&
 
-                (!formattedDate || rowDate === formattedDate) &&
+                (!date || rowDate === date) &&
 
                 rowCustomer.includes(customer) &&
 

@@ -25,8 +25,11 @@ const data = XLSX.utils.sheet_to_json(sheet, {
   header: 1
 });
 
-const products = data
-  .map((row, index) => ({
+const products = data.filter(row =>
+      row[4] &&
+      row[4] !== 'Номенклатура, Упаковка' &&
+      !isNaN(row[13])
+  ).map((row, index) => ({
     id: index + 1,
     name: row[4]
       ?.replace(/,\s*шт\.?$/i, '')
@@ -43,15 +46,196 @@ const products = data
   .filter(item => item.name);
 
 
+// Роутер панели упражнения
 app.get('/', (req, res) => {
-    res.render('index',{
-      breadcrumbs: [
-      {
-        title: 'Главная',
-        url: '/'
-      }
-    ]
+
+    const nextInvoiceNumber =
+        getNextInvoiceNumber();
+
+    const invoicesDir = path.join(
+        __dirname,
+        'data',
+        'invoices'
+    );
+
+    let invoices = [];
+
+    if (fs.existsSync(invoicesDir)) {
+
+        const files = fs.readdirSync(invoicesDir);
+
+        invoices = files.map(file => {
+
+            return JSON.parse(
+                fs.readFileSync(
+                    path.join(invoicesDir, file),
+                    'utf8'
+                )
+            );
+
+        });
+
+    }
+
+    const today =
+        new Date().toISOString().split('T')[0];
+
+    const salesToday =
+        invoices
+            .filter(invoice => invoice.date === today)
+            .reduce(
+                (sum, invoice) =>
+                    sum + Number(invoice.total),
+                0
+            );
+
+    const invoicesToday =
+        invoices.filter(
+            invoice => invoice.date === today
+        ).length;
+
+    const clientsCount =
+        new Set(
+            invoices.map(
+                invoice => invoice.customer
+            )
+        ).size;
+
+    const productsCount =
+        invoices.reduce(
+            (total, invoice) =>
+                total +
+                (invoice.items
+                    ? invoice.items.length
+                    : 0),
+            0
+        );
+
+    invoices.sort((a, b) =>
+        Number(b.number) -
+        Number(a.number)
+    );
+
+    const latestInvoices =
+        invoices.slice(0, 10);
+
+    res.render('dashboard', {
+        title: 'Панель управления',
+        activeMenu: 'dashboard',
+
+        nextInvoiceNumber,
+
+        invoices: latestInvoices,
+
+        salesToday,
+        invoicesToday,
+        clientsCount,
+        productsCount,
+
+        breadcrumbs: [
+            {
+                title: 'Главная',
+                url: '/'
+            }
+        ]
     });
+
+});
+
+app.get('/dashboard', (req, res) => {
+
+
+    const nextInvoiceNumber =
+        getNextInvoiceNumber();
+
+    const invoicesDir = path.join(
+        __dirname,
+        'data',
+        'invoices'
+    );
+
+    let invoices = [];
+
+    if (fs.existsSync(invoicesDir)) {
+
+        const files = fs.readdirSync(invoicesDir);
+
+        invoices = files.map(file => {
+
+            return JSON.parse(
+                fs.readFileSync(
+                    path.join(invoicesDir, file),
+                    'utf8'
+                )
+            );
+
+        });
+
+    }
+
+    const today =
+        new Date().toISOString().split('T')[0];
+
+    const salesToday =
+        invoices
+            .filter(invoice => invoice.date === today)
+            .reduce(
+                (sum, invoice) =>
+                    sum + Number(invoice.total),
+                0
+            );
+
+    const invoicesToday =
+        invoices.filter(
+            invoice => invoice.date === today
+        ).length;
+
+    const clientsCount =
+        new Set(
+            invoices.map(
+                invoice => invoice.customer
+            )
+        ).size;
+
+    const productsCount =
+        invoices.reduce(
+            (total, invoice) =>
+                total +
+                (invoice.items
+                    ? invoice.items.length
+                    : 0),
+            0
+        );
+
+    invoices.sort((a, b) =>
+        Number(b.number) -
+        Number(a.number)
+    );
+
+    const latestInvoices =
+        invoices.slice(0, 10);
+
+    res.render('dashboard', {
+        title: 'Панель управления',
+        activeMenu: 'dashboard',
+
+        nextInvoiceNumber,
+
+        invoices: latestInvoices,
+
+        salesToday,
+        invoicesToday,
+        clientsCount,
+        productsCount,
+
+        breadcrumbs: [
+            {
+                title: 'Главная',
+                url: '/'
+            }
+        ]
+    });
+
 });
 
 // Продажи
@@ -99,6 +283,7 @@ app.get('/sales', (req, res) => {
         title: 'Продажи',
         nextInvoiceNumber,
         invoices,
+        activeMenu: 'sales',
         breadcrumbs: [
             {
                 title: 'Главная',
@@ -143,8 +328,9 @@ app.get('/new/:id', (req, res) => {
   const id = req.params.id;
 
   res.render('new', {
-    title: `Новый чек №${id}`,
+    title: `Новый чек`,
     invoiceId: id,
+    activeMenu: 'sales',
     breadcrumbs: [
       {
         title: 'Главная',
@@ -184,6 +370,7 @@ app.get('/invoices/:id', (req, res) => {
         title: `Чек №${id}`,
         invoice,
         invoiceId: id,
+        activeMenu: 'sales',
         breadcrumbs: [
             {
                 title: 'Главная',
@@ -201,22 +388,25 @@ app.get('/invoices/:id', (req, res) => {
 
 });
 
+// Роутер товаров
 app.get('/products', (req, res) => {
-  res.render('products', {
-    breadcrumbs: [
-      {
-        title: 'Главная',
-        url: '/'
-      },
-      {
+
+    res.render('products', {
         title: 'Товары',
-        url: '/products'
-      }
-    ]
-  });
+        activeMenu: 'products',
+        products,
+        breadcrumbs: [
+            {
+                title: 'Главная',
+                url: '/'
+            },
+            {
+                title: 'Товары'
+            }
+        ]
+    });
+
 });
-
-
 // Сохранение чека
 function getNextInvoiceNumber() {
 
@@ -290,4 +480,5 @@ app.listen(port, () => {
 });
 
 
-
+console.log(products.length);
+console.log(products[0]);

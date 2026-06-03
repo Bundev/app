@@ -29,8 +29,8 @@
       }
       
       resultsDiv.innerHTML = products.map(product => `
-        <div class="product">
-          <div class="nomin" data-name='${product.name}' title='${product.name}'  data-price="${product.price}">${product.name}</div>
+        <div class="product" data-name='${product.name}' title='${product.name}'  data-price="${product.price}">
+          <div class="nomin" >${product.name}</div>
           <div class="price">${product.price}</div>
         </div>
       `).join('');
@@ -134,7 +134,7 @@ function addProduct(product) {
 
 resultsDiv.addEventListener('click', (e) => {
 
-      const item = e.target.closest('.nomin');
+      const item = e.target.closest('.product');
 
       if (!item) return;
      

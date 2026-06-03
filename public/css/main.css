@@ -26,3 +26,33 @@
   margin-bottom: 20px;
 }
 /* Кнопка новый чек в разделе продажи */
+
+/*  */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.nav-link {
+    color: #0d6efd;
+    border-radius: 8px;
+    margin-bottom: 4px;
+
+    transition: .2s;
+}
+
+.nav-link:hover {
+    background: #f1f5ff;
+}
+
+.nav-link.active {
+    background: #e7f1ff;
+    color: #0d6efd !important;
+
+    font-weight: 600;
+
+    border-left: 4px solid #0d6efd;
+}

@@ -1,0 +1,15 @@
+.table-scroll {
+    height: 400px;
+    overflow-y: auto;
+
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+
+    background: white;
+    z-index: 10;
+}

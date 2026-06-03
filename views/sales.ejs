@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%=title %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/seles.css">
   </head>
@@ -18,166 +17,161 @@ href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.m
           <%- include('blocks/menu') -%>
         </div>
         <div class="col-10">
-          <div class="buttonblox">
-            <a href="/new/<%= nextInvoiceNumber %>" class="btn btn-primary">+ Новый чек</a>
-          </div>
-<div class="card mb-3">
-    <div class="card-body">
-
-        <div class="row g-2">
-
-            <div class="col-md-2">
-                <input
-                    type="text"
-                    id="filter-number"
-                    class="form-control"
-                    placeholder="№ чека">
+            <div class="buttonblox">
+                <a href="/new/<%= nextInvoiceNumber %>" class="btn btn-primary">+ Новый чек</a>
             </div>
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
 
-            <div class="col-md-2">
-                <input
-                    type="date"
-                    id="filter-date"
-                    class="form-control">
+                    <div class="row g-2">
+
+                        <div class="col-md-2">
+                            <input
+                                type="text"
+                                id="filter-number"
+                                class="form-control"
+                                placeholder="№ чека">
+                        </div>
+
+                        <div class="col-md-2">
+                            <input
+                                type="date"
+                                id="filter-date"
+                                class="form-control">
+                        </div>
+
+                        <div class="col-md-3">
+                            <input
+                                type="text"
+                                id="filter-customer"
+                                class="form-control"
+                                placeholder="Покупатель">
+                        </div>
+                        <div class="col-md-2">
+                            <input
+                                type="number"
+                                id="filter-sum"
+                                class="form-control"
+                                placeholder="Сумма от">
+                        </div>
+                        <div class="col-md-2">
+                            <select
+                                id="filter-status"
+                                class="form-select">
+
+                                <option value="">
+                                    Все статусы
+                                </option>
+
+                                <option value="Оплачен">
+                                    Оплачен
+                                </option>
+
+                                <option value="В обработке">
+                                    В обработке
+                                </option>
+
+                            </select>
+                        </div>
+
+                        
+
+                        <div class="col-md-1">
+                            <button
+                                class="btn btn-outline-secondary w-100"
+                                onclick="clearFilters()">
+
+                                ✕
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
-
-            <div class="col-md-3">
-                <input
-                    type="text"
-                    id="filter-customer"
-                    class="form-control"
-                    placeholder="Покупатель">
-            </div>
-            <div class="col-md-2">
-                <input
-                    type="number"
-                    id="filter-sum"
-                    class="form-control"
-                    placeholder="Сумма от">
-            </div>
-            <div class="col-md-2">
-                <select
-                    id="filter-status"
-                    class="form-select">
-
-                    <option value="">
-                        Все статусы
-                    </option>
-
-                    <option value="Оплачен">
-                        Оплачен
-                    </option>
-
-                    <option value="В обработке">
-                        В обработке
-                    </option>
-
-                </select>
-            </div>
-
             
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
 
-            <div class="col-md-1">
-                <button
-                    class="btn btn-outline-secondary w-100"
-                    onclick="clearFilters()">
+                        <div class="table-scroll">
+                            <table class="table table-hover align-middle mb-0 invoice-list">
 
-                    ✕
-                </button>
-            </div>
+                                <thead>
 
-        </div>
+                                    <tr>
+                                        <th width="120">№</th>
+                                        <th width="150">Дата</th>
+                                        <th>Клиент</th>
+                                        <th width="180">Сумма</th>
+                                        <th width="180">Статус</th>
+                                    </tr>
 
-    </div>
-</div>
+                                </thead>
 
+                                <tbody id="invoice-table">
 
+                                    <% invoices.forEach(invoice => { %>
 
-<div class="card border-0 shadow-sm">
+                                    <tr
+                                        class="invoice-row"
+                                        data-url="/invoices/<%= invoice.number %>">
 
-    <div class="card-body p-0">
+                                        <td>
+                                            <span class="invoice-number">
+                                                №<%= invoice.number %>
+                                            </span>
+                                        </td>
 
-        <table class="table table-hover align-middle mb-0 invoice-list">
+                                        <td data-date="<%= invoice.date %>">
+                                            <%= new Date(invoice.date).toLocaleDateString('ru-RU') %>
+                                        </td>
 
-            <thead>
+                                        <td>
+                                            <strong>
+                                                <%= invoice.customer %>
+                                            </strong>
+                                        </td>
 
-                <tr>
-                    <th width="120">№</th>
-                    <th width="150">Дата</th>
-                    <th>Клиент</th>
-                    <th width="180">Сумма</th>
-                    <th width="180">Статус</th>
-                </tr>
+                                        <td>
+                                            <span class="invoice-total">
+                                                <%= Number(invoice.total)
+                                                .toFixed(2) %> ₴
+                                            </span>
+                                        </td>
 
-            </thead>
+                                        <td>
 
-            <tbody id="invoice-table">
+                                            <% if (invoice.status === 'Новый') { %>
 
-                <% invoices.forEach(invoice => { %>
+                                                <span class="badge rounded-pill bg-primary">
+                                                    Новый
+                                                </span>
 
-                <tr
-                    class="invoice-row"
-                    data-url="/invoices/<%= invoice.number %>">
+                                            <% } else if (invoice.status === 'processing') { %>
 
-                    <td>
-                        <span class="invoice-number">
-                            №<%= invoice.number %>
-                        </span>
-                    </td>
+                                                <span class="badge rounded-pill bg-warning text-dark">
+                                                    В обработке
+                                                </span>
 
-                    <td>
-                        <%= new Date(invoice.date)
-                        .toLocaleDateString('ru-RU') %>
-                    </td>
+                                            <% } else if (invoice.status === 'paid') { %>
 
-                    <td>
-                        <strong>
-                            <%= invoice.customer %>
-                        </strong>
-                    </td>
+                                                <span class="badge rounded-pill bg-success">
+                                                    Оплачен
+                                                </span>
 
-                    <td>
-                        <span class="invoice-total">
-                            <%= Number(invoice.total)
-                            .toFixed(2) %> ₴
-                        </span>
-                    </td>
+                                            <% } %>
 
-                    <td>
+                                        </td>
 
-                        <% if (invoice.status === 'Новый') { %>
+                                    </tr>
 
-                            <span class="badge rounded-pill bg-primary">
-                                Новый
-                            </span>
-
-                        <% } else if (invoice.status === 'processing') { %>
-
-                            <span class="badge rounded-pill bg-warning text-dark">
-                                В обработке
-                            </span>
-
-                        <% } else if (invoice.status === 'paid') { %>
-
-                            <span class="badge rounded-pill bg-success">
-                                Оплачен
-                            </span>
-
-                        <% } %>
-
-                    </td>
-
-                </tr>
-
-                <% }) %>
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
+                                    <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            
         </div>
       </div>
     </div>

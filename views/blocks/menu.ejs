@@ -1,31 +1,34 @@
 <ul class="nav flex-column">
 
     <li class="nav-item">
-        <a class="nav-link" href="/dashboard">📊 Панель управления</a>
+        <a class="nav-link <%= activeMenu === 'dashboard' ? 'active' : '' %>" href="/dashboard">📊 Панель управления</a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="/sales">🛒 Продажи</a>
+        <a class="nav-link <%= activeMenu === 'sales' ? 'active' : '' %>" href="/sales">🛒 Продажи</a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="/products">📦 Товары</a>
+        <a class="nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">📦 Товары</a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="/clients">👥 Клиенты</a>
+        <a class="nav-link <%= activeMenu === 'clients' ? 'active' : '' %>" href="/clients">👥 Клиенты</a>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="/finance/cash">💰 Финансы</a>
-    </li>
+    <a class="nav-link <%= activeMenu === 'finance' ? 'active' : '' %>"
+    href="/finance/cash">
+    💰 Финансы
+    </a>
 
-    <li class="nav-item">
-        <a class="nav-link" href="/suppliers">🚚 Поставщики</a>
-    </li>
+    <a class="nav-link <%= activeMenu === 'suppliers' ? 'active' : '' %>"
+    href="/suppliers">
+    🚚 Поставщики
+    </a>
 
-    <li class="nav-item">
-        <a class="nav-link" href="/settings/app">⚙️ Система</a>
-    </li>
+    <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>"
+    href="/settings/app">
+    ⚙️ Система
+    </a>
 
 </ul>

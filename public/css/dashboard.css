@@ -1,0 +1,44 @@
+.card {
+    border-radius: 12px;
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+h3 {
+    font-weight: 700;
+}
+
+.table-hover tbody tr {
+    cursor: pointer;
+}
+.dashboard-table {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.invoice-row {
+    cursor: pointer;
+}
+
+.invoice-row:hover {
+    background: #f8f9fa;
+}
+
+.table-scroll {
+    height: 400px; /* фиксированная высота */
+    overflow-y: auto;
+}
+
+.table-scroll table {
+    margin-bottom: 0;
+}
+
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+
+    background: white;
+    z-index: 10;
+}
