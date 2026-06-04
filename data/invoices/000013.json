@@ -1,0 +1,21 @@
+{
+  "customer": "Основной покупатель",
+  "status": "completed",
+  "date": "2026-06-04",
+  "total": 123.2,
+  "items": [
+    {
+      "name": "Муфта М/п ВР Ф16х3/4\" WaterPro Master (MA0036)",
+      "qty": 1,
+      "price": 88,
+      "sum": 88
+    },
+    {
+      "name": "Труба М/п Ф16 SD (4296), м",
+      "qty": 1,
+      "price": 35.2,
+      "sum": 35.2
+    }
+  ],
+  "number": "000013"
+}
