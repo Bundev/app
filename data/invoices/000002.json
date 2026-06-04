@@ -1,6 +1,6 @@
 {
   "customer": "Основной покупатель",
-  "status": "paid",
+  "status": "completed",
   "date": "2026-06-03",
   "total": 295.2,
   "items": [

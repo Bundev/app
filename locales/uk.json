@@ -1,0 +1,18 @@
+{
+	"title": {
+		"dashboard": "Панель управління",
+		"products": "Товари",
+		"sales": "Продажі",
+		"customers": "Клієнти",
+		"settings": "Налаштування",
+		"new": "Новий чек",
+		"invoices": "Чеки",
+		"finance": "Фінанси",
+		"suppliers": "Постачальники"
+	},
+	"salesTodayTitle": "Продажі сьогодні",
+	"invoicesTodayTitle": "Чеків сьогодні",
+	"productsTitle": "Товарів",
+	"customersTitle": "Клієнтів",
+	"quickActions": "Швидкі дії"
+}

@@ -1,16 +1,109 @@
+
 <header>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark topbar">
     <div class="container-fluid">
 
       <a class="navbar-brand fw-bold" href="/">
         RetailPro
       </a>
 
-      <div class="ms-auto">
-        <span class="navbar-text text-light">
-          👤 Иван
-        </span>
-      </div>
+      <div class="ms-auto d-flex align-items-center gap-3">
+
+    <div class="btn-group">
+        <a href="/lang/ru"
+           class="btn <%= lang === 'ru' ? 'btn-primary' : 'btn-outline-secondary' %>">
+            RU
+        </a>
+
+        <a href="/lang/uk"
+           class="btn <%= lang === 'uk' ? 'btn-primary' : 'btn-outline-secondary' %>">
+            UA
+        </a>
+    </div>
+
+    <div class="dropdown ms-auto">
+
+    <a href="#"
+       class="d-flex align-items-center text-decoration-none text-white"
+       data-bs-toggle="dropdown">
+
+        <div class="text-end me-3">
+
+            <div class="fw-bold">
+                Иван Иванов
+            </div>
+
+            <small class="text-light">
+                Администратор
+            </small>
+
+        </div>
+
+        <img
+            src="/img/user.png"
+            class="rounded-circle border"
+            width="42"
+            height="42">
+
+    </a>
+
+    <ul class="dropdown-menu dropdown-menu-end shadow">
+
+        <li>
+            <h6 class="dropdown-header">
+                👤 Иван Иванов
+            </h6>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/profile">
+
+                <i class="bi bi-person"></i>
+                Профиль
+
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/settings/profile">
+
+                <i class="bi bi-gear"></i>
+                Настройки
+
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/users">
+
+                <i class="bi bi-people"></i>
+                Пользователи
+
+            </a>
+        </li>
+
+        <li>
+            <hr class="dropdown-divider">
+        </li>
+
+        <li>
+            <a class="dropdown-item text-danger"
+               href="/logout">
+
+                <i class="bi bi-box-arrow-right"></i>
+                Выход
+
+            </a>
+        </li>
+
+    </ul>
+
+</div>
+
+</div>
 
     </div>
   </nav>

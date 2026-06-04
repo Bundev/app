@@ -1,10 +1,12 @@
 const express = require('express');
 const XLSX = require('xlsx');
 const Fuse = require('fuse.js');
-
+const cookieParser = require('cookie-parser');
+const i18n = require('i18n');
 
 const fs = require('fs');
 const path = require('path');
+const { name } = require('ejs');
 
 
 const app = express();
@@ -15,6 +17,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const port = 3000;
+
+app.use(cookieParser());
+
+i18n.configure({
+    locales: ['ru', 'uk'],
+    defaultLocale: 'ru',
+    directory: path.join(__dirname, 'locales'),
+    objectNotation: true
+});
+
+app.use(i18n.init);
+
+// Автоматическое определение языка
+app.use((req, res, next) => {
+    let lang = req.cookies.lang;
+
+    if (!lang) {
+        lang = req.acceptsLanguages('ru', 'uk') || 'ru';
+        res.cookie('lang', lang, { maxAge: 365 * 24 * 60 * 60 * 1000 });
+    }
+
+    req.setLocale(lang);
+    res.locals.__ = res.__;
+    res.locals.lang = lang;
+
+    next();
+});
+
+
 
 
 const workbook = XLSX.readFile('./db/db.xls');
@@ -40,7 +71,7 @@ const products = data.filter(row =>
       .replace(/[(),№]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim(),
-    price: row[13]+(row[13] * 20 / 100),
+    price: row[13]+(row[13] * 10 / 100),
     stock: row[14]
   }))
   .filter(item => item.name);
@@ -120,7 +151,7 @@ app.get('/', (req, res) => {
         invoices.slice(0, 10);
 
     res.render('dashboard', {
-        title: 'Панель управления',
+        titleKey: 'title.dashboard',
         activeMenu: 'dashboard',
 
         nextInvoiceNumber,
@@ -131,10 +162,19 @@ app.get('/', (req, res) => {
         invoicesToday,
         clientsCount,
         productsCount,
-
+        script: [
+            {
+                src: 'dashboard.js',
+            }
+        ],
+        style: [
+            {
+                href: 'dashboard.css',
+            }
+        ],
         breadcrumbs: [
             {
-                title: 'Главная',
+                title: req.__('title.dashboard'),
                 url: '/'
             }
         ]
@@ -216,7 +256,7 @@ app.get('/dashboard', (req, res) => {
         invoices.slice(0, 10);
 
     res.render('dashboard', {
-        title: 'Панель управления',
+        titleKey: 'title.dashboard',
         activeMenu: 'dashboard',
 
         nextInvoiceNumber,
@@ -227,10 +267,19 @@ app.get('/dashboard', (req, res) => {
         invoicesToday,
         clientsCount,
         productsCount,
-
+        script: [
+            {
+                src: 'dashboard.js',
+            }
+        ],
+        style: [
+            {
+                href: 'dashboard.css',
+            }
+        ],
         breadcrumbs: [
             {
-                title: 'Главная',
+                title: req.__('title.dashboard'),
                 url: '/'
             }
         ]
@@ -280,17 +329,27 @@ app.get('/sales', (req, res) => {
     }
 
     res.render('sales', {
-        title: 'Продажи',
+        titleKey: 'title.sales',
         nextInvoiceNumber,
         invoices,
         activeMenu: 'sales',
+        script: [
+            {
+                src: 'sales.js',
+            }
+        ],
+        style: [
+            {
+                href: 'sales.css',
+            }
+        ],
         breadcrumbs: [
             {
-                title: 'Главная',
+                title: req.__('title.dashboard'),
                 url: '/'
             },
             {
-                title: 'Продажи',
+                title: req.__('title.sales'),
                 url: '/sales'
             }
         ]
@@ -328,20 +387,30 @@ app.get('/new/:id', (req, res) => {
   const id = req.params.id;
 
   res.render('new', {
-    title: `Новый чек`,
+    titleKey: 'title.new',
     invoiceId: id,
     activeMenu: 'sales',
+    script: [
+            {
+                src: 'new.js',
+            }
+        ],
+        style: [
+            {
+                href: 'new.css',
+            }
+        ],
     breadcrumbs: [
       {
-        title: 'Главная',
+        title: req.__('title.dashboard'),
         url: '/'
       },
       {
-        title: 'Продажи',
+        title: req.__('title.sales'),
         url: '/sales'
       },
       {
-        title: `Новый чек №${id}`, 
+        title: `${req.__('title.new')} №${id}`, 
       }
     ]
   });
@@ -367,21 +436,31 @@ app.get('/invoices/:id', (req, res) => {
     );
 
     res.render('invoices', {
-        title: `Чек №${id}`,
+        titleKey: `${req.__('title.sales')} №${id}`,
         invoice,
         invoiceId: id,
         activeMenu: 'sales',
+        script: [
+            {
+                src: 'invoices.js',
+            }
+        ],
+        style: [
+            {
+                href: 'invoices.css',
+            }
+        ],
         breadcrumbs: [
             {
-                title: 'Главная',
+                title: req.__('title.dashboard'),
                 url: '/'
             },
             {
-                title: 'Продажи',
+                title: req.__('title.sales'),
                 url: '/sales'
             },
             {
-                title: `Чек №${id}`
+                title: `${req.__('title.invoices')} №${id}`
             }
         ]
     });
@@ -392,16 +471,26 @@ app.get('/invoices/:id', (req, res) => {
 app.get('/products', (req, res) => {
 
     res.render('products', {
-        title: 'Товары',
+        titleKey: 'title.products',
         activeMenu: 'products',
         products,
+        script: [
+            {
+                src: 'products.js',
+            }
+        ],
+        style: [
+            {
+                href: 'products.css',
+            }
+        ],
         breadcrumbs: [
             {
-                title: 'Главная',
+                title: req.__('title.dashboard'),
                 url: '/'
             },
             {
-                title: 'Товары'
+                title: req.__('title.products')
             }
         ]
     });
@@ -475,6 +564,22 @@ app.post('/save-invoice', (req, res) => {
     );
 
 });
+
+
+// Переключение языка
+app.get('/lang/:lang', (req, res) => {
+    const lang = req.params.lang;
+
+    if (['ru', 'uk'].includes(lang)) {
+        res.cookie('lang', lang, {
+            maxAge: 365 * 24 * 60 * 60 * 1000
+        });
+    }
+
+    res.redirect(req.get('Referer') || '/');
+});
+
+
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });

@@ -56,3 +56,37 @@ button:focus {
 
     border-left: 4px solid #0d6efd;
 }
+
+.bg-orange {
+    background-color: #fd7e14 !important;
+    color: #fff;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+    color: #fff;
+}
+
+.topbar {
+    background: linear-gradient(
+        90deg,
+        #1e3a8a,
+        #2563eb
+    );
+}
+.dropdown img {
+    object-fit: cover;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.dropdown-menu {
+    border: 0;
+    border-radius: 12px;
+}
+
+.dropdown-item {
+    padding: 10px 15px;
+}
