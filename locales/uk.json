@@ -2,13 +2,17 @@
 	"title": {
 		"dashboard": "Панель управління",
 		"products": "Товари",
+		"categories": "Категорії",
 		"sales": "Продажі",
 		"customers": "Клієнти",
+		"suppliers": "Постачальники",
+		"purchases": "Закупівлі",
+		"stores": "Магазини",
+		"users": "Користувачі",
 		"settings": "Налаштування",
 		"new": "Новий чек",
 		"invoices": "Чеки",
-		"finance": "Фінанси",
-		"suppliers": "Постачальники"
+		"finance": "Фінанси"
 	},
 	"dashboard": {
 		"salesToday": "Продажі сьогодні",
@@ -16,5 +20,55 @@
 		"products": "Товарів",
 		"customers": "Клієнтів",
 		"quickActions": "Швидкі дії"
+	},
+	"products": {
+		"title": "Товари",
+		"add": "Додати товар",
+		"edit": "Редагувати товар",
+		"delete": "Видалити товар",
+		"name": "Назва",
+		"category": "Категорія",
+		"sku": "Артикул",
+		"barcode": "Штрихкод",
+		"purchasePrice": "Закупівельна ціна",
+		"salePrice": "Ціна продажу",
+		"quantity": "Кількість",
+		"description": "Опис"
+	},
+	"customers": {
+		"title": "Клієнти",
+		"add": "Додати клієнта",
+		"name": "Ім'я",
+		"phone": "Телефон",
+		"email": "Електронна пошта",
+		"address": "Адреса"
+	},
+	"suppliers": {
+		"title": "Постачальники",
+		"add": "Додати постачальника",
+		"name": "Назва",
+		"phone": "Телефон",
+		"email": "Електронна пошта",
+		"address": "Адреса"
+	},
+	"sales": {
+		"title": "Продажі",
+		"new": "Нова продажа",
+		"customer": "Клієнт",
+		"total": "Сума",
+		"paymentMethod": "Спосіб оплати",
+		"status": "Статус"
+	},
+	"common": {
+		"add": "Додати",
+		"edit": "Редагувати",
+		"delete": "Видалити",
+		"save": "Зберегти",
+		"cancel": "Скасувати",
+		"search": "Пошук",
+		"actions": "Дії",
+		"status": "Статус",
+		"createdAt": "Створено",
+		"updatedAt": "Оновлено"
 	}
 }

@@ -2,13 +2,17 @@
 	"title": {
 		"dashboard": "Панель управления",
 		"products": "Товары",
+		"categories": "Категории",
 		"customers": "Клиенты",
-		"settings": "Настройки",
 		"sales": "Продажи",
 		"new": "Новый чек",
-		"invoices": "Чеки",
+		"invoices": "Чек",
 		"finance": "Финансы",
-		"suppliers": "Поставщики"
+		"suppliers": "Поставщики",
+		"purchases": "Закупки",
+		"stores": "Магазины",
+		"users": "Пользователи",
+		"settings": "Настройки"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",
@@ -16,5 +20,78 @@
 		"products": "Товаров",
 		"customers": "Клиентов",
 		"quickActions": "Быстрые действия"
-	}
+	},
+	"products": {
+		"title": "Товары",
+		"add": "Добавить товар",
+		"edit": "Редактировать товар",
+		"delete": "Удалить товар",
+		"name": "Название",
+		"category": "Категория",
+		"sku": "Артикул",
+		"barcode": "Штрихкод",
+		"purchasePrice": "Закупочная цена",
+		"salePrice": "Цена продажи",
+		"quantity": "Количество",
+		"description": "Описание"
+	},
+	"customers": {
+		"title": "Клиенты",
+		"add": "Добавить клиента",
+		"name": "Имя",
+		"phone": "Телефон",
+		"email": "Email",
+		"address": "Адрес"
+	},
+	"sales": {
+		"title": "Продажи",
+		"new": "Новая продажа",
+		"customer": "Клиент",
+		"total": "Сумма",
+		"paymentMethod": "Способ оплаты",
+		"status": "Статус"
+	},
+	"suppliers": {
+		"title": "Поставщики",
+		"add": "Добавить поставщика",
+		"name": "Название",
+		"phone": "Телефон",
+		"email": "Email",
+		"address": "Адрес"
+	},
+	"purchases": {
+		"title": "Закупки",
+		"add": "Новая закупка",
+		"supplier": "Поставщик",
+		"total": "Сумма",
+		"status": "Статус"
+	},
+	"stores": {
+		"title": "Магазины",
+		"add": "Добавить магазин",
+		"name": "Название",
+		"address": "Адрес",
+		"phone": "Телефон"
+	},
+	"users": {
+		"title": "Пользователи",
+		"add": "Добавить пользователя",
+		"login": "Логин",
+		"name": "Имя",
+		"role": "Роль",
+		"status": "Статус"
+	},
+	"common": {
+		"add": "Добавить",
+		"edit": "Редактировать",
+		"delete": "Удалить",
+		"save": "Сохранить",
+		"cancel": "Отмена",
+		"search": "Поиск",
+		"actions": "Действия",
+		"status": "Статус",
+		"createdAt": "Создано",
+		"updatedAt": "Обновлено"
+	},
+	"Чек": "Чек"
 }

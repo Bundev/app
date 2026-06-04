@@ -436,7 +436,7 @@ app.get('/invoices/:id', (req, res) => {
     );
 
     res.render('invoices', {
-        titleKey: `${req.__('title.sales')} №${id}`,
+        titleKey: req.__('title.invoices'),
         invoice,
         invoiceId: id,
         activeMenu: 'sales',
@@ -460,7 +460,7 @@ app.get('/invoices/:id', (req, res) => {
                 url: '/sales'
             },
             {
-                title: `${req.__('title.invoices')} №${id}`
+                title: req.__('title.invoices'),
             }
         ]
     });
