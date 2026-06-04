@@ -26,7 +26,7 @@
                 <div class="card-body">
 
                     <div class="text-muted">
-                        <%= __('salesTodayTitle') %>
+                        <%= __('dashboard.invoicesToday') %>
                     </div>
 
                     <h3 class="mt-2">
@@ -46,7 +46,7 @@
                 <div class="card-body">
 
                     <div class="text-muted">
-                        <%= __('invoicesTodayTitle') %>
+                        <%= __('dashboard.products') %>
                     </div>
 
                     <h3 class="mt-2">
@@ -66,7 +66,7 @@
                 <div class="card-body">
 
                     <div class="text-muted">
-                        <%= __('productsTitle') %>
+                        <%= __('dashboard.products') %>
                     </div>
 
                     <h3 class="mt-2">
@@ -86,7 +86,7 @@
                 <div class="card-body">
 
                     <div class="text-muted">
-                        <%= __('customersTitle') %>
+                        <%= __('dashboard.customers') %>
                     </div>
 
                     <h3 class="mt-2">
@@ -148,49 +148,49 @@
                                         <%= Number(invoice.total).toFixed(2) %> ₴
                                     </td>
                                     <td>
-<% if (invoice.status === 'new') { %>
+                                        <% if (invoice.status === 'new') { %>
 
-<span class="badge bg-primary">
-    Новый
-</span>
+                                        <span class="badge bg-primary">
+                                            Новый
+                                        </span>
 
-<% } else if (invoice.status === 'processing') { %>
+                                        <% } else if (invoice.status === 'processing') { %>
 
-<span class="badge bg-warning text-dark">
-    В обработке
-</span>
+                                        <span class="badge bg-warning text-dark">
+                                            В обработке
+                                        </span>
 
-<% } else if (invoice.status === 'packing') { %>
+                                        <% } else if (invoice.status === 'packing') { %>
 
-<span class="badge bg-orange">
-    Собирается
-</span>
+                                        <span class="badge bg-orange">
+                                            Собирается
+                                        </span>
 
-<% } else if (invoice.status === 'ready') { %>
+                                        <% } else if (invoice.status === 'ready') { %>
 
-<span class="badge bg-purple">
-    Готов к выдаче
-</span>
+                                        <span class="badge bg-purple">
+                                            Готов к выдаче
+                                        </span>
 
-<% } else if (invoice.status === 'delivery') { %>
+                                        <% } else if (invoice.status === 'delivery') { %>
 
-<span class="badge bg-info">
-    Доставляется
-</span>
+                                        <span class="badge bg-info">
+                                            Доставляется
+                                        </span>
 
-<% } else if (invoice.status === 'completed') { %>
+                                        <% } else if (invoice.status === 'completed') { %>
 
-<span class="badge bg-success">
-    Выполнен
-</span>
+                                        <span class="badge bg-success">
+                                            Выполнен
+                                        </span>
 
-<% } else if (invoice.status === 'cancelled') { %>
+                                        <% } else if (invoice.status === 'cancelled') { %>
 
-<span class="badge bg-danger">
-    Отменён
-</span>
+                                        <span class="badge bg-danger">
+                                            Отменён
+                                        </span>
 
-<% } %>
+                                        <% } %>
 
 
                                     </td>
@@ -215,7 +215,7 @@
 
                 <div class="card-header bg-white">
 
-                    <%= __('quickActions') %>
+                    <%= __('dashboard.quickActions') %>
 
                 </div>
 

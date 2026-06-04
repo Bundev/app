@@ -10,9 +10,11 @@
 		"finance": "Фінанси",
 		"suppliers": "Постачальники"
 	},
-	"salesTodayTitle": "Продажі сьогодні",
-	"invoicesTodayTitle": "Чеків сьогодні",
-	"productsTitle": "Товарів",
-	"customersTitle": "Клієнтів",
-	"quickActions": "Швидкі дії"
+	"dashboard": {
+		"salesToday": "Продажі сьогодні",
+		"invoicesToday": "Чеків сьогодні",
+		"products": "Товарів",
+		"customers": "Клієнтів",
+		"quickActions": "Швидкі дії"
+	}
 }
