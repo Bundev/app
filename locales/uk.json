@@ -19,7 +19,8 @@
 		"invoicesToday": "Чеків сьогодні",
 		"products": "Товарів",
 		"customers": "Клієнтів",
-		"quickActions": "Швидкі дії"
+		"quickActions": "Швидкі дії",
+		"productsToday": "Товарів сьогодні"
 	},
 	"products": {
 		"title": "Товари",

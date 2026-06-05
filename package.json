@@ -14,8 +14,10 @@
     "cookie-parser": "^1.4.7",
     "ejs": "^5.0.2",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "fuse.js": "^7.3.0",
     "i18n": "^0.15.3",
+    "pg": "^8.21.0",
     "xlsx": "^0.18.5"
   },
   "bin": "index.js"

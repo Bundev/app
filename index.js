@@ -3,6 +3,10 @@ const XLSX = require('xlsx');
 const Fuse = require('fuse.js');
 const cookieParser = require('cookie-parser');
 const i18n = require('i18n');
+const session = require('express-session');
+
+
+
 
 const fs = require('fs');
 const path = require('path');
@@ -15,6 +19,12 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+    secret: 'retailpro-secret',
+    resave: false,
+    saveUninitialized: false
+}));
 
 const port = 3000;
 
@@ -76,9 +86,52 @@ const products = data.filter(row =>
   }))
   .filter(item => item.name);
 
+function auth(req, res, next) {
+
+    if (!req.session.user) {
+
+        return res.redirect('/login');
+
+    }
+
+    next();
+
+}
+
+// Сохранение чека
+function getNextInvoiceNumber() {
+
+    const dir = path.join(__dirname, 'data', 'invoices');
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(dir);
+
+    let max = 0;
+
+    files.forEach(file => {
+
+        if (file.endsWith('.json')) {
+
+            const num = parseInt(
+                file.replace('.json', '')
+            );
+
+            if (!isNaN(num) && num > max) {
+                max = num;
+            }
+        }
+
+    });
+
+    return String(max + 1).padStart(6, '0');
+}
+
 
 // Роутер панели упражнения
-app.get('/', (req, res) => {
+app.get('/', auth, (req, res) => {
 
     const nextInvoiceNumber =
         getNextInvoiceNumber();
@@ -182,7 +235,7 @@ app.get('/', (req, res) => {
 
 });
 
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', auth, (req, res) => {
 
 
     const nextInvoiceNumber =
@@ -218,7 +271,10 @@ app.get('/dashboard', (req, res) => {
 
     const salesToday =
         invoices
-            .filter(invoice => invoice.date === today)
+            .filter(
+                invoice => invoice.date === today &&
+                invoice.status === 'completed'
+            )
             .reduce(
                 (sum, invoice) =>
                     sum + Number(invoice.total),
@@ -227,7 +283,8 @@ app.get('/dashboard', (req, res) => {
 
     const invoicesToday =
         invoices.filter(
-            invoice => invoice.date === today
+            invoice => invoice.date === today &&
+            invoice.status === 'completed'
         ).length;
 
     const clientsCount =
@@ -246,6 +303,25 @@ app.get('/dashboard', (req, res) => {
                     : 0),
             0
         );
+    const productsToday =
+    invoices
+        .filter(invoice =>
+            invoice.date === today &&
+            invoice.status === 'completed'
+        )
+        .reduce((total, invoice) => {
+
+            const items =
+                invoice.items || [];
+
+            return total +
+                items.reduce(
+                    (sum, item) =>
+                        sum + Number(item.qty || 0),
+                    0
+                );
+
+        }, 0);
 
     invoices.sort((a, b) =>
         Number(b.number) -
@@ -267,6 +343,7 @@ app.get('/dashboard', (req, res) => {
         invoicesToday,
         clientsCount,
         productsCount,
+        productsToday,
         script: [
             {
                 src: 'dashboard.js',
@@ -288,7 +365,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 // Продажи
-app.get('/sales', (req, res) => {
+app.get('/sales', auth, (req, res) => {
 
     const nextInvoiceNumber =
         getNextInvoiceNumber();
@@ -358,7 +435,7 @@ app.get('/sales', (req, res) => {
 });
 
 
-app.get('/search', (req, res) => {
+app.get('/search', auth, (req, res) => {
 
     const q = (req.query.q || '').toLowerCase();
 
@@ -383,7 +460,7 @@ app.get('/search', (req, res) => {
     
 });
 
-app.get('/new/:id', (req, res) => {
+app.get('/new/:id', auth, (req, res) => {
   const id = req.params.id;
 
   res.render('new', {
@@ -410,13 +487,12 @@ app.get('/new/:id', (req, res) => {
         url: '/sales'
       },
       {
-        title: `${req.__('title.new')} №${id}`, 
+        title: req.__('title.new'), 
       }
     ]
   });
 });
-
-app.get('/invoices/:id', (req, res) => {
+app.get('/invoices/:id', auth, (req, res) => {
 
     const id = req.params.id;
 
@@ -466,9 +542,8 @@ app.get('/invoices/:id', (req, res) => {
     });
 
 });
-
 // Роутер товаров
-app.get('/products', (req, res) => {
+app.get('/products', auth, (req, res) => {
 
     res.render('products', {
         titleKey: 'title.products',
@@ -496,38 +571,65 @@ app.get('/products', (req, res) => {
     });
 
 });
-// Сохранение чека
-function getNextInvoiceNumber() {
-
-    const dir = path.join(__dirname, 'data', 'invoices');
-
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+app.get('/login', (req, res) => {
+    if (req.session.user) {
+        return res.redirect('/dashboard');
     }
-
-    const files = fs.readdirSync(dir);
-
-    let max = 0;
-
-    files.forEach(file => {
-
-        if (file.endsWith('.json')) {
-
-            const num = parseInt(
-                file.replace('.json', '')
-            );
-
-            if (!isNaN(num) && num > max) {
-                max = num;
+    res.render('login', {
+        titleKey: 'login',
+        script: [
+            {
+                src: 'login.js',
             }
+        ],
+        style: [
+            {
+                href: 'login.css',
+            }
+        ],
+    });
+
+});
+
+
+app.get('/logout', (req, res) => {
+
+    req.session.destroy(err => {
+
+        if (err) {
+            return res.redirect('/dashboard');
         }
+
+        res.redirect('/login');
 
     });
 
-    return String(max + 1).padStart(6, '0');
-}
+});
+
+app.post('/login', (req, res) => {
+
+    const { login, password } = req.body;
+
+    if (
+        login === 'admin' &&
+        password === '123456'
+    ) {
+
+        req.session.user = {
+            login
+        };
+
+        return res.redirect('/dashboard');
+    }
+
+    res.redirect('/login');
+
+});
+
+
+
 // Сохранение чека
-app.post('/save-invoice', (req, res) => {
+app.post('/save-invoice', auth, (req, res) => {
 
     const invoice = req.body;
 
@@ -578,6 +680,7 @@ app.get('/lang/:lang', (req, res) => {
 
     res.redirect(req.get('Referer') || '/');
 });
+
 
 
 app.listen(port, () => {

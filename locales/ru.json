@@ -18,6 +18,7 @@
 		"salesToday": "Продажи сегодня",
 		"invoicesToday": "Чеки сегодня",
 		"products": "Товаров",
+		"productsToday": "Товаров сегодня",
 		"customers": "Клиентов",
 		"quickActions": "Быстрые действия"
 	},
@@ -93,5 +94,6 @@
 		"createdAt": "Создано",
 		"updatedAt": "Обновлено"
 	},
-	"Чек": "Чек"
+	"Чек": "Чек",
+	"login": "login"
 }
