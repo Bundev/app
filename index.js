@@ -81,7 +81,11 @@ const products = data.filter(row =>
       .replace(/[(),№]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim(),
-    price: row[13]+(row[13] * 10 / 100),
+    price: Math.round(
+    row[13] > 100
+        ? row[13] * 1.1
+        : row[13] * 1.2
+    ),
     stock: row[14]
   }))
   .filter(item => item.name);
@@ -133,6 +137,8 @@ function getNextInvoiceNumber() {
 // Роутер панели упражнения
 app.get('/', auth, (req, res) => {
 
+   
+
     const nextInvoiceNumber =
         getNextInvoiceNumber();
 
@@ -166,7 +172,10 @@ app.get('/', auth, (req, res) => {
 
     const salesToday =
         invoices
-            .filter(invoice => invoice.date === today)
+            .filter(
+                invoice => invoice.date === today &&
+                invoice.status === 'completed'
+            )
             .reduce(
                 (sum, invoice) =>
                     sum + Number(invoice.total),
@@ -175,7 +184,8 @@ app.get('/', auth, (req, res) => {
 
     const invoicesToday =
         invoices.filter(
-            invoice => invoice.date === today
+            invoice => invoice.date === today &&
+            invoice.status === 'completed'
         ).length;
 
     const clientsCount =
@@ -194,6 +204,25 @@ app.get('/', auth, (req, res) => {
                     : 0),
             0
         );
+    const productsToday =
+    invoices
+        .filter(invoice =>
+            invoice.date === today &&
+            invoice.status === 'completed'
+        )
+        .reduce((total, invoice) => {
+
+            const items =
+                invoice.items || [];
+
+            return total +
+                items.reduce(
+                    (sum, item) =>
+                        sum + Number(item.qty || 0),
+                    0
+                );
+
+        }, 0);
 
     invoices.sort((a, b) =>
         Number(b.number) -
@@ -215,6 +244,7 @@ app.get('/', auth, (req, res) => {
         invoicesToday,
         clientsCount,
         productsCount,
+        productsToday,
         script: [
             {
                 src: 'dashboard.js',
@@ -232,7 +262,6 @@ app.get('/', auth, (req, res) => {
             }
         ]
     });
-
 });
 
 app.get('/dashboard', auth, (req, res) => {
