@@ -1,11 +1,12 @@
 const db = require('./db');
 
-db.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log(res.rows);
+async function test() {
+  try {
+    const [rows] = await db.query('SELECT DATABASE() as db');
+    console.log(rows);
+  } catch (err) {
+    console.error(err);
   }
+}
 
-  db.end();
-});
+test();
