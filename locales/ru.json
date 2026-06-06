@@ -12,7 +12,8 @@
 		"purchases": "Закупки",
 		"stores": "Магазины",
 		"users": "Пользователи",
-		"settings": "Настройки"
+		"settings": "Настройки",
+		"register": "title.register"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",

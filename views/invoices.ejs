@@ -27,50 +27,7 @@
                                 </div>
 
                                 <div>
-                                    <% if (invoice.status === 'new') { %>
-
-                                    <span class="badge bg-primary">
-                                        Новый
-                                    </span>
-
-                                    <% } else if (invoice.status === 'processing') { %>
-
-                                    <span class="badge bg-warning text-dark">
-                                        В обработке
-                                    </span>
-
-                                    <% } else if (invoice.status === 'packing') { %>
-
-                                    <span class="badge bg-orange">
-                                        Собирается
-                                    </span>
-
-                                    <% } else if (invoice.status === 'ready') { %>
-
-                                    <span class="badge bg-purple">
-                                        Готов к выдаче
-                                    </span>
-
-                                    <% } else if (invoice.status === 'delivery') { %>
-
-                                    <span class="badge bg-info">
-                                        Доставляется
-                                    </span>
-
-                                    <% } else if (invoice.status === 'completed') { %>
-
-                                    <span class="badge bg-success">
-                                        Выполнен
-                                    </span>
-
-                                    <% } else if (invoice.status === 'cancelled') { %>
-
-                                    <span class="badge bg-danger">
-                                        Отменён
-                                    </span>
-
-                                    <% } %>
-
+                                    <span class="badge <%= statuses[invoice.status].class %>"><%= statuses[invoice.status].title %></span>
                                 </div>
 
                             </div>

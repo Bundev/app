@@ -57,13 +57,18 @@
                                     Все статусы
                                 </option>
 
-                                <option value="Оплачен">
-                                    Оплачен
-                                </option>
 
-                                <option value="В обработке">
-                                    В обработке
-                                </option>
+
+                                 <% Object.keys(statuses).forEach(key => { %>
+
+                                    <option value="<%= statuses[key].title %>">
+
+                                        <%= statuses[key].title %>
+
+                                    </option>
+
+                                <% }) %>
+
 
                             </select>
                         </div>

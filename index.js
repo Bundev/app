@@ -76,7 +76,7 @@ const products = data.filter(row =>
   ).map((row, index) => ({
     id: index + 1,
     name: row[4]
-      ?.replace(/,\s*шт\.?$/i, '')
+      ?.replace(/,\s*(шт|м)\.?$/i, '')
       .trim(),
     unit: row[4]
         .toLowerCase()
@@ -85,7 +85,7 @@ const products = data.filter(row =>
             : 'шт',
     searchName: row[4]?.toLowerCase()
       ?.toLowerCase()
-      .replace(/,\s*шт\.?$/i, '')
+      .replace(/,\s*(шт|м)\.?$/i, '')
       .replace(/[(),№]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim(),
@@ -500,6 +500,24 @@ app.get('/login', (req, res) => {
         style: [
             {
                 href: 'login.css',
+            }
+        ],
+    });
+
+});
+
+app.get('/register', (req, res) => {
+
+    res.render('register', {
+        titleKey: 'title.register',
+         script: [
+            {
+                src: 'register.js',
+            }
+        ],
+        style: [
+            {
+                href: 'register.css',
             }
         ],
     });
