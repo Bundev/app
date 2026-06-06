@@ -22,7 +22,7 @@
                                     </h2>
 
                                     <small class="text-muted">
-                                        от <%= invoice.date %>
+                                        от <%= new Date(invoice.date).toLocaleDateString('ru-RU') %>
                                     </small>
                                 </div>
 
@@ -105,7 +105,7 @@
                 </div>
                 
                 <div class="col-md-2">
-                    <% if ('admin' === 'admin') { %>
+                    <% if (user && user.role === 'admin') { %>
                     <a href="/invoice/delete/<%= invoice.number %>"
                        class="btn btn-danger w-100"
                        onclick="return confirm('Удалить чек безвозвратно?')">

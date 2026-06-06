@@ -30,17 +30,17 @@
         <div class="text-end me-3">
 
             <div class="fw-bold">
-                Иван Иванов
+                <%= user.name %>
             </div>
 
             <small class="text-light">
-                Администратор
+                <%= roles[user.role] %>
             </small>
 
         </div>
 
         <img
-            src="/img/user_avatar/images (2).jpg"
+            src="<%= user.avatar %>"
             class="rounded-circle border"
             width="42"
             height="42">
@@ -48,13 +48,6 @@
     </a>
 
     <ul class="dropdown-menu dropdown-menu-end shadow">
-
-        <li>
-            <h6 class="dropdown-header">
-                👤 Иван Иванов
-            </h6>
-        </li>
-
         <li>
             <a class="dropdown-item"
                href="/profile">

@@ -28,7 +28,65 @@
                         </p>
 
                     </div>
+                    <% if (error) { %>
 
+                    <div class="card border-danger mb-3">
+
+                    <div class="card-body text-danger">
+
+                        <h5 class="card-title">
+
+                            <i class="bi bi-shield-exclamation"></i>
+
+                            Ошибка регистрации
+
+                        </h5>
+
+                        <p class="mb-0">
+
+                            <%= error %>
+
+                        </p>
+
+                    </div>
+
+                    </div>
+
+                    <% } %>
+                    <% if (success) { %>
+
+                    <div class="alert alert-success alert-dismissible fade show">
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        <%= success %>
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                        </button>
+
+                    </div>
+
+                    <% } %>
+                    <% if (error) { %>
+
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+
+                        <%= error %>
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                        </button>
+
+                    </div>
+
+                    <% } %>
                     <form method="POST"
                           action="/register">
 
@@ -41,6 +99,19 @@
                             <input
                                 type="text"
                                 name="name"
+                                class="form-control"
+                                required>
+
+                        </div>
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Email
+                            </label>
+
+                            <input
+                                type="email"
+                                name="email"
                                 class="form-control"
                                 required>
 
@@ -59,7 +130,8 @@
                                 required>
 
                         </div>
-
+                        
+                        
                         <div class="mb-3">
 
                             <label class="form-label">
@@ -73,26 +145,18 @@
                                 required>
 
                         </div>
-
+                        
                         <div class="mb-3">
 
                             <label class="form-label">
-                                Роль
+                                Повторите пароль
                             </label>
 
-                            <select
-                                name="role"
-                                class="form-select">
-
-                                <option value="manager">
-                                    Менеджер
-                                </option>
-
-                                <option value="admin">
-                                    Администратор
-                                </option>
-
-                            </select>
+                            <input
+                                type="password"
+                                name="password2"
+                                class="form-control"
+                                required>
 
                         </div>
 

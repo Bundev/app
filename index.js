@@ -4,8 +4,11 @@ const Fuse = require('fuse.js');
 const cookieParser = require('cookie-parser');
 const i18n = require('i18n');
 const session = require('express-session');
-const statuses =require('./config/statuses');
-
+const statuses = require('./config/statuses');
+const roles = require('./config/roles');
+const db = require('./config/db');
+const bcrypt = require('bcrypt');
+const port = 3000;
 
 
 const fs = require('fs');
@@ -19,17 +22,38 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(session({
-    secret: 'retailpro-secret',
+    secret: 'mycrm_secret',
     resave: false,
     saveUninitialized: false
 }));
+
+app.use((req, res, next) => {
+
+    res.locals.user =
+        req.session.user || null;
+
+    next();
+
+});
 
 app.use(express.urlencoded({
     extended: true
 }));
 
-const port = 3000;
+app.use((req, res, next) => {
+
+    res.locals.roles = {
+        admin: 'Администратор',
+        manager: 'Менеджер',
+        seller: 'Продавец'
+    };
+
+    next();
+
+});
+
 
 app.use(cookieParser());
 
@@ -97,6 +121,35 @@ const products = data.filter(row =>
     stock: row[14]
   }))
   .filter(item => item.name);
+
+
+  (async () => {
+
+    try {
+
+        const [rows] =
+            await db.execute(
+                'SELECT NOW() AS time'
+            );
+
+        console.log(
+            '✅ База подключена'
+        );
+
+        console.log(rows[0]);
+
+    } catch (error) {
+
+        console.error(
+            '❌ Ошибка подключения:',
+            error
+        );
+
+    }
+
+})();
+
+
 
 function auth(req, res, next) {
 
@@ -271,7 +324,27 @@ function renderDashboard(req, res) {
     });
 }
 
+function renderLogin(res, error = null, success = null) {
 
+    return res.render('login', {
+        titleKey: 'title.login',
+        error,
+        success,
+
+        script: [
+            {
+                src: 'login.js'
+            }
+        ],
+
+        style: [
+            {
+                href: 'login.css'
+            }
+        ]
+    });
+
+}
 // Роутер панели упражнения
 app.get('/', auth, renderDashboard);
 app.get('/dashboard', auth, renderDashboard);
@@ -486,12 +559,19 @@ app.get('/products', auth, (req, res) => {
     });
 
 });
+// Вход в аккаунт
 app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
     }
+
+    const success = req.session.success;
+    req.session.success = null;
+
     res.render('login', {
-        titleKey: 'login',
+        titleKey: 'title.login',
+        error: null,
+        success,
         script: [
             {
                 src: 'login.js',
@@ -506,10 +586,81 @@ app.get('/login', (req, res) => {
 
 });
 
+app.post('/login', async (req, res) => {
+
+    try {
+
+        const {
+            login,
+            password
+        } = req.body;
+
+        const [rows] =
+            await db.execute(
+                `
+                SELECT *
+                FROM user
+                WHERE login = ?
+                `,
+                [login]
+            );
+
+        if (!rows.length) {
+
+            return renderLogin(
+                res,
+                'Неверный логин или пароль'
+            );
+        }
+
+        const user =
+            rows[0];
+
+        const validPassword =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
+
+        if (!validPassword) {
+
+            return renderLogin(
+                res,
+                'Неверный логин или пароль'
+            );
+
+        }
+
+        req.session.user = {
+
+            id: user.id,
+            name: user.name,
+            login: user.login,
+            role: user.role,
+            avatar: user.avatar
+
+        };
+
+        res.redirect('/dashboard');
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.send(
+            'Ошибка входа'
+        );
+
+    }
+
+});
+//Регистрация
 app.get('/register', (req, res) => {
 
     res.render('register', {
         titleKey: 'title.register',
+        error: null,
+        success: null,
          script: [
             {
                 src: 'register.js',
@@ -524,14 +675,132 @@ app.get('/register', (req, res) => {
 
 });
 
+app.post('/register', async (req, res) => {
+    
+    try {
+        const {
+            name,
+            login,
+            email,
+            password,
+            password2
+        } = req.body;
 
+        if (req.body.password !== req.body.password2) {
+
+            return res.render('register', {
+
+                titleKey: 'title.register',
+
+                error: 'Пароли не совпадают'
+
+            });
+        }
+
+        const hashedPassword =
+            await bcrypt.hash(
+                password,
+                10
+            );
+
+        const [exists] =
+            await db.execute(
+                `
+                SELECT id
+                FROM user
+                WHERE login = ?
+                   OR email = ?
+                `,
+                [
+                    login,
+                    email
+                ]
+            );
+
+        if (exists.length) {
+
+            return res.render('register', {
+
+                titleKey: 'title.register',
+
+                error: 'Пользователь с таким логином или email уже существует'
+
+            });
+
+        }
+
+        const [rows] =
+            await db.execute(
+                `
+                SELECT COALESCE(MAX(id), 0) + 1 AS nextId
+                FROM user
+                `
+            );
+
+        const nextId =
+            rows[0].nextId;
+
+        await db.execute(
+            `
+            INSERT INTO user
+            (
+                id,
+                name,
+                email,
+                login,
+                password,
+                role,
+                avatar
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            `,
+            [
+                nextId,
+                name,
+                email,
+                login,
+                hashedPassword,
+                'admin',
+                '/img/default-avatar.png'
+            ]
+        );
+        req.session.success =
+            'Пользователь успешно зарегистрирован';
+
+        res.redirect('/login');
+        // res.redirect('/login');
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).send(
+            'Ошибка регистрации'
+        );
+
+    }
+
+});
+
+app.get('/users', async (req, res) => {
+
+    const [users] =
+        await db.execute(
+            'SELECT * FROM user'
+        );
+
+    res.send(`
+        <pre>
+        ${JSON.stringify(users, null, 4)}
+        </pre>
+        `);
+
+});
+
+// Выход из акаунта
 app.get('/logout', (req, res) => {
 
-    req.session.destroy(err => {
-
-        if (err) {
-            return res.redirect('/dashboard');
-        }
+    req.session.destroy(() => {
 
         res.redirect('/login');
 
@@ -594,25 +863,7 @@ app.get('/invoice/:id/delete-item/:index', (req, res) => {
 
 });
 
-app.post('/login', (req, res) => {
 
-    const { login, password } = req.body;
-
-    if (
-        login === 'admin' &&
-        password === '123456'
-    ) {
-
-        req.session.user = {
-            login
-        };
-
-        return res.redirect('/dashboard');
-    }
-
-    res.redirect('/login');
-
-});
 
 
 
