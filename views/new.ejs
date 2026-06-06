@@ -46,37 +46,26 @@
             </div>
 
             <div class="col-md-3">
-                <select class="form-select" id="status">
-                    <option value="">
-                        Статус заказа
-                    </option>
-                    <option value="new">
-                        Новый
-                    </option>
+                <select
+                    name="status"
+                    id="status"
+                    class="form-select">
 
-                    <option value="processing">
-                        В обработке
-                    </option>
+                    <% Object.keys(statuses).forEach(key => { %>
 
-                    <option value="packing">
-                        Собирается
-                    </option>
+                        <option
+                            value="<%= key %>"
+                            <%= (typeof invoice !== 'undefined'
+                                ? invoice.status === key
+                                : key === 'new')
+                                ? 'selected'
+                                : '' %>>
 
-                    <option value="ready">
-                        Готов к выдаче
-                    </option>
+                            <%= statuses[key].title %>
 
-                    <option value="delivery">
-                        Доставляется
-                    </option>
+                        </option>
 
-                    <option value="completed">
-                        Выполнен
-                    </option>
-
-                    <option value="cancelled">
-                        Отменён
-                    </option>
+                    <% }) %>
 
                 </select>
             </div>

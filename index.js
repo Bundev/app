@@ -4,7 +4,7 @@ const Fuse = require('fuse.js');
 const cookieParser = require('cookie-parser');
 const i18n = require('i18n');
 const session = require('express-session');
-
+const statuses =require('./config/statuses');
 
 
 
@@ -19,11 +19,14 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(session({
     secret: 'retailpro-secret',
     resave: false,
     saveUninitialized: false
+}));
+
+app.use(express.urlencoded({
+    extended: true
 }));
 
 const port = 3000;
@@ -75,6 +78,11 @@ const products = data.filter(row =>
     name: row[4]
       ?.replace(/,\s*шт\.?$/i, '')
       .trim(),
+    unit: row[4]
+        .toLowerCase()
+        .includes(', м')
+            ? 'м'
+            : 'шт',
     searchName: row[4]?.toLowerCase()
       ?.toLowerCase()
       .replace(/,\s*шт\.?$/i, '')
@@ -134,264 +142,139 @@ function getNextInvoiceNumber() {
 }
 
 
+function renderDashboard(req, res) {
+  
+
+    const nextInvoiceNumber =
+        getNextInvoiceNumber();
+
+    const invoicesDir = path.join(
+        __dirname,
+        'data',
+        'invoices'
+    );
+
+    let invoices = [];
+
+    if (fs.existsSync(invoicesDir)) {
+
+        const files = fs.readdirSync(invoicesDir);
+
+        invoices = files.map(file => {
+
+            return JSON.parse(
+                fs.readFileSync(
+                    path.join(invoicesDir, file),
+                    'utf8'
+                )
+            );
+
+        });
+
+    }
+
+    const today =
+        new Date().toISOString().split('T')[0];
+
+    const salesToday =
+        invoices
+            .filter(
+                invoice => invoice.date === today &&
+                invoice.status === 'completed'
+            )
+            .reduce(
+                (sum, invoice) =>
+                    sum + Number(invoice.total),
+                0
+            );
+
+    const invoicesToday =
+        invoices.filter(
+            invoice => invoice.date === today &&
+            invoice.status === 'completed'
+        ).length;
+
+    const clientsCount =
+        new Set(
+            invoices.map(
+                invoice => invoice.customer
+            )
+        ).size;
+
+    const productsCount =
+        invoices.reduce(
+            (total, invoice) =>
+                total +
+                (invoice.items
+                    ? invoice.items.length
+                    : 0),
+            0
+        );
+    const productsToday =
+    invoices
+        .filter(invoice =>
+            invoice.date === today &&
+            invoice.status === 'completed'
+        )
+        .reduce((total, invoice) => {
+
+            const items =
+                invoice.items || [];
+
+            return total +
+                items.reduce(
+                    (sum, item) =>
+                        sum + Number(item.qty || 0),
+                    0
+                );
+
+        }, 0);
+
+    invoices.sort((a, b) =>
+        Number(b.number) -
+        Number(a.number)
+    );
+
+    const latestInvoices =
+        invoices.slice(0, 10);
+
+    res.render('dashboard', {
+        titleKey: 'title.dashboard',
+        activeMenu: 'dashboard',
+
+        nextInvoiceNumber,
+
+        invoices: latestInvoices,
+
+        salesToday,
+        invoicesToday,
+        clientsCount,
+        productsCount,
+        productsToday,
+        statuses,
+        script: [
+            {
+                src: 'dashboard.js',
+            }
+        ],
+        style: [
+            {
+                href: 'dashboard.css',
+            }
+        ],
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            }
+        ]
+    });
+}
+
+
 // Роутер панели упражнения
-app.get('/', auth, (req, res) => {
-
-   
-
-    const nextInvoiceNumber =
-        getNextInvoiceNumber();
-
-    const invoicesDir = path.join(
-        __dirname,
-        'data',
-        'invoices'
-    );
-
-    let invoices = [];
-
-    if (fs.existsSync(invoicesDir)) {
-
-        const files = fs.readdirSync(invoicesDir);
-
-        invoices = files.map(file => {
-
-            return JSON.parse(
-                fs.readFileSync(
-                    path.join(invoicesDir, file),
-                    'utf8'
-                )
-            );
-
-        });
-
-    }
-
-    const today =
-        new Date().toISOString().split('T')[0];
-
-    const salesToday =
-        invoices
-            .filter(
-                invoice => invoice.date === today &&
-                invoice.status === 'completed'
-            )
-            .reduce(
-                (sum, invoice) =>
-                    sum + Number(invoice.total),
-                0
-            );
-
-    const invoicesToday =
-        invoices.filter(
-            invoice => invoice.date === today &&
-            invoice.status === 'completed'
-        ).length;
-
-    const clientsCount =
-        new Set(
-            invoices.map(
-                invoice => invoice.customer
-            )
-        ).size;
-
-    const productsCount =
-        invoices.reduce(
-            (total, invoice) =>
-                total +
-                (invoice.items
-                    ? invoice.items.length
-                    : 0),
-            0
-        );
-    const productsToday =
-    invoices
-        .filter(invoice =>
-            invoice.date === today &&
-            invoice.status === 'completed'
-        )
-        .reduce((total, invoice) => {
-
-            const items =
-                invoice.items || [];
-
-            return total +
-                items.reduce(
-                    (sum, item) =>
-                        sum + Number(item.qty || 0),
-                    0
-                );
-
-        }, 0);
-
-    invoices.sort((a, b) =>
-        Number(b.number) -
-        Number(a.number)
-    );
-
-    const latestInvoices =
-        invoices.slice(0, 10);
-
-    res.render('dashboard', {
-        titleKey: 'title.dashboard',
-        activeMenu: 'dashboard',
-
-        nextInvoiceNumber,
-
-        invoices: latestInvoices,
-
-        salesToday,
-        invoicesToday,
-        clientsCount,
-        productsCount,
-        productsToday,
-        script: [
-            {
-                src: 'dashboard.js',
-            }
-        ],
-        style: [
-            {
-                href: 'dashboard.css',
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            }
-        ]
-    });
-});
-
-app.get('/dashboard', auth, (req, res) => {
-
-
-    const nextInvoiceNumber =
-        getNextInvoiceNumber();
-
-    const invoicesDir = path.join(
-        __dirname,
-        'data',
-        'invoices'
-    );
-
-    let invoices = [];
-
-    if (fs.existsSync(invoicesDir)) {
-
-        const files = fs.readdirSync(invoicesDir);
-
-        invoices = files.map(file => {
-
-            return JSON.parse(
-                fs.readFileSync(
-                    path.join(invoicesDir, file),
-                    'utf8'
-                )
-            );
-
-        });
-
-    }
-
-    const today =
-        new Date().toISOString().split('T')[0];
-
-    const salesToday =
-        invoices
-            .filter(
-                invoice => invoice.date === today &&
-                invoice.status === 'completed'
-            )
-            .reduce(
-                (sum, invoice) =>
-                    sum + Number(invoice.total),
-                0
-            );
-
-    const invoicesToday =
-        invoices.filter(
-            invoice => invoice.date === today &&
-            invoice.status === 'completed'
-        ).length;
-
-    const clientsCount =
-        new Set(
-            invoices.map(
-                invoice => invoice.customer
-            )
-        ).size;
-
-    const productsCount =
-        invoices.reduce(
-            (total, invoice) =>
-                total +
-                (invoice.items
-                    ? invoice.items.length
-                    : 0),
-            0
-        );
-    const productsToday =
-    invoices
-        .filter(invoice =>
-            invoice.date === today &&
-            invoice.status === 'completed'
-        )
-        .reduce((total, invoice) => {
-
-            const items =
-                invoice.items || [];
-
-            return total +
-                items.reduce(
-                    (sum, item) =>
-                        sum + Number(item.qty || 0),
-                    0
-                );
-
-        }, 0);
-
-    invoices.sort((a, b) =>
-        Number(b.number) -
-        Number(a.number)
-    );
-
-    const latestInvoices =
-        invoices.slice(0, 10);
-
-    res.render('dashboard', {
-        titleKey: 'title.dashboard',
-        activeMenu: 'dashboard',
-
-        nextInvoiceNumber,
-
-        invoices: latestInvoices,
-
-        salesToday,
-        invoicesToday,
-        clientsCount,
-        productsCount,
-        productsToday,
-        script: [
-            {
-                src: 'dashboard.js',
-            }
-        ],
-        style: [
-            {
-                href: 'dashboard.css',
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            }
-        ]
-    });
-
-});
+app.get('/', auth, renderDashboard);
+app.get('/dashboard', auth, renderDashboard);
 
 // Продажи
 app.get('/sales', auth, (req, res) => {
@@ -439,6 +322,7 @@ app.get('/sales', auth, (req, res) => {
         nextInvoiceNumber,
         invoices,
         activeMenu: 'sales',
+        statuses,
         script: [
             {
                 src: 'sales.js',
@@ -496,6 +380,7 @@ app.get('/new/:id', auth, (req, res) => {
     titleKey: 'title.new',
     invoiceId: id,
     activeMenu: 'sales',
+    statuses,
     script: [
             {
                 src: 'new.js',
@@ -545,6 +430,7 @@ app.get('/invoices/:id', auth, (req, res) => {
         invoice,
         invoiceId: id,
         activeMenu: 'sales',
+        statuses,
         script: [
             {
                 src: 'invoices.js',
@@ -635,6 +521,61 @@ app.get('/logout', (req, res) => {
 
 });
 
+app.get('/invoice/:id/delete-item/:index', (req, res) => {
+
+    const invoiceId =
+        req.params.id;
+
+    const itemIndex =
+        Number(req.params.index);
+
+    const filePath = path.join(
+        __dirname,
+        'data',
+        'invoices',
+        `${invoiceId}.json`
+    );
+
+    if (!fs.existsSync(filePath)) {
+
+        return res.redirect('/sales');
+
+    }
+
+    const invoice = JSON.parse(
+        fs.readFileSync(
+            filePath,
+            'utf8'
+        )
+    );
+
+    invoice.items.splice(
+        itemIndex,
+        1
+    );
+
+    invoice.total =
+        invoice.items.reduce(
+            (sum, item) =>
+                sum + Number(item.sum),
+            0
+        );
+
+    fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+            invoice,
+            null,
+            2
+        )
+    );
+
+    res.redirect(
+        `/invoices/${invoiceId}`
+    );
+
+});
+
 app.post('/login', (req, res) => {
 
     const { login, password } = req.body;
@@ -693,6 +634,89 @@ app.post('/save-invoice', auth, (req, res) => {
 
         }
     );
+
+});
+
+app.post('/invoice/status/:id', (req, res) => {
+
+    const invoiceId =
+        req.params.id;
+
+    const filePath = path.join(
+        __dirname,
+        'data',
+        'invoices',
+        `${invoiceId}.json`
+    );
+
+    if (!fs.existsSync(filePath)) {
+
+        return res.redirect('/sales');
+
+    }
+
+    const invoice = JSON.parse(
+        fs.readFileSync(
+            filePath,
+            'utf8'
+        )
+    );
+
+    invoice.status =
+        req.body.status;
+
+    fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+            invoice,
+            null,
+            2
+        )
+    );
+
+    res.redirect(
+        `/invoices/${invoiceId}`
+    );
+
+});
+
+app.post('/invoice/delete/:id', (req, res) => {
+
+    const filePath = path.join(
+        __dirname,
+        'data',
+        'invoices',
+        `${req.params.id}.json`
+    );
+
+    if (fs.existsSync(filePath)) {
+
+        fs.unlinkSync(filePath);
+
+    }
+
+    res.redirect('/sales');
+
+});
+app.get('/invoice/delete/:id', (req, res) => {
+
+    const invoiceId =
+        req.params.id;
+
+    const filePath = path.join(
+        __dirname,
+        'data',
+        'invoices',
+        `${invoiceId}.json`
+    );
+
+    if (fs.existsSync(filePath)) {
+
+        fs.unlinkSync(filePath);
+
+    }
+
+    res.redirect('/sales');
 
 });
 

@@ -1,0 +1,15 @@
+{
+  "customer": "Основной покупатель",
+  "status": "completed",
+  "date": "2026-06-06",
+  "total": 286,
+  "items": [
+    {
+      "name": "Лейка 1 позиционная + шланг ZERIX SHOWER SET-01 (ZX3068)",
+      "qty": 1,
+      "price": 286,
+      "sum": 286
+    }
+  ],
+  "number": "000019"
+}

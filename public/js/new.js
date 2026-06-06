@@ -29,7 +29,7 @@
       }
       
       resultsDiv.innerHTML = products.map(product => `
-        <div class="product" data-name='${product.name}' title='${product.name}'  data-price="${product.price}">
+        <div class="product" data-name='${product.name}' title='${product.name}' data-unit="${product.unit}" data-price="${product.price}">
           <div class="nomin" >${product.name}</div>
           <div class="price">${product.price}</div>
         </div>
@@ -103,7 +103,7 @@ function addProduct(product) {
             min="1">
     </td>
 
-    <td>Шт</td>
+    <td>${product.unit}</td>
 
     <td class="pricepoduct">
         ${product.price.toFixed(2)}
@@ -141,6 +141,7 @@ resultsDiv.addEventListener('click', (e) => {
       addProduct({
           
           name: item.dataset.name,
+          unit: item.dataset.unit,
           price: Number(item.dataset.price)
       });
 

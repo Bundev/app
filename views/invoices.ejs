@@ -29,47 +29,47 @@
                                 <div>
                                     <% if (invoice.status === 'new') { %>
 
-<span class="badge bg-primary">
-    Новый
-</span>
+                                    <span class="badge bg-primary">
+                                        Новый
+                                    </span>
 
-<% } else if (invoice.status === 'processing') { %>
+                                    <% } else if (invoice.status === 'processing') { %>
 
-<span class="badge bg-warning text-dark">
-    В обработке
-</span>
+                                    <span class="badge bg-warning text-dark">
+                                        В обработке
+                                    </span>
 
-<% } else if (invoice.status === 'packing') { %>
+                                    <% } else if (invoice.status === 'packing') { %>
 
-<span class="badge bg-orange">
-    Собирается
-</span>
+                                    <span class="badge bg-orange">
+                                        Собирается
+                                    </span>
 
-<% } else if (invoice.status === 'ready') { %>
+                                    <% } else if (invoice.status === 'ready') { %>
 
-<span class="badge bg-purple">
-    Готов к выдаче
-</span>
+                                    <span class="badge bg-purple">
+                                        Готов к выдаче
+                                    </span>
 
-<% } else if (invoice.status === 'delivery') { %>
+                                    <% } else if (invoice.status === 'delivery') { %>
 
-<span class="badge bg-info">
-    Доставляется
-</span>
+                                    <span class="badge bg-info">
+                                        Доставляется
+                                    </span>
 
-<% } else if (invoice.status === 'completed') { %>
+                                    <% } else if (invoice.status === 'completed') { %>
 
-<span class="badge bg-success">
-    Выполнен
-</span>
+                                    <span class="badge bg-success">
+                                        Выполнен
+                                    </span>
 
-<% } else if (invoice.status === 'cancelled') { %>
+                                    <% } else if (invoice.status === 'cancelled') { %>
 
-<span class="badge bg-danger">
-    Отменён
-</span>
+                                    <span class="badge bg-danger">
+                                        Отменён
+                                    </span>
 
-<% } %>
+                                    <% } %>
 
                                 </div>
 
@@ -77,6 +77,7 @@
 
                         </div>
                     </div>
+
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
 
@@ -90,6 +91,83 @@
 
                         </div>
                     </div>
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-white">
+
+        <h5 class="mb-0">
+            Управление заказом
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <form action="/invoice/status/<%= invoice.number %>"
+              method="POST">
+
+            <div class="row align-items-end">
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Статус заказа
+                    </label>
+
+                    <select
+                        name="status"
+                        class="form-select">
+
+                        <% Object.keys(statuses).forEach(key => { %>
+
+                            <option
+                                value="<%= key %>"
+                                <%= invoice.status === key ? 'selected' : '' %>>
+
+                                <%= statuses[key].title %>
+
+                            </option>
+
+                        <% }) %>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary w-100">
+
+                        <i class="bi bi-check-lg"></i>
+                        Сохранить
+
+                    </button>
+
+                </div>
+                
+                <div class="col-md-2">
+                    <% if ('admin' === 'admin') { %>
+                    <a href="/invoice/delete/<%= invoice.number %>"
+                       class="btn btn-danger w-100"
+                       onclick="return confirm('Удалить чек безвозвратно?')">
+
+                        <i class="bi bi-trash"></i>
+                        Удалить
+
+                    </a>
+                    <% } %>
+                </div>
+                
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
                     <div class="card border-0 shadow-sm">
 
                         <div class="card-body p-0">
@@ -104,7 +182,9 @@
                                         <th>Кол-во</th>
                                         <th>Цена</th>
                                         <th>Сумма</th>
+                                        <th>Действия</th>
                                     </tr>
+                                    
 
                                 </thead>
 
@@ -126,6 +206,15 @@
                                             <strong>
                                                 <%= item.sum.toFixed(2) %> ₴
                                             </strong>
+                                        </td>
+                                        <td>
+                                            <a href="/invoice/<%= invoice.number %>/delete-item/<%= index %>"
+                                            class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Удалить товар?')">
+
+                                                <i class="bi bi-trash"></i>
+
+                                            </a>
                                         </td>
 
                                     </tr>
