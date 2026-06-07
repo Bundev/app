@@ -225,3 +225,24 @@ button:focus {
 
 }
 
+@media (max-width: 768px) {
+
+    .breadcrumb {
+        display: none;
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .navbar-brand {
+        font-size: 2rem;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .content {
+        padding-top: 10px;
+    }
+}

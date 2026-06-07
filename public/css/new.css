@@ -222,3 +222,67 @@
 
 
 /* Таблица в новом счете */
+
+
+
+
+@media (max-width: 768px) {
+
+    .new-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+}
+@media (max-width: 768px) {
+
+    .card {
+        margin: 0;
+        border-radius: 10px;
+    }
+
+    .card-body {
+        padding: 12px;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .btn {
+        min-height: 44px;
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .input-group > * {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .card-footer .d-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch !important;
+    }
+
+    .card-footer .btn {
+        width: 100%;
+    }
+
+}

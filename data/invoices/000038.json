@@ -1,0 +1,15 @@
+{
+  "customer": "Основной покупатель",
+  "status": "completed",
+  "date": "2026-06-07",
+  "total": 36,
+  "items": [
+    {
+      "name": "Держатель душевой пласт Zerix WQZ-016 (ZX1798)",
+      "qty": 1,
+      "price": 36,
+      "sum": 36
+    }
+  ],
+  "number": "000038"
+}

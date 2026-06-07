@@ -12,7 +12,7 @@
         <div class="col content">
           <div class="d-flex justify-content-between align-items-center mb-3">
 
-              <h2 class="mb-0">
+              <h2 class="mb-0 new-header">
                   🧾 Новый чек
                   <span class="badge bg-primary ms-2">
                       №<%= invoiceId %>
@@ -20,69 +20,74 @@
               </h2>
 
           </div>
-          <div class="row mb-3">
+          <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row g-2">
+                        
+                        <div class="col-12 col-md-5 ">
+                            
+                            <select class="form-select" id="customer">
+                            <option value="">Выберите покупателя</option>
 
-            <div class="col-md-5">
-                <select class="form-select" id="customer">
-                  <option value="">Выберите покупателя</option>
+                            <option value="Основной покупатель" selected>
+                                Основной покупатель
+                            </option>
 
-                  <option value="Основной покупатель" selected>
-                      Основной покупатель
-                  </option>
+                            <option value="Бунде Иван">
+                                Бунде Иван
+                            </option>
 
-                  <option value="Бунде Иван">
-                      Бунде Иван
-                  </option>
+                            <option value="Бундев Вячеслав">
+                                Бундев Вячеслав
+                            </option>
 
-                  <option value="Бундев Вячеслав">
-                      Бундев Вячеслав
-                  </option>
+                            <option value="Нотивский Иван">
+                                Нотивский Иван
+                            </option>
+                        </select>
+                        </div>
 
-                  <option value="Нотивский Иван">
-                      Нотивский Иван
-                  </option>
-              </select>
+                        <div class="col-12 col-md-3">
+                            <select
+                                name="status"
+                                id="status"
+                                class="form-select">
+
+                                <% Object.keys(statuses).forEach(key => { %>
+
+                                    <option
+                                        value="<%= key %>"
+                                        <%= (typeof invoice !== 'undefined'
+                                            ? invoice.status === key
+                                            : key === 'new')
+                                            ? 'selected'
+                                            : '' %>>
+
+                                        <%= statuses[key].title %>
+
+                                    </option>
+
+                                <% }) %>
+
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <input
+                                id="invoiceDate"
+                                type="date"
+                                class="form-control"
+                                value="">
+                        </div>
+
+                        <div class="col-12 col-md-2">
+                            <button class="btn btn-success w-100">
+                                + Клиент
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="col-md-3">
-                <select
-                    name="status"
-                    id="status"
-                    class="form-select">
-
-                    <% Object.keys(statuses).forEach(key => { %>
-
-                        <option
-                            value="<%= key %>"
-                            <%= (typeof invoice !== 'undefined'
-                                ? invoice.status === key
-                                : key === 'new')
-                                ? 'selected'
-                                : '' %>>
-
-                            <%= statuses[key].title %>
-
-                        </option>
-
-                    <% }) %>
-
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <input
-                    id="invoiceDate"
-                    type="date"
-                    class="form-control"
-                    value="">
-            </div>
-
-            <div class="col-md-2">
-                <button class="btn btn-success w-100">
-                    + Клиент
-                </button>
-            </div>
-        </div>
         <div class="input-group mb-3">
             
             <div class="searchbox flex-grow-1">
@@ -100,77 +105,82 @@
                 </div>
             </div>
         </div>
-        
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-container">
+                    <table class="table table-hover align-middle table-sales">
+                        <thead>
+                            <tr>
+                                <th style="width:60px">№</th>
+                                <th>Название товара</th>
+                                <th style="width:120px">Кол-во</th>
+                                <th style="width:80px">Ед.</th>
+                                <th style="width:120px">Цена</th>
+                                <th style="width:120px">Сумма</th>
+                                <th style="width:80px">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody id="item-products">
+                        </tbody>
+                    </table>
+                </div>
 
-        
-
-          
-          
-
-
-
-
-
-<div class="card shadow-sm border-0">
-
-    <div class="card-body p-0">
-
-        <div class="table-container">
-          <table class="table table-hover align-middle table-sales">
-
-              <thead>
-                  <tr>
-                      <th style="width:60px">№</th>
-                      <th>Название товара</th>
-                      <th style="width:120px">Кол-во</th>
-                      <th style="width:80px">Ед.</th>
-                      <th style="width:120px">Цена</th>
-                      <th style="width:120px">Сумма</th>
-                      <th style="width:80px">Действие</th>
-                  </tr>
-              </thead>
-
-              <tbody id="item-products">
-
-              </tbody>
-
-          </table>
-
-</div>
-
-    </div>
-
-    <div class="card-footer bg-white">
-
-        <div class="d-flex justify-content-end align-items-center gap-3">
-
-            <div>
-                <strong>Итого:</strong>
-                <span id="total-sum">0.00</span> ₴
             </div>
 
-            <input
-                type="number"
-                id="cash"
-                class="form-control"
-                style="width:140px"
-                placeholder="Получено">
+            <div class="card-footer bg-white">
 
-            <div>
-                <strong id="change">0.00 ₴</strong>
+                <div class="d-flex justify-content-end align-items-center gap-3">
+
+                    
+                    <div>
+                        <strong id="change">0.00 ₴</strong>
+                    </div>
+                    <input
+                        type="number"
+                        id="cash"
+                        class="form-control"
+                        style="width:140px"
+                        placeholder="Получено">
+
+                    
+
+                    <div>
+                        <strong>Итого:</strong>
+                        <span id="total-sum">0.00</span> ₴
+                    </div>
+                    <div class="col-md-4">
+
+                        <select
+                            name="paymentMethod"
+                            class="form-select">
+
+                            <option value="cash">
+                                💵 Наличные
+                            </option>
+
+                            <option value="card">
+                                💳 Карта
+                            </option>
+
+                            <option value="transfer">
+                                🏦 Перевод
+                            </option>
+
+                        </select>
+
+                    </div>
+                    <button
+                        id="saveInvoice"
+                        class="btn btn-success" onclick="saveInvoice()">
+                        <i class="bi bi-save"></i>
+                        Сохранить чек
+                    </button>
+
+                </div>
+
             </div>
-
-            <button
-                id="saveInvoice"
-                class="btn btn-primary" onclick="saveInvoice()">
-                Сохранить
-            </button>
 
         </div>
-
-    </div>
-
-</div>
 
 
         </div>
