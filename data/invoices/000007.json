@@ -1,6 +1,6 @@
 {
   "customer": "Основной покупатель",
-  "status": "completed",
+  "status": "cancelled",
   "date": "2026-06-04",
   "total": 409.2,
   "items": [

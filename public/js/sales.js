@@ -88,10 +88,13 @@ function clearFilters() {
 }
 
 document.querySelectorAll('.invoice-row').forEach(row => {
+    row.addEventListener('click', (e) => {
 
-    row.addEventListener('click', () => {
-        window.location.href =
-            row.dataset.url;
+        if (e.ctrlKey) {
+            window.open(row.dataset.url, '_blank');
+        } else {
+            window.location.href = row.dataset.url;
+        }
+
     });
-
 });

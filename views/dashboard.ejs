@@ -4,216 +4,165 @@
         <%- include('blocks/head') -%>
     </head>
     <body>
+        <div id="overlay"></div>
         <%- include('blocks/header') -%>
         <div class="container-fluid" id="cont">
             <div class="row">
-                <div class="col-2">
-                    <%- include('blocks/menu') -%>
-                </div>
-                <div class="col-10" >
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>
-                        📊 <%= __('title.dashboard') %>
-                    </h2>
-                </div>
-
-    <div class="row g-3 mb-4">
-
-        <div class="col-md-3">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body">
-
-                    <div class="text-muted">
-                        <%= __('dashboard.salesToday') %>
+                <%- include('blocks/menu') -%>
+                <div class="col content">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                        <h2>📊 <%= __('title.dashboard') %></h2>
                     </div>
+                    <div class="row g-3 mb-4">
 
-                    <h3 class="mt-2">
-                        <%= salesToday.toFixed(2) %> ₴
-                    </h3>
+                        <div class="col-12 col-sm-6 col-xl-3">
 
-                </div>
+                            <div class="card border-0 shadow-sm">
 
-            </div>
+                                <div class="card-body">
 
-        </div>
+                                    <div class="text-muted">
+                                        <%= __('dashboard.salesToday') %>
+                                    </div>
 
-        <div class="col-md-3">
+                                    <h3 class="mt-2">
+                                        <%= salesToday.toFixed(2) %> ₴
+                                    </h3>
 
-            <div class="card border-0 shadow-sm">
+                                </div>
 
-                <div class="card-body">
+                            </div>
 
-                    <div class="text-muted">
-                        <%= __('dashboard.invoicesToday') %>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-xl-3">
+
+                            <div class="card border-0 shadow-sm">
+
+                                <div class="card-body">
+
+                                    <div class="text-muted">
+                                        <%= __('dashboard.invoicesToday') %>
+                                    </div>
+
+                                    <h3 class="mt-2">
+                                        <%= invoicesToday %>
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-xl-3">
+
+                            <div class="card border-0 shadow-sm">
+
+                                <div class="card-body">
+
+                                    <div class="text-muted">
+                                        <%= __('dashboard.productsToday') %>
+                                    </div>
+
+                                    <h3 class="mt-2">
+                                        <%= productsToday %>
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-xl-3">
+
+                            <div class="card border-0 shadow-sm">
+
+                                <div class="card-body">
+
+                                    <div class="text-muted">
+                                        <%= __('dashboard.customers') %>
+                                    </div>
+
+                                    <h3 class="mt-2">
+                                        <%= clientsCount %>
+                                    </h3>
+
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
+                    <div class="row g-3">
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white">Последние чеки</div>    
+                                <div class="card-body p-0">
+                                    <div class="table-scroll table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>№</th>
+                                                    <th>Клиент</th>
+                                                    <th>Сумма</th>
+                                                    <th>Статус</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% invoices.forEach(invoice => { %>
+                                                <tr class="invoice-row-dashboard" data-url="/invoices/<%= invoice.number %>">
+                                                    <td><span class="badge bg-light text-primary border">№<%= invoice.number %></span></td>
+                                                    <td><%= invoice.customer %></td>
+                                                    <td><%= Number(invoice.total).toFixed(2) %> ₴</td>
+                                                    <td><span class="badge <%= statuses[invoice.status].class %>"><%= statuses[invoice.status].title %></span></td>
+                                                </tr>
+                                                <% }) %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white">
+                                    <%= __('dashboard.quickActions') %>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="/new/<%= nextInvoiceNumber %>"
+                                        class="btn btn-primary">
 
-                    <h3 class="mt-2">
-                        <%= invoicesToday %>
-                    </h3>
+                                            🧾 Новый чек
 
-                </div>
+                                        </a>
 
-            </div>
+                                        <a href="/products"
+                                        class="btn btn-outline-secondary">
 
-        </div>
+                                            📦 Товары
 
-        <div class="col-md-3">
+                                        </a>
 
-            <div class="card border-0 shadow-sm">
+                                        <!-- <a href="/clients"
+                                        class="btn btn-outline-secondary">
 
-                <div class="card-body">
+                                            👥 Клиенты
 
-                    <div class="text-muted">
-                        <%= __('dashboard.productsToday') %>
+                                        </a>
+
+                                        <a href="/finance/cash"
+                                        class="btn btn-outline-secondary">
+
+                                            💰 Касса
+
+                                        </a> -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <h3 class="mt-2">
-                        <%= productsToday %>
-                    </h3>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-md-3">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body">
-
-                    <div class="text-muted">
-                        <%= __('dashboard.customers') %>
-                    </div>
-
-                    <h3 class="mt-2">
-                        <%= clientsCount %>
-                    </h3>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="row g-3">
-
-        <div class="col-lg-8">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-header bg-white">
-
-                    Последние чеки
-
-                </div>
-                
-
-                    
-                <div class="card-body p-0">
-                    <div class="table-scroll">
-                        <table class="table table-hover align-middle mb-0">
-
-                            <thead>
-
-                                <tr>
-                                    <th>№</th>
-                                    <th>Клиент</th>
-                                    <th>Сумма</th>
-                                    <th>Статус</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                <% invoices.forEach(invoice => { %>
-
-                                <tr class="invoice-row-dashboard" data-url="/invoices/<%= invoice.number %>">
-
-                                    <td>
-                                        <span class="badge bg-light text-primary border">
-                                            №<%= invoice.number %>
-                                        </span>
-                                    </td>
-
-                                    <td><%= invoice.customer %></td>
-
-                                    <td>
-                                        <%= Number(invoice.total).toFixed(2) %> ₴
-                                    </td>
-                                    <td>
-                                        <span class="badge <%= statuses[invoice.status].class %>"><%= statuses[invoice.status].title %></span>
-                                    </td>
-
-                                </tr>
-
-                                <% }) %>
-
-                            </tbody>
-
-                        </table>
-                    </div>
-                </div>
-                
-            </div>
-
-        </div>
-
-        <div class="col-lg-4">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-header bg-white">
-
-                    <%= __('dashboard.quickActions') %>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="d-grid gap-2">
-
-                        <a href="/new/<%= nextInvoiceNumber %>"
-                           class="btn btn-primary">
-
-                            🧾 Новый чек
-
-                        </a>
-
-                        <a href="/products"
-                           class="btn btn-outline-secondary">
-
-                            📦 Товары
-
-                        </a>
-
-                        <!-- <a href="/clients"
-                           class="btn btn-outline-secondary">
-
-                            👥 Клиенты
-
-                        </a>
-
-                        <a href="/finance/cash"
-                           class="btn btn-outline-secondary">
-
-                            💰 Касса
-
-                        </a> -->
-
-                    </div>
-
-                </div>
-
-            </div>
-                </div>
-            </div>
             </div>
         </div>
         <%- include('blocks/footer') -%>

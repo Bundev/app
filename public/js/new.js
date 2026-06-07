@@ -149,7 +149,7 @@ resultsDiv.addEventListener('click', (e) => {
 
 
   
-
+// Копируеть текст при клике на элемент с классом .product-name
   document.addEventListener('click', (e) => {
 
   const product = e.target.closest('.product-name');

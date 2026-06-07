@@ -1,4 +1,24 @@
+html,
+body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.header,
+.topbar {
+    width: 100%;
+}
+
+.topbar .container-fluid {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
 /* Боковое меню */
+
 
 .flex-column{
   font-size: 14px;
@@ -92,3 +112,116 @@ button:focus {
 }
 
 /* Стараницв входа */
+/* ПК */
+@media (min-width: 769px) {
+    .sidebar {
+        display: block;
+    }
+}
+
+/* Телефон */
+@media (max-width: 768px) {
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 260px;
+        height: 100vh;
+        background: #fff;
+        z-index: 1050;
+        transition: left .3s ease;
+        overflow-y: auto;
+        display: block;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+
+    h2 {
+        font-size: 1.8rem;
+    }
+
+    .card-body h3 {
+        font-size: 2rem;
+    }
+
+    .card {
+        margin-bottom: 10px;
+    }
+
+    #cont {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+#overlay {
+    display: none;
+    z-index: 1040;
+}
+
+
+
+@media (max-width: 768px) {
+    #overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.4);
+        z-index: 1040;
+    }
+
+    #overlay.show {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .dropdown .text-end {
+        display: none;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .btn-group .btn {
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+}
+

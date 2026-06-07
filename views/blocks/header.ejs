@@ -1,25 +1,26 @@
-
-<header>
+<header class="header">
   <nav class="navbar navbar-expand-lg navbar-dark topbar">
     <div class="container-fluid">
-
+      <button class="btn btn-light d-md-none me-2" id="menuToggle">
+          ☰
+      </button>
       <a class="navbar-brand fw-bold" href="/">
         RetailPro
       </a>
 
       <div class="ms-auto d-flex align-items-center gap-3">
 
-    <div class="btn-group">
-        <a href="/lang/ru"
-           class="btn <%= lang === 'ru' ? 'btn-primary' : 'btn-outline-secondary' %>">
-            RU
-        </a>
+      <div class="btn-group">
+          <a href="/lang/ru"
+            class="btn <%= lang === 'ru' ? 'btn-primary' : 'btn-outline-secondary' %>">
+              RU
+          </a>
 
-        <a href="/lang/uk"
-           class="btn <%= lang === 'uk' ? 'btn-primary' : 'btn-outline-secondary' %>">
-            UA
-        </a>
-    </div>
+          <a href="/lang/uk"
+            class="btn <%= lang === 'uk' ? 'btn-primary' : 'btn-outline-secondary' %>">
+              UA
+          </a>
+      </div>
 
     <div class="dropdown ms-auto">
 

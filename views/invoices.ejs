@@ -7,10 +7,8 @@
         <%- include('blocks/header') -%>
         <div class="container-fluid" id="cont">
             <div class="row">
-                <div class="col-2">
                 <%- include('blocks/menu') -%>
-                </div>
-                <div class="col-10" >
+                <div class="col content">
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-body">
 
@@ -48,82 +46,82 @@
 
                         </div>
                     </div>
-<div class="card shadow-sm border-0 mb-4">
+                    <div class="card shadow-sm border-0 mb-4">
 
-    <div class="card-header bg-white">
+                        <div class="card-header bg-white">
 
-        <h5 class="mb-0">
-            Управление заказом
-        </h5>
+                            <h5 class="mb-0">
+                                Управление заказом
+                            </h5>
 
-    </div>
+                        </div>
 
-    <div class="card-body">
+                        <div class="card-body">
 
-        <form action="/invoice/status/<%= invoice.number %>"
-              method="POST">
+                            <form action="/invoice/status/<%= invoice.number %>"
+                                method="POST">
 
-            <div class="row align-items-end">
+                                <div class="row align-items-end">
 
-                <div class="col-md-4">
+                                    <div class="col-md-4">
 
-                    <label class="form-label">
-                        Статус заказа
-                    </label>
+                                        <label class="form-label">
+                                            Статус заказа
+                                        </label>
 
-                    <select
-                        name="status"
-                        class="form-select">
+                                        <select
+                                            name="status"
+                                            class="form-select">
 
-                        <% Object.keys(statuses).forEach(key => { %>
+                                            <% Object.keys(statuses).forEach(key => { %>
 
-                            <option
-                                value="<%= key %>"
-                                <%= invoice.status === key ? 'selected' : '' %>>
+                                                <option
+                                                    value="<%= key %>"
+                                                    <%= invoice.status === key ? 'selected' : '' %>>
 
-                                <%= statuses[key].title %>
+                                                    <%= statuses[key].title %>
 
-                            </option>
+                                                </option>
 
-                        <% }) %>
+                                            <% }) %>
 
-                    </select>
+                                        </select>
 
-                </div>
+                                    </div>
 
-                <div class="col-md-2">
+                                    <div class="col-md-2">
 
-                    <button
-                        type="submit"
-                        class="btn btn-primary w-100">
+                                        <button
+                                            type="submit"
+                                            class="btn btn-primary w-100">
 
-                        <i class="bi bi-check-lg"></i>
-                        Сохранить
+                                            <i class="bi bi-check-lg"></i>
+                                            Сохранить
 
-                    </button>
+                                        </button>
 
-                </div>
-                
-                <div class="col-md-2">
-                    <% if (user && user.role === 'admin') { %>
-                    <a href="/invoice/delete/<%= invoice.number %>"
-                       class="btn btn-danger w-100"
-                       onclick="return confirm('Удалить чек безвозвратно?')">
+                                    </div>
+                                    
+                                    <div class="col-md-2">
+                                        <% if (user && user.role === 'admin') { %>
+                                        <a href="/invoice/delete/<%= invoice.number %>"
+                                        class="btn btn-danger w-100"
+                                        onclick="return confirm('Удалить чек безвозвратно?')">
 
-                        <i class="bi bi-trash"></i>
-                        Удалить
+                                            <i class="bi bi-trash"></i>
+                                            Удалить
 
-                    </a>
-                    <% } %>
-                </div>
-                
-            </div>
+                                        </a>
+                                        <% } %>
+                                    </div>
+                                    
+                                </div>
 
-        </form>
+                            </form>
 
-    </div>
+                        </div>
 
-</div>
+                    </div>
 
                     <div class="card border-0 shadow-sm">
 
@@ -149,7 +147,7 @@
 
                                 <% invoice.items.forEach((item,index)=> { %>
 
-                                    <tr>
+                                    <tr class="invoices-item" data-name='<%= item.name%>'>
 
                                         <td><%= index + 1 %></td>
 
