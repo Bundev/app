@@ -121,34 +121,15 @@ const products = data.filter(row =>
     stock: row[14]
   }))
   .filter(item => item.name);
-
-
-  (async () => {
-
+// Проверка подключения
+(async () => {
     try {
-
-        const [rows] =
-            await db.execute(
-                'SELECT NOW() AS time'
-            );
-
-        console.log(
-            '✅ База подключена'
-        );
-
-        console.log(rows[0]);
-
-    } catch (error) {
-
-        console.error(
-            '❌ Ошибка подключения:',
-            error
-        );
-
+        const [rows] = await db.query('SELECT 1');
+        console.log(rows);
+    } catch (err) {
+        console.error(err);
     }
-
 })();
-
 
 
 function auth(req, res, next) {
@@ -640,7 +621,10 @@ app.post('/login', async (req, res) => {
             avatar: user.avatar
 
         };
-
+        await db.query(
+            'UPDATE user SET last_login = NOW() WHERE id = ?',
+            [user.id]
+        );
         res.redirect('/dashboard');
 
     } catch (error) {
@@ -737,31 +721,31 @@ app.post('/register', async (req, res) => {
                 `
             );
 
-        const nextId =
-            rows[0].nextId;
+        const nextId = rows[0].nextId;
+        
 
         await db.execute(
             `
             INSERT INTO user
             (
-                id,
                 name,
                 email,
                 login,
                 password,
                 role,
-                avatar
+                avatar,
+                created_at
             )
             VALUES (?, ?, ?, ?, ?, ?, ?)
             `,
-            [
-                nextId,
+            [ 
                 name,
                 email,
                 login,
                 hashedPassword,
                 'admin',
-                '/img/default-avatar.png'
+                '/img/default-avatar.png',
+                new Date()
             ]
         );
         req.session.success =
