@@ -540,6 +540,156 @@ app.get('/products', auth, (req, res) => {
     });
 
 });
+
+app.get('/stores', async (req, res) => {
+
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.redirect('/dashboard');
+    }
+
+let stores;
+
+if (req.session.user.role === 'admin') {
+    [stores] = await db.execute(
+        'SELECT * FROM stores ORDER BY id DESC'
+    );
+} else {
+    [stores] = await db.execute(`
+        SELECT s.*
+        FROM stores s
+        INNER JOIN user_stores us
+            ON us.store_id = s.id
+        WHERE us.user_id = ?
+        ORDER BY s.id DESC
+    `, [req.session.user.id]);
+}
+
+
+    res.render('stores', {
+        titleKey: 'title.stores',
+        activeMenu: 'stores',
+        stores,
+        script: [
+            {
+                src: 'stores.js',
+            }
+        ],
+        style: [
+            {
+                href: 'stores.css',
+            }
+        ],
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.stores')
+            }
+        ]
+    });
+
+});
+
+app.get('/stores/add', (req, res) => {
+
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.redirect('/dashboard');
+    }
+
+    res.render('store-add', {
+        titleKey: 'title.stores',
+        activeMenu: 'stores',
+        script: [
+            {
+                src: 'store-add.js',
+            }
+        ],
+        style: [
+            {
+                href: 'store-add.css',
+            }
+        ],
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.store-add')
+            }
+        ]
+    });
+
+});
+
+app.post('/stores/add', async (req, res) => {
+
+    try {
+
+        if (!req.session.user || req.session.user.role !== 'admin') {
+            return res.status(403).send('Доступ запрещён');
+        }
+
+        const {
+            name,
+            address,
+            phone
+        } = req.body;
+
+        if (!name) {
+            return res.send('Введите название магазина');
+        }
+
+const [result] = await db.execute(
+    `
+    INSERT INTO stores
+    (
+        name,
+        address,
+        phone,
+        status
+    )
+    VALUES (?, ?, ?, ?)
+    `,
+    [
+        name,
+        address,
+        phone,
+        'active'
+    ]
+);
+
+const storeId = result.insertId;
+
+await db.execute(
+    `
+    INSERT INTO user_stores
+    (
+        user_id,
+        store_id
+    )
+    VALUES (?, ?)
+    `,
+    [
+        req.session.user.id,
+        storeId
+    ]
+);
+
+        res.redirect('/stores');
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).send('Ошибка добавления магазина');
+
+    }
+
+});
+
 // Вход в аккаунт
 app.get('/login', (req, res) => {
     if (req.session.user) {
@@ -618,7 +768,11 @@ app.post('/login', async (req, res) => {
             name: user.name,
             login: user.login,
             role: user.role,
-            avatar: user.avatar
+            avatar: user.avatar,
+            status: user.status,
+            phone: user.phone,
+            store_id: user.store_id,
+
 
         };
         await db.query(
@@ -972,6 +1126,8 @@ app.get('/invoice/delete/:id', (req, res) => {
     res.redirect('/sales');
 
 });
+
+
 
 
 // Переключение языка

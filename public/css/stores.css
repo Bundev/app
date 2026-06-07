@@ -1,0 +1,26 @@
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead th {
+    font-weight: 600;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table tbody tr {
+    transition: .2s;
+}
+
+.table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.badge {
+    font-size: 12px;
+}

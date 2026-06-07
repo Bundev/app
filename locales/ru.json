@@ -14,7 +14,8 @@
 		"users": "Пользователи",
 		"settings": "Настройки",
 		"register": "title.register",
-		"login": "title.login"
+		"login": "title.login",
+		"store-add": "title.store-add"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",

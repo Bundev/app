@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('blocks/head') -%>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <%- include('blocks/header') -%>
+    <div class="container-fluid" id="cont">
+      <div class="row">
+        <%- include('blocks/menu') -%>
+        <div class="col content">
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    <h2 class="mb-0">
+        🏪 Магазины
+    </h2>
+
+    <a href="/stores/add" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        Добавить магазин
+    </a>
+
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th width="80">ID</th>
+                    <th>Название</th>
+                    <th>Адрес</th>
+                    <th>Телефон</th>
+                    <th width="120">Статус</th>
+                    <th width="150">Действия</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <% stores.forEach(store => { %>
+                <tr>
+                    <td>
+                        <span class="badge bg-secondary">
+                            #<%= store.id %>
+                        </span>
+                    </td>
+
+                    <td>
+                        <strong><%= store.name %></strong>
+                    </td>
+
+                    <td><%= store.address %></td>
+
+                    <td>
+                        <a href="tel:<%= store.phone %>">
+                            <%= store.phone %>
+                        </a>
+                    </td>
+
+                    <td>
+                        <% if(store.status === 'active') { %>
+                            <span class="badge bg-success">
+                                Активен
+                            </span>
+                        <% } else { %>
+                            <span class="badge bg-danger">
+                                Неактивен
+                            </span>
+                        <% } %>
+                    </td>
+
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary">
+                            ✏️
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-danger">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+        </div>
+      </div>
+    </div>
+    <%- include('blocks/footer') -%>
+  </body>
+</html>

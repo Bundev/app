@@ -12,7 +12,7 @@
         <li class="nav-item">
             <a class="nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">📦 <%= __('title.products') %></a>
         </li>
-    <!-- 
+    
         <li class="nav-item">
             <a class="nav-link <%= activeMenu === 'clients' ? 'active' : '' %>" href="/clients">👥 <%= __('title.customers') %></a>
         </li>
@@ -26,11 +26,18 @@
         href="/suppliers">
         🚚 <%= __('title.suppliers') %>
         </a>
-
+        <% if (user && user.role === 'admin') { %>
+        <li class="nav-item">
+            <a class="nav-link <%= activeMenu === 'stores' ? 'active' : '' %>"
+            href="/stores">
+            🏪 <%= __('title.stores') %>
+            </a>
+        </li>
+        <% } %>
         <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>"
         href="/settings/app">
         ⚙️ <%= __('title.settings') %>
-        </a> -->
+        </a>
 
     </ul>
 </div>
