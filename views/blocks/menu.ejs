@@ -27,17 +27,10 @@
         🚚 <%= __('title.suppliers') %>
         </a>
         <% if (user && user.role === 'admin') { %>
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'stores' ? 'active' : '' %>"
-            href="/stores">
-            🏪 <%= __('title.stores') %>
-            </a>
-        </li>
-        <% } %>
         <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>"
-        href="/settings/app">
+        href="/settings">
         ⚙️ <%= __('title.settings') %>
         </a>
-
+        <% } %>
     </ul>
 </div>

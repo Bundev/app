@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('blocks/head') -%>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <%- include('blocks/header') -%>
+    <div class="container-fluid" id="cont">
+      <div class="row">
+        <%- include('blocks/menu') -%>
+        <div class="col content">
+
+
+            <h2 class="mb-4">
+
+                <i class="bi bi-gear-fill"></i>
+
+                Настройки CRM
+
+            </h2>
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    <div class="list-group shadow-sm">
+
+                        <a href="#company"
+                        class="list-group-item list-group-item-action active"
+                        data-bs-toggle="list">
+
+                            🏢 Компания
+
+                        </a>
+
+                        <a href="#users"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            👥 Сотрудники
+
+                        </a>
+
+                        <a href="#stores"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            🏪 Магазины
+
+                        </a>
+
+                        <a href="#payments"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            💳 Способы оплаты
+
+                        </a>
+
+                        <a href="#statuses"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            📄 Статусы заказов
+
+                        </a>
+
+                        <a href="#invoice"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            🧾 Нумерация чеков
+
+                        </a>
+
+                        <a href="#language"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            🌍 Локализация
+
+                        </a>
+
+                        <a href="#security"
+                        class="list-group-item list-group-item-action"
+                        data-bs-toggle="list">
+
+                            🔒 Права доступа
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-9">
+
+                    <div class="tab-content">
+
+                        <!-- Компания -->
+                        <div class="tab-pane fade show active"
+                            id="company">
+
+                            <div class="card shadow-sm">
+
+                                <div class="card-header">
+
+                                    Данные компании
+
+                                </div>
+
+                                <div class="card-body">
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+
+                                            Название компании
+
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            value="RetailPro">
+
+                                    </div>
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label">
+
+                                            Телефон
+
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            class="form-control">
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+
+
+
+                        <!-- Пользователи -->
+                        <div class="tab-pane fade" id="users">
+
+                            <div class="card shadow-sm">
+
+                                <div class="card-header bg-white">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <h5 class="mb-0">
+
+                                            👥 Сотрудники
+
+                                        </h5>
+
+                                        <a
+                                            href="/user/new"
+                                            class="btn btn-primary">
+
+                                            <i class="bi bi-person-plus"></i>
+
+                                            Добавить сотрудника
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="table-responsive">
+
+                                    <table class="table table-hover align-middle mb-0 users-table">
+                                        <tbody>
+
+                                        <% users.forEach(user => { %>
+
+                                        <tr>
+
+                                            <td>
+                                                <img
+                                                    src="<%= user.avatar %>"
+                                                    class="user-avatar">
+                                            </td>
+
+                                            <td>
+
+                                                <div class="user-name">
+                                                    <%= user.name %>
+                                                </div>
+
+                                                <div class="user-login">
+                                                    @<%= user.login %>
+                                                </div>
+
+                                            </td>
+
+                                            <td>
+                                                <%= user.email %>
+                                            </td>
+
+                                            <td>
+
+                                                <span class="badge rounded-pill role-<%= user.role %>">
+
+                                                    <%= roles[user.role] %>
+
+                                                </span>
+
+                                            </td>
+
+                                            <td>
+
+                                                <span class="badge rounded-pill status-<%= user.status %>">
+
+                                                    <%= user.status === 'active'
+                                                        ? 'Активен'
+                                                        : 'Заблокирован'
+                                                    %>
+
+                                                </span>
+
+                                            </td>
+
+                                            <td>
+
+                                                <div class="btn-group">
+
+                                                    <a
+                                                        href="/users/<%= user.id %>"
+                                                        class="btn btn-sm btn-outline-primary">
+
+                                                        <i class="bi bi-eye"></i>
+
+                                                    </a>
+
+                                                    <a
+                                                        href="/users/edit/<%= user.id %>"
+                                                        class="btn btn-sm btn-outline-secondary">
+
+                                                        <i class="bi bi-pencil"></i>
+
+                                                    </a>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                        <% }) %>
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                        <div class="tab-pane fade" id="stores">
+                            <div class="card shadow-sm">
+                                <div class="card-header d-flex justify-content-between">
+                                    <span>
+                                        🏪 Магазины
+                                    </span>
+
+                                    <a
+                                        href="/stores/new"
+                                        class="btn btn-sm btn-primary">
+
+                                        Добавить магазин
+
+                                    </a>
+
+                                </div>
+
+                                <div class="card-body p-0">
+
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="80">ID</th>
+                                            <th>Название</th>
+                                            <th>Адрес</th>
+                                            <th>Телефон</th>
+                                            <th width="120">Статус</th>
+                                            <th width="150">Действия</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <% stores.forEach(store => { %>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">
+                                                    #<%= store.id %>
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <strong><%= store.name %></strong>
+                                            </td>
+
+                                            <td><%= store.address %></td>
+
+                                            <td>
+                                                <a href="tel:<%= store.phone %>">
+                                                    <%= store.phone %>
+                                                </a>
+                                            </td>
+
+                                            <td>
+                                                <% if(store.status === 'active') { %>
+                                                    <span class="badge bg-success">
+                                                        Активен
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="badge bg-danger">
+                                                        Неактивен
+                                                    </span>
+                                                <% } %>
+                                            </td>
+
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary">
+                                                    ✏️
+                                                </button>
+
+                                                <button class="btn btn-sm btn-outline-danger">
+                                                    🗑️
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+
+                                </table>
+                                    
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Способы оплаты -->
+                        <div class="tab-pane fade"
+                            id="payments">
+
+                            <div class="card shadow-sm">
+
+                                <div class="card-body">
+
+                                    <div class="form-check">
+
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            checked>
+
+                                        <label class="form-check-label">
+
+                                            💵 Наличные
+
+                                        </label>
+
+                                    </div>
+
+                                    <div class="form-check">
+
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            checked>
+
+                                        <label class="form-check-label">
+
+                                            💳 Карта
+
+                                        </label>
+
+                                    </div>
+
+                                    <div class="form-check">
+
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            checked>
+
+                                        <label class="form-check-label">
+
+                                            🏦 Перевод
+
+                                        </label>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Статусы -->
+                        <div class="tab-pane fade"
+                            id="statuses">
+
+                            <div class="card shadow-sm">
+
+                                <div class="card-body">
+
+                                    <ul class="list-group">
+
+                                        <li class="list-group-item">
+                                            Новый
+                                        </li>
+
+                                        <li class="list-group-item">
+                                            В обработке
+                                        </li>
+
+                                        <li class="list-group-item">
+                                            Собирается
+                                        </li>
+
+                                        <li class="list-group-item">
+                                            Готов к выдаче
+                                        </li>
+
+                                        <li class="list-group-item">
+                                            Выполнен
+                                        </li>
+
+                                        <li class="list-group-item">
+                                            Отменён
+                                        </li>
+
+                                    </ul>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Нумерация -->
+                        <div class="tab-pane fade"
+                            id="invoice">
+
+                            <div class="card shadow-sm">
+
+                                <div class="card-body">
+
+                                    <label class="form-label">
+
+                                        Префикс чека
+
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        value="INV">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+      </div>
+    </div>
+    <%- include('blocks/footer') -%>
+  </body>
+</html>

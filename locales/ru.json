@@ -15,7 +15,10 @@
 		"settings": "Настройки",
 		"register": "title.register",
 		"login": "title.login",
-		"store-add": "title.store-add"
+		"store-add": "title.store-add",
+		"user_views": "title.user_views",
+		"user": "title.user",
+		"user_new": "title.user_new"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",

@@ -541,58 +541,7 @@ app.get('/products', auth, (req, res) => {
 
 });
 
-app.get('/stores', async (req, res) => {
-
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.redirect('/dashboard');
-    }
-
-let stores;
-
-if (req.session.user.role === 'admin') {
-    [stores] = await db.execute(
-        'SELECT * FROM stores ORDER BY id DESC'
-    );
-} else {
-    [stores] = await db.execute(`
-        SELECT s.*
-        FROM stores s
-        INNER JOIN user_stores us
-            ON us.store_id = s.id
-        WHERE us.user_id = ?
-        ORDER BY s.id DESC
-    `, [req.session.user.id]);
-}
-
-
-    res.render('stores', {
-        titleKey: 'title.stores',
-        activeMenu: 'stores',
-        stores,
-        script: [
-            {
-                src: 'stores.js',
-            }
-        ],
-        style: [
-            {
-                href: 'stores.css',
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.stores')
-            }
-        ]
-    });
-
-});
-
-app.get('/stores/add', (req, res) => {
+app.get('/stores/new', (req, res) => {
 
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.redirect('/dashboard');
@@ -600,7 +549,7 @@ app.get('/stores/add', (req, res) => {
 
     res.render('store-add', {
         titleKey: 'title.stores',
-        activeMenu: 'stores',
+        activeMenu: 'settings',
         script: [
             {
                 src: 'store-add.js',
@@ -615,6 +564,10 @@ app.get('/stores/add', (req, res) => {
             {
                 title: req.__('title.dashboard'),
                 url: '/'
+            },
+            {
+                title: req.__('title.settings'),
+                url: '/settings'
             },
             {
                 title: req.__('title.store-add')
@@ -920,20 +873,106 @@ app.post('/register', async (req, res) => {
 
 });
 
-app.get('/users', async (req, res) => {
+
+
+app.get('/users/:id', async (req, res) => {
 
     const [users] =
         await db.execute(
-            'SELECT * FROM user'
+            `
+            SELECT *
+            FROM user
+            WHERE id = ?
+            `,
+            [req.params.id]
         );
 
-    res.send(`
-        <pre>
-        ${JSON.stringify(users, null, 4)}
-        </pre>
-        `);
+    if (!users.length) {
+
+        return res.redirect('/users');
+
+    }
+
+    const user =
+        users[0];
+
+    const [stores] =
+        await db.execute(
+            `
+            SELECT s.*
+            FROM stores s
+            INNER JOIN user_stores us
+                ON us.store_id = s.id
+            WHERE us.user_id = ?
+            `,
+            [user.id]
+        );
+
+    res.render('user', {
+        titleKey: 'title.user',
+        activeMenu: 'settings',
+        user,
+        stores,
+        script: [
+            {
+                src: 'user.js'
+            }
+        ],
+        style: [
+            {
+                href: 'user.css'
+            }
+        ],
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.settings'),
+                
+            }
+        ]
+    });
 
 });
+
+app.get('/user/new', (req, res) => {
+
+    res.render('user_new', {
+
+        titleKey: 'title.user_new',
+        activeMenu: 'settings',
+        script: [
+            {
+                src: 'user_new.js'
+            }
+        ],
+        style: [
+            {
+                href: 'user_new.css'
+            }
+        ],
+         breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.settings'),
+                url: '/settings'
+            },
+            {
+                title: req.__('title.user_new'), 
+            }
+        ]
+
+    });
+
+});
+
+
+
 
 // Выход из акаунта
 app.get('/logout', (req, res) => {
@@ -1000,10 +1039,6 @@ app.get('/invoice/:id/delete-item/:index', (req, res) => {
     );
 
 });
-
-
-
-
 
 // Сохранение чека
 app.post('/save-invoice', auth, (req, res) => {
@@ -1127,8 +1162,124 @@ app.get('/invoice/delete/:id', (req, res) => {
 
 });
 
+app.get('/settings', async(req, res) => {
+    if (
+        !req.session.user ||
+        req.session.user.role !== 'admin'
+    ) {
+
+        return res.redirect('/dashboard');
+
+    }
+
+   
+    const [stores] =
+    await db.execute(
+        `
+        SELECT s.*
+        FROM stores s
+        INNER JOIN user_stores us
+            ON us.store_id = s.id
+        WHERE us.user_id = ?
+        `,
+        [req.session.user.id]
+    );
+
+    const [users] =
+    await db.execute(
+        `
+        SELECT *
+        FROM user
+        WHERE id_admin = ?
+        ORDER BY name
+        `,
+        [req.session.user.id]
+    );
 
 
+    res.render('settings', {
+        titleKey: 'title.settings',
+        activeMenu: 'settings',
+        stores,
+        users,
+        script: [
+            {
+                src: 'settings.js'
+            }
+        ],
+        style: [
+            {
+                href: 'settings.css'
+            }
+        ],
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.settings'),
+                
+            }
+        ]
+    });
+
+});
+
+app.post('/user/new', async (req, res) => {
+
+    const {
+        name,
+        email,
+        login,
+        password,
+        role
+    } = req.body;
+
+    const hashedPassword =
+        await bcrypt.hash(
+            password,
+            10
+        );
+
+    const [rows] =
+        await db.execute(
+            `
+            SELECT COALESCE(MAX(id), 0) + 1 AS nextId
+            FROM user
+            `
+        );
+
+    await db.execute(
+        `
+        INSERT INTO user
+        (
+            id,
+            name,
+            email,
+            login,
+            password,
+            role,
+            avatar,
+            id_admin
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+            rows[0].nextId,
+            name,
+            email,
+            login,
+            hashedPassword,
+            role,
+            '/img/default-avatar.png',
+            req.session.user.id
+        ]
+    );
+
+    res.redirect('/settings');
+
+});
 
 // Переключение языка
 app.get('/lang/:lang', (req, res) => {
