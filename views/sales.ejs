@@ -11,7 +11,7 @@
         <%- include('blocks/menu') -%>
         <div class="col content">
             <div class="buttonblox">
-                <a href="/new/<%= nextInvoiceNumber %>" class="btn btn-primary">+ <%= __('title.new') %></a>
+                <a href="/new" class="btn btn-primary">+ <%= __('title.new') %></a>
             </div>
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
@@ -87,65 +87,92 @@
 
                 </div>
             </div>
-            
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0">
+<div class="card border-0 shadow-sm">
 
-                        <div class="table-scroll">
-                            <table class="table table-hover align-middle mb-0 invoice-list">
+    <div class="table-responsive">
 
-                                <thead>
+        <table class="table sales-table mb-0">
 
-                                    <tr>
-                                        <th width="120">№</th>
-                                        <th width="150">Дата</th>
-                                        <th>Клиент</th>
-                                        <th width="180">Сумма</th>
-                                        <th width="180">Статус</th>
-                                    </tr>
+            <thead>
 
-                                </thead>
+                <tr>
+                    <th>Чек</th>
+                    <th>Дата</th>
+                    <th>Клиент</th>
+                    <th class="text-end">Сумма</th>
+                    <th class="text-center">Статус</th>
+                </tr>
 
-                                <tbody id="invoice-table">
+            </thead>
 
-                                    <% invoices.forEach(invoice => { %>
+            <tbody>
 
-                                    <tr
-                                        class="invoice-row"
-                                        data-url="/invoices/<%= invoice.number %>">
+            <% sales.forEach(sale => { %>
 
-                                        <td>
-                                            <span class="invoice-number">
-                                                №<%= invoice.number %>
-                                            </span>
-                                        </td>
+                <tr class="invoice-row" data-url="/sale/<%= sale.id %>">
 
-                                        <td data-date="<%= invoice.date %>">
-                                            <%= new Date(invoice.date).toLocaleDateString('ru-RU') %>
-                                        </td>
+                    <td>
 
-                                        <td>
-                                            <strong>
-                                                <%= invoice.customer %>
-                                            </strong>
-                                        </td>
+                        <span class="invoice-badge">
+                            <%= sale.invoice_number %>
+                        </span>
 
-                                        <td>
-                                            <span class="invoice-total">
-                                                <%= Number(invoice.total)
-                                                .toFixed(2) %> ₴
-                                            </span>
-                                        </td>
-                                        <td><span class="badge <%= statuses[invoice.status].class %>"><%= statuses[invoice.status].title %></span></td>
-                                    </tr>
+                    </td>
 
-                                    <% }) %>
-                                </tbody>
-                            </table>
+                    <td>
+                        <div class="fw-semibold">
+                            <%= new Date(sale.created_at).toLocaleDateString('ru-RU') %>
                         </div>
-                    </div>
-                </div>
-            
+
+                        <small class="text-muted">
+                            <%= new Date(sale.created_at).toLocaleTimeString(
+                                'ru-RU',
+                                {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }
+                            ) %>
+                        </small>
+                        
+                    </td>
+
+                    <td>
+
+                        <div class="customer-name">
+                            <%= sale.customer_name %>
+                        </div>
+
+                    </td>
+
+                    <td class="text-end">
+
+                        <span class="sale-sum">
+                            <%= Number(sale.total).toFixed(2) %> ₴
+                        </span>
+
+                    </td>
+
+                    <td class="text-center">
+
+                        <span class="status-success">
+                            Продажа завершена
+                        </span>
+
+                    </td>
+
+                    
+
+                </tr>
+
+            <% }) %>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
         </div>
       </div>
     </div>

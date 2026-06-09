@@ -8,6 +8,7 @@ const statuses = require('./config/statuses');
 const roles = require('./config/roles');
 const db = require('./config/db');
 const bcrypt = require('bcrypt');
+const upload = require('./config/upload');
 const port = 3000;
 
 
@@ -93,34 +94,34 @@ const data = XLSX.utils.sheet_to_json(sheet, {
   header: 1
 });
 
-const products = data.filter(row =>
-      row[4] &&
-      row[4] !== 'Номенклатура, Упаковка' &&
-      !isNaN(row[13])
-  ).map((row, index) => ({
-    id: index + 1,
-    name: row[4]
-      ?.replace(/,\s*(шт|м)\.?$/i, '')
-      .trim(),
-    unit: row[4]
-        .toLowerCase()
-        .includes(', м')
-            ? 'м'
-            : 'шт',
-    searchName: row[4]?.toLowerCase()
-      ?.toLowerCase()
-      .replace(/,\s*(шт|м)\.?$/i, '')
-      .replace(/[(),№]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim(),
-    price: Math.round(
-    row[13] > 100
-        ? row[13] * 1.1
-        : row[13] * 1.2
-    ),
-    stock: row[14]
-  }))
-  .filter(item => item.name);
+// const products = data.filter(row =>
+//       row[4] &&
+//       row[4] !== 'Номенклатура, Упаковка' &&
+//       !isNaN(row[13])
+//   ).map((row, index) => ({
+//     id: index + 1,
+//     name: row[4]
+//       ?.replace(/,\s*(шт|м)\.?$/i, '')
+//       .trim(),
+//     unit: row[4]
+//         .toLowerCase()
+//         .includes(', м')
+//             ? 'м'
+//             : 'шт',
+//     searchName: row[4]?.toLowerCase()
+//       ?.toLowerCase()
+//       .replace(/,\s*(шт|м)\.?$/i, '')
+//       .replace(/[(),№]/g, ' ')
+//       .replace(/\s+/g, ' ')
+//       .trim(),
+//     price: Math.round(
+//     row[13] > 100
+//         ? row[13] * 1.1
+//         : row[13] * 1.2
+//     ),
+//     stock: row[14]
+//   }))
+//   .filter(item => item.name);
 // Проверка подключения
 (async () => {
     try {
@@ -143,7 +144,6 @@ function auth(req, res, next) {
     next();
 
 }
-
 // Сохранение чека
 function getNextInvoiceNumber() {
 
@@ -174,8 +174,6 @@ function getNextInvoiceNumber() {
 
     return String(max + 1).padStart(6, '0');
 }
-
-
 function renderDashboard(req, res) {
   
 
@@ -304,7 +302,6 @@ function renderDashboard(req, res) {
         ]
     });
 }
-
 function renderLogin(res, error = null, success = null) {
 
     return res.render('login', {
@@ -326,67 +323,479 @@ function renderLogin(res, error = null, success = null) {
     });
 
 }
+// Middleware проверки администратора
+function requireAdmin(req,res,next) {
+
+    if (!req.session.user) {
+
+        return res.redirect(
+            '/login'
+        );
+
+    }
+
+    if (
+        req.session.user.role !==
+        'admin'
+    ) {
+
+        return res.status(403).send(
+            'Доступ запрещён'
+        );
+
+    }
+
+    next();
+
+}
 // Роутер панели упражнения
 app.get('/', auth, renderDashboard);
 app.get('/dashboard', auth, renderDashboard);
-
 // Продажи
-app.get('/sales', auth, (req, res) => {
+app.get('/sales', auth, async (req, res) => {
 
-    const nextInvoiceNumber =
-        getNextInvoiceNumber();
+    try {
 
-    const invoicesDir = path.join(
-        __dirname,
-        'data',
-        'invoices'
-    );
+        let sql = `
+            SELECT
+                s.*,
+                c.name AS customer_name,
+                u.name AS user_name,
+                st.name AS store_name
+            FROM sales s
 
-    let invoices = [];
+            LEFT JOIN customers c
+                ON c.id = s.customer_id
 
-    if (fs.existsSync(invoicesDir)) {
+            LEFT JOIN user u
+                ON u.id_admin = s.user_id
 
-        const files =
-            fs.readdirSync(invoicesDir);
+            LEFT JOIN stores st
+                ON st.id = s.store_id
+        `;
 
-        invoices = files.map(file => {
+        let params = [];
 
-            const filePath = path.join(
-                invoicesDir,
-                file
+        // Администратор видит все чеки своей компании
+        if (
+            req.session.user.role === 'admin'
+        ) {
+
+            sql += `
+                WHERE s.company_id = ?
+            `;
+
+            params.push(
+                req.session.user.company_id
             );
 
-            return JSON.parse(
-                fs.readFileSync(
-                    filePath,
-                    'utf8'
-                )
+        } else {
+
+            // Менеджер и продавец только свои
+            sql += `
+                WHERE s.user_id = ?
+            `;
+
+            params.push(
+                req.session.user.id
             );
+
+        }
+
+        sql += `
+            ORDER BY s.id DESC
+        `;
+
+        const [sales] =
+            await db.query(
+                sql,
+                params
+            );
+
+        res.render('sales', {
+
+            titleKey: 'title.sales',
+
+            activeMenu: 'sales',
+
+            sales,
+            statuses,
+            script: [
+                {
+                    src: 'sales.js'
+                }
+            ],
+
+            style: [
+                {
+                    href: 'sales.css'
+                }
+            ],
+
+            breadcrumbs: [
+                {
+                    title: req.__(
+                        'title.dashboard'
+                    ),
+                    url: '/'
+                },
+                {
+                    title: req.__(
+                        'title.sales'
+                    )
+                }
+            ]
 
         });
 
-        invoices.sort((a, b) =>
-            Number(b.number) -
-            Number(a.number)
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).send(
+            error.message
         );
+
     }
 
-    res.render('sales', {
-        titleKey: 'title.sales',
-        nextInvoiceNumber,
-        invoices,
+});
+app.get('/sale/:id', auth, async (req, res) => {
+
+    const saleId = req.params.id;
+
+    const [[sale]] =
+        await db.query(
+            `
+            SELECT
+                s.*,
+                c.name AS customer_name,
+                u.name AS user_name,
+                st.name AS store_name
+            FROM sales s
+
+            LEFT JOIN customers c
+                ON c.id = s.customer_id
+
+            LEFT JOIN user u
+                ON u.id = s.user_id
+
+            LEFT JOIN stores st
+                ON st.id = s.store_id
+
+            WHERE s.id = ?
+            `,
+            [saleId]
+        );
+
+    if (!sale) {
+        return res.redirect('/sales');
+    }
+
+    const [items] =
+        await db.query(
+            `
+            SELECT
+                si.*,
+                p.name,
+                p.sku
+            FROM sale_items si
+
+            JOIN products p
+                ON p.id = si.product_id
+
+            WHERE si.sale_id = ?
+            `,
+            [saleId]
+        );
+
+    res.render('sale-view', {
+        titleKey: 'Чек',
+        sale,
+        items,
         activeMenu: 'sales',
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: 'Продажи',
+                url: '/sales'
+            },
+            {
+                title: `Чек №${sale.invoice_number}`
+            }
+        ]
+    });
+
+});
+
+// Сохранение чека
+app.post('/sales/save', auth, async (req, res) => {
+
+    try {
+
+        const {
+            customer_id,
+            payment_method,
+            total,
+            items
+        } = req.body;
+
+        const company_id =
+            req.session.user.company_id;
+
+        const [[userStore]] =
+            await db.query(
+                `
+                SELECT store_id
+                FROM user_stores
+                WHERE user_id = ?
+                LIMIT 1
+                `,
+                [
+                    req.session.user.id
+                ]
+            );
+
+        const store_id =
+            userStore?.store_id || 1;
+
+        const year =
+            new Date().getFullYear();
+
+        const [[lastSale]] =
+            await db.query(
+                `
+                SELECT invoice_number
+                FROM sales
+                WHERE company_id = ?
+                AND invoice_number LIKE ?
+                ORDER BY id DESC
+                LIMIT 1
+                `,
+                [
+                    company_id,
+                    `SALE-${year}-%`
+                ]
+            );
+
+        let nextNumber = 1;
+
+        if (
+            lastSale &&
+            lastSale.invoice_number
+        ) {
+
+            const parts =
+                lastSale.invoice_number
+                    .split('-');
+
+            nextNumber =
+                Number(parts[2]) + 1;
+
+        }
+
+        const invoiceNumber =
+            `SALE-${year}-${String(nextNumber)
+                .padStart(6, '0')}`;
+
+        const created_at =
+            new Date()
+                .toLocaleString(
+                    'sv-SE',
+                    {
+                        timeZone:
+                            'Europe/Kyiv'
+                    }
+                );
+
+        const [saleResult] =
+            await db.execute(
+                `
+                INSERT INTO sales
+                (
+                    company_id,
+                    invoice_number,
+                    customer_id,
+                    user_id,
+                    store_id,
+                    total,
+                    payment_method,
+                    status,
+                    created_at
+                )
+                VALUES
+                (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
+                `,
+                [
+                    company_id,
+                    invoiceNumber,
+                    customer_id > 0
+                        ? customer_id
+                        : null,
+                    req.session.user.id,
+                    store_id,
+                    total,
+                    payment_method,
+                    'completed',
+                    created_at
+                ]
+            );
+
+        const saleId =
+            saleResult.insertId;
+
+        for (const item of items) {
+
+            const subtotal =
+                Number(item.quantity) *
+                Number(item.price);
+
+            await db.execute(
+                `
+                INSERT INTO sale_items
+                (
+                    sale_id,
+                    product_id,
+                    quantity,
+                    price,
+                    subtotal
+                )
+                VALUES
+                (
+                    ?, ?, ?, ?, ?
+                )
+                `,
+                [
+                    saleId,
+                    item.product_id,
+                    item.quantity,
+                    item.price,
+                    subtotal
+                ]
+            );
+
+            await db.execute(
+                `
+                UPDATE products
+                SET quantity =
+                    quantity - ?
+                WHERE id = ?
+                `,
+                [
+                    item.quantity,
+                    item.product_id
+                ]
+            );
+
+        }
+
+        res.json({
+            success: true,
+            sale_id: saleId,
+            invoice_number: invoiceNumber
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+// app.get('/search', auth, (req, res) => {
+
+//     const q = (req.query.q || '').toLowerCase();
+
+//   if (q.length < 2) {
+//     return res.json([]);
+//   }
+
+//   const result = [];
+//   const limit = 200;
+
+//   for (let i = 0; i < products.length; i++) {
+//     if (products[i].searchName.includes(q)) {
+//       result.push(products[i]);
+
+//       if (result.length === limit) {
+//         break;
+//       }
+//     }
+//   }
+
+//  res.json(result);
+    
+// });
+app.get('/new', auth, async (req, res) => {
+
+    const year =
+        new Date().getFullYear();
+
+    const [[lastSale]] =
+        await db.query(
+            `
+            SELECT invoice_number
+            FROM sales
+            WHERE company_id = ?
+            AND invoice_number LIKE ?
+            ORDER BY id DESC
+            LIMIT 1
+            `,
+            [
+                req.session.user.company_id,
+                `SALE-${year}-%`
+            ]
+        );
+
+    let nextNumber = 1;
+
+    if (
+        lastSale &&
+        lastSale.invoice_number
+    ) {
+
+        const parts =
+            lastSale.invoice_number.split('-');
+
+        nextNumber =
+            Number(parts[2]) + 1;
+    }
+
+    const invoiceNumber =
+        `SALE-${year}-${String(nextNumber)
+            .padStart(6, '0')}`;
+
+    res.render('new', {
+
+        titleKey: 'title.new',
+
+        invoiceNumber,
+
+        activeMenu: 'sales',
+
         statuses,
+
         script: [
             {
-                src: 'sales.js',
+                src: 'new.js'
             }
         ],
+
         style: [
             {
-                href: 'sales.css',
+                href: 'new.css'
             }
         ],
+
         breadcrumbs: [
             {
                 title: req.__('title.dashboard'),
@@ -395,70 +804,13 @@ app.get('/sales', auth, (req, res) => {
             {
                 title: req.__('title.sales'),
                 url: '/sales'
+            },
+            {
+                title: req.__('title.new')
             }
         ]
     });
 
-});
-
-
-app.get('/search', auth, (req, res) => {
-
-    const q = (req.query.q || '').toLowerCase();
-
-  if (q.length < 2) {
-    return res.json([]);
-  }
-
-  const result = [];
-  const limit = 200;
-
-  for (let i = 0; i < products.length; i++) {
-    if (products[i].searchName.includes(q)) {
-      result.push(products[i]);
-
-      if (result.length === limit) {
-        break;
-      }
-    }
-  }
-
- res.json(result);
-    
-});
-
-app.get('/new/:id', auth, (req, res) => {
-  const id = req.params.id;
-
-  res.render('new', {
-    titleKey: 'title.new',
-    invoiceId: id,
-    activeMenu: 'sales',
-    statuses,
-    script: [
-            {
-                src: 'new.js',
-            }
-        ],
-        style: [
-            {
-                href: 'new.css',
-            }
-        ],
-    breadcrumbs: [
-      {
-        title: req.__('title.dashboard'),
-        url: '/'
-      },
-      {
-        title: req.__('title.sales'),
-        url: '/sales'
-      },
-      {
-        title: req.__('title.new'), 
-      }
-    ]
-  });
 });
 app.get('/invoices/:id', auth, (req, res) => {
 
@@ -512,20 +864,49 @@ app.get('/invoices/:id', auth, (req, res) => {
 
 });
 // Роутер товаров
-app.get('/products', auth, (req, res) => {
+app.get('/products', auth, async (req, res) => {
+
+    const success =
+        req.session.success;
+
+    req.session.success =
+        null;
+
+    const [products] =
+        await db.execute(
+            `
+            SELECT
+                p.*,
+                c.name AS category_name,
+                s.name AS store_name
+            FROM products p
+            LEFT JOIN categories c
+                ON c.id = p.category_id
+            INNER JOIN user_stores us
+                ON us.store_id = p.store_id
+            INNER JOIN stores s
+                ON s.id = p.store_id
+            WHERE us.user_id = ?
+            ORDER BY p.name
+            `,
+            [
+                req.session.user.id
+            ]
+        );
 
     res.render('products', {
         titleKey: 'title.products',
         activeMenu: 'products',
         products,
+        success,
         script: [
             {
-                src: 'products.js',
+                src: 'products.js'
             }
         ],
         style: [
             {
-                href: 'products.css',
+                href: 'products.css'
             }
         ],
         breadcrumbs: [
@@ -541,7 +922,184 @@ app.get('/products', auth, (req, res) => {
 
 });
 
-app.get('/stores/new', (req, res) => {
+
+app.get(
+    '/products/import',
+    auth,
+    requireAdmin,
+    async (req, res) => {
+
+        const [stores] =
+            await db.execute(
+                `
+                SELECT s.*
+                FROM stores s
+                INNER JOIN user_stores us
+                    ON us.store_id = s.id
+                WHERE us.user_id = ?
+                ORDER BY s.name
+                `,
+                [
+                    req.session.user.id
+                ]
+            );
+
+        res.render(
+            'products_import',
+            {
+                titleKey:
+                    'Импорт товаров',
+                activeMenu:
+                    'products',
+                stores,
+                user:
+                    req.session.user
+            }
+        );
+
+    }
+);
+const importProducts = require('./import/importProducts');
+app.post('/products/import',auth,requireAdmin,upload.single('excel'),async (req, res) => {
+
+        try {
+
+            const result =
+                await importProducts(
+                    db,
+                    req.file.path,
+                    req.body.store_id
+                );
+
+            req.session.success =
+                `Импорт завершён.
+                Категорий: ${result.categoriesCount},
+                Товаров: ${result.productsCount}`;
+
+            res.redirect(
+                '/products'
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                'Ошибка импорта'
+            );
+
+        }
+
+    }
+);
+
+app.get('/api/products/search', auth, async (req, res) => {
+
+    try {
+
+        const q =
+            req.query.q?.trim() || '';
+
+        const companyId =
+            req.session.user.company_id;
+
+        const role =
+            req.session.user.role;
+
+        // Администратор компании
+        if (role === 'admin') {
+
+            const [products] =
+                await db.query(
+                    `
+                    SELECT
+                        p.id,
+                        p.name,
+                        p.sku,
+                        p.barcode,
+                        p.sale_price,
+                        p.quantity,
+                        s.name AS store_name
+                    FROM products p
+
+                    JOIN stores s
+                        ON s.id = p.store_id
+
+                    WHERE s.company_id = ?
+                    AND (
+                        p.name LIKE ?
+                        OR p.sku LIKE ?
+                        OR p.barcode LIKE ?
+                    )
+
+                    ORDER BY p.name
+                    LIMIT 30
+                    `,
+                    [
+                        companyId,
+                        `%${q}%`,
+                        `%${q}%`,
+                        `%${q}%`
+                    ]
+                );
+
+            return res.json(products);
+
+        }
+
+        // Менеджер / продавец
+        const [products] =
+            await db.query(
+                `
+                SELECT
+                    p.id,
+                    p.name,
+                    p.sku,
+                    p.barcode,
+                    p.sale_price,
+                    p.quantity,
+                    s.name AS store_name
+                FROM products p
+
+                JOIN user_stores us
+                    ON us.store_id = p.store_id
+
+                JOIN stores s
+                    ON s.id = p.store_id
+
+                WHERE us.user_id = ?
+                AND (
+                    p.name LIKE ?
+                    OR p.sku LIKE ?
+                    OR p.barcode LIKE ?
+                )
+
+                ORDER BY p.name
+                LIMIT 30
+                `,
+                [
+                    req.session.user.id,
+                    `%${q}%`,
+                    `%${q}%`,
+                    `%${q}%`
+                ]
+            );
+
+        res.json(products);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false
+        });
+
+    }
+
+});
+
+app.get('/stores/new', auth, (req, res) => {
 
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.redirect('/dashboard');
@@ -576,8 +1134,7 @@ app.get('/stores/new', (req, res) => {
     });
 
 });
-
-app.post('/stores/add', async (req, res) => {
+app.post('/stores/add', auth, async (req, res) => {
 
     try {
 
@@ -631,7 +1188,7 @@ await db.execute(
     ]
 );
 
-        res.redirect('/stores');
+        res.redirect('/settings?tab=stores');
 
     } catch (error) {
 
@@ -642,7 +1199,6 @@ await db.execute(
     }
 
 });
-
 // Вход в аккаунт
 app.get('/login', (req, res) => {
     if (req.session.user) {
@@ -669,7 +1225,6 @@ app.get('/login', (req, res) => {
     });
 
 });
-
 app.post('/login', async (req, res) => {
 
     try {
@@ -689,6 +1244,8 @@ app.post('/login', async (req, res) => {
                 [login]
             );
 
+        
+
         if (!rows.length) {
 
             return renderLogin(
@@ -699,6 +1256,8 @@ app.post('/login', async (req, res) => {
 
         const user =
             rows[0];
+
+        
 
         const validPassword =
             await bcrypt.compare(
@@ -715,6 +1274,16 @@ app.post('/login', async (req, res) => {
 
         }
 
+
+        if (user.status === 'blocked') {
+
+            return renderLogin(
+                res,
+                'Ваш аккаунт заблокирован'
+            );
+
+        }
+
         req.session.user = {
 
             id: user.id,
@@ -725,6 +1294,7 @@ app.post('/login', async (req, res) => {
             status: user.status,
             phone: user.phone,
             store_id: user.store_id,
+            company_id: user.company_id
 
 
         };
@@ -765,7 +1335,6 @@ app.get('/register', (req, res) => {
     });
 
 });
-
 app.post('/register', async (req, res) => {
     
     try {
@@ -872,9 +1441,6 @@ app.post('/register', async (req, res) => {
     }
 
 });
-
-
-
 app.get('/users/:id', async (req, res) => {
 
     const [users] =
@@ -893,7 +1459,7 @@ app.get('/users/:id', async (req, res) => {
 
     }
 
-    const user =
+    const user_st =
         users[0];
 
     const [stores] =
@@ -905,13 +1471,13 @@ app.get('/users/:id', async (req, res) => {
                 ON us.store_id = s.id
             WHERE us.user_id = ?
             `,
-            [user.id]
+            [user_st.id]
         );
 
     res.render('user', {
         titleKey: 'title.user',
         activeMenu: 'settings',
-        user,
+        user_st,
         stores,
         script: [
             {
@@ -930,6 +1496,10 @@ app.get('/users/:id', async (req, res) => {
             },
             {
                 title: req.__('title.settings'),
+                url: '/settings'
+            },
+            {
+                title: req.__('title.user'),
                 
             }
         ]
@@ -937,9 +1507,211 @@ app.get('/users/:id', async (req, res) => {
 
 });
 
-app.get('/user/new', (req, res) => {
-
+app.get('/user/new', auth, async (req, res) => {
+    const [stores] =
+        await db.execute(
+            `
+            SELECT s.*
+            FROM stores s
+            INNER JOIN user_stores us
+                ON us.store_id = s.id
+            WHERE us.user_id = ?
+            ORDER BY s.name
+            `,
+            [req.session.user.id]
+        );
+    
     res.render('user_new', {
+        titleKey: 'title.user_new',
+        activeMenu: 'settings',
+        stores,
+        script: [
+            {
+                src: 'user_new.js'
+            }
+        ],
+        style: [
+            {
+                href: 'user_new.css'
+            }
+        ],
+         breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.settings'),
+                url: '/settings'
+            },
+            {
+                title: req.__('title.user_new'), 
+            }
+        ]
+
+    });
+
+});
+
+app.post('/user/new', auth, upload.single('avatar'),
+    async (req, res) => {
+
+        try {
+
+            const {
+                name,
+                email,
+                phone,
+                login,
+                password,
+                role,
+                salary,
+                position,
+                notes,
+                hire_date,
+                birth_date
+            } = req.body;
+
+            const hashedPassword =
+                await bcrypt.hash(
+                    password,
+                    10
+                );
+
+            const avatar =
+                req.file
+                    ? `/uploads/avatars/${req.file.filename}`
+                    : '/img/default-avatar.png';
+
+            const [result] =
+                await db.execute(
+                    `
+                    INSERT INTO user
+                    (
+                        id_admin,
+                        login,
+                        password,
+                        name,
+                        role,
+                        status,
+                        avatar,
+                        email,
+                        phone,
+                        notes,
+                        salary,
+                        hire_date,
+                        birth_date,
+                        position
+                    )
+                    VALUES
+                    (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    )
+                    `,
+                    [
+                        req.session.user.id,
+                        login,
+                        hashedPassword,
+                        name,
+                        role,
+                        'active',
+                        avatar,
+                        email || null,
+                        phone || null,
+                        notes || null,
+                        salary || null,
+                        hire_date || null,
+                        birth_date || null,
+                        position || null
+                    ]
+                );
+
+            const userId =
+                result.insertId;
+
+        
+
+            if (req.body.store_id) {
+
+            await db.execute(
+                `
+                INSERT INTO user_stores
+                (
+                    user_id,
+                    store_id
+                )
+                VALUES (?, ?)
+                `,
+                [
+                    userId,
+                    req.body.store_id
+                ]
+            );
+
+            }
+
+            res.redirect(
+                `/users/${userId}`
+            );
+
+            
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                'Ошибка создания сотрудника'
+            );
+
+        }
+
+    }
+);
+
+app.get('/users/stores/:id', auth, async (req, res) => {
+
+    const userId =
+        req.params.id;
+
+    const [user] =
+        await db.execute(
+            `
+            SELECT *
+            FROM user
+            WHERE id = ?
+            `,
+            [userId]
+        );
+
+    const [stores] =
+    await db.execute(
+        `
+        SELECT s.*
+        FROM stores s
+        INNER JOIN user_stores us
+            ON us.store_id = s.id
+        WHERE us.user_id = ?
+        ORDER BY s.name
+        `,
+        [req.session.user.id]
+    );
+
+    const [selectedStores] =
+        await db.execute(
+            `
+            SELECT store_id
+            FROM user_stores
+            WHERE user_id = ?
+            `,
+            [userId]
+        );
+
+    res.render('user_stores', {
+
+        user_st: user[0],
+        stores,
+        selectedStores,
 
         titleKey: 'title.user_new',
         activeMenu: 'settings',
@@ -971,8 +1743,175 @@ app.get('/user/new', (req, res) => {
 
 });
 
+app.get('/users/block/:id',requireAdmin, auth, async (req, res) => {
 
+        const userId = Number(req.params.id);
+        // нельзя заблокировать самого себя
+        if (userId === req.session.user.id) {
 
+            return res.send(
+                'Нельзя заблокировать самого себя'
+            );
+
+        }
+        // сотрудник должен принадлежать текущему админу
+        const [rows] =
+            await db.execute(
+                `
+                SELECT id
+                FROM user
+                WHERE id = ?
+                AND id_admin = ?
+                `,
+                [
+                    userId,
+                    req.session.user.id
+                ]
+            );
+
+        if (!rows.length) {
+
+            return res.status(403).send(
+                'Доступ запрещён'
+            );
+
+        }
+
+        await db.execute(
+            `
+            UPDATE user
+            SET status = 'blocked'
+            WHERE id = ?
+            `,
+            [userId]
+        );
+
+        res.redirect(
+            `/users/${userId}`
+        );
+
+    }
+);
+
+app.get('/users/unblock/:id', auth, requireAdmin, async (req, res) => {
+
+    const userId =
+        Number(req.params.id);
+
+    const [rows] =
+        await db.execute(
+            `
+            SELECT id
+            FROM user
+            WHERE id = ?
+            AND id_admin = ?
+            `,
+            [
+                userId,
+                req.session.user.id
+            ]
+        );
+
+    if (!rows.length) {
+
+        return res.status(403).send(
+            'Доступ запрещён'
+        );
+
+    }
+
+    await db.execute(
+        `
+        UPDATE user
+        SET status = 'active'
+        WHERE id = ?
+        `,
+        [userId]
+    );
+
+    res.redirect(
+        `/users/${userId}`
+    );
+
+});
+
+app.get('/users/delete/:id', auth,requireAdmin, async (req, res) => {
+
+    const userId =
+        req.params.id;
+
+    if (Number(req.params.id) === req.session.user.id) {
+
+        return res.send(
+            'Нельзя удалить самого себя'
+        );
+
+    }
+
+    await db.execute(
+        `
+        DELETE
+        FROM user_stores
+        WHERE user_id = ?
+        `,
+        [userId]
+    );
+
+    await db.execute(
+        `
+        DELETE
+        FROM user
+        WHERE id = ?
+        `,
+        [userId]
+    );
+
+    res.redirect('/settings?tab=users');
+
+});
+
+app.post('/users/stores/:id', auth, async (req, res) => {
+
+    const userId = req.params.id;
+
+    const stores =
+        Array.isArray(req.body.stores)
+            ? req.body.stores
+            : req.body.stores
+                ? [req.body.stores]
+                : [];
+
+    await db.execute(
+        `
+        DELETE
+        FROM user_stores
+        WHERE user_id = ?
+        `,
+        [userId]
+    );
+
+    for (const storeId of stores) {
+
+        await db.execute(
+            `
+            INSERT INTO user_stores
+            (
+                user_id,
+                store_id
+            )
+            VALUES (?, ?)
+            `,
+            [
+                userId,
+                storeId
+            ]
+        );
+
+    }
+
+    res.redirect(`/users/${userId}`);
+
+});
 
 // Выход из акаунта
 app.get('/logout', (req, res) => {
@@ -984,8 +1923,7 @@ app.get('/logout', (req, res) => {
     });
 
 });
-
-app.get('/invoice/:id/delete-item/:index', (req, res) => {
+app.get('/invoice/:id/delete-item/:index', auth, (req, res) => {
 
     const invoiceId =
         req.params.id;
@@ -1040,46 +1978,7 @@ app.get('/invoice/:id/delete-item/:index', (req, res) => {
 
 });
 
-// Сохранение чека
-app.post('/save-invoice', auth, (req, res) => {
-
-    const invoice = req.body;
-
-    const invoiceNumber = getNextInvoiceNumber();
-
-    invoice.number = invoiceNumber;
-
-    const filePath = path.join(
-        __dirname,
-        'data',
-        'invoices',
-        `${invoiceNumber}.json`
-    );
-
-    fs.writeFile(
-        filePath,
-        JSON.stringify(invoice, null, 2),
-        err => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false
-                });
-            }
-
-            res.json({
-                success: true,
-                number: invoiceNumber
-            });
-
-        }
-    );
-
-});
-
-app.post('/invoice/status/:id', (req, res) => {
+app.post('/invoice/status/:id', auth, (req, res) => {
 
     const invoiceId =
         req.params.id;
@@ -1121,8 +2020,7 @@ app.post('/invoice/status/:id', (req, res) => {
     );
 
 });
-
-app.post('/invoice/delete/:id', (req, res) => {
+app.post('/invoice/delete/:id', auth, (req, res) => {
 
     const filePath = path.join(
         __dirname,
@@ -1140,7 +2038,7 @@ app.post('/invoice/delete/:id', (req, res) => {
     res.redirect('/sales');
 
 });
-app.get('/invoice/delete/:id', (req, res) => {
+app.get('/invoice/delete/:id', auth, (req, res) => {
 
     const invoiceId =
         req.params.id;
@@ -1161,8 +2059,7 @@ app.get('/invoice/delete/:id', (req, res) => {
     res.redirect('/sales');
 
 });
-
-app.get('/settings', async(req, res) => {
+app.get('/settings', auth, async(req, res) => {
     if (
         !req.session.user ||
         req.session.user.role !== 'admin'
@@ -1196,10 +2093,12 @@ app.get('/settings', async(req, res) => {
         [req.session.user.id]
     );
 
-
+    const tab =
+        req.query.tab || 'company';
     res.render('settings', {
         titleKey: 'title.settings',
         activeMenu: 'settings',
+        activeSettingsTab: tab,
         stores,
         users,
         script: [
@@ -1226,61 +2125,6 @@ app.get('/settings', async(req, res) => {
 
 });
 
-app.post('/user/new', async (req, res) => {
-
-    const {
-        name,
-        email,
-        login,
-        password,
-        role
-    } = req.body;
-
-    const hashedPassword =
-        await bcrypt.hash(
-            password,
-            10
-        );
-
-    const [rows] =
-        await db.execute(
-            `
-            SELECT COALESCE(MAX(id), 0) + 1 AS nextId
-            FROM user
-            `
-        );
-
-    await db.execute(
-        `
-        INSERT INTO user
-        (
-            id,
-            name,
-            email,
-            login,
-            password,
-            role,
-            avatar,
-            id_admin
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-            rows[0].nextId,
-            name,
-            email,
-            login,
-            hashedPassword,
-            role,
-            '/img/default-avatar.png',
-            req.session.user.id
-        ]
-    );
-
-    res.redirect('/settings');
-
-});
-
 // Переключение языка
 app.get('/lang/:lang', (req, res) => {
     const lang = req.params.lang;
@@ -1293,10 +2137,6 @@ app.get('/lang/:lang', (req, res) => {
 
     res.redirect(req.get('Referer') || '/');
 });
-
-
-
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });
-

@@ -3,65 +3,75 @@
   margin-bottom: 20px;
 }
 /* Кнопка новый чек в разделе продажи */
-
-.invoice-row {
-    cursor: pointer;
+.sales-table {
+    background: #fff;
 }
 
-.invoice-row:hover {
-    background-color: #f8f9fa;
-}
-
-.invoice-list thead th {
-    background: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    color: #495057;
-    padding: 14px;
-}
-
-.invoice-row {
-    cursor: pointer;
-    transition: all .15s ease;
-}
-
-.invoice-row:hover {
-    background: #f8f9fa;
-}
-
-.invoice-row td {
-    padding: 14px;
-}
-
-.invoice-number {
-    background: #eef4ff;
-    color: #0d6efd;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-weight: 600;
-}
-
-.invoice-total {
+.sales-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
     font-weight: 700;
-    color: #212529;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 16px;
+}
+
+.sales-table td {
+    padding: 16px;
+    vertical-align: middle;
+    border-color: #f1f5f9;
+}
+
+.sales-table tbody tr {
+    transition: .2s;
+}
+
+.sales-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.invoice-badge {
+    display: inline-block;
+    padding: 8px 14px;
+    background: #e8f0ff;
+    color: #2563eb;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.customer-name {
+    font-weight: 600;
+}
+
+.sale-sum {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.status-success {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #16a34a;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.sales-table .btn-light {
+    border: 1px solid #e5e7eb;
+}
+
+.sales-table .btn-light:hover {
+    background: #2563eb;
+    color: #fff;
+    background: #f4f8ff;
+    box-shadow: inset 4px 0 #0d6efd;
 }
 
 
-.table-scroll {
-    max-height: 500px;
-    overflow-y: auto;
-
-    
+.invoice-row{
+    cursor: pointer;
 }
-.table-scroll thead th {
-    position: sticky;
-    top: 0;
-
-    background: #f8f9fa;
-    z-index: 10;
-}
-.table-scroll {
-    height: calc(100vh - 250px);
-    overflow-y: auto;
-}
-

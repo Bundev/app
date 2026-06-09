@@ -3,31 +3,83 @@ function filterProducts() {
 
     const search =
         document
-            .getElementById('search-product')
+            .getElementById(
+                'search-product'
+            )
             .value
-            .toLowerCase();
+            .toLowerCase()
+            .trim();
 
-    let count = 0;
+    const rows =
+        document.querySelectorAll(
+            '#products-table tr'
+        );
 
-    document
-        .querySelectorAll('#products-table tr')
-        .forEach(row => {
+    let visibleCount = 0;
 
-            const text =
-                row.textContent.toLowerCase();
+    rows.forEach(row => {
 
-            const visible =
-                text.includes(search);
+        const name =
+            row.dataset.name
+                ?.toLowerCase() || '';
 
-            row.style.display =
-                visible ? '' : 'none';
+        const sku =
+            row.dataset.sku
+                ?.toLowerCase() || '';
 
-            if (visible) count++;
+        const barcode =
+            row.dataset.barcode
+                ?.toLowerCase() || '';
 
-        });
+        const category =
+            row.dataset.category
+                ?.toLowerCase() || '';
 
-    document
-        .getElementById('products-count')
-        .textContent = count;
+        const found =
+            name.includes(search) ||
+            sku.includes(search) ||
+            barcode.includes(search) ||
+            category.includes(search);
+
+        row.style.display =
+            found
+                ? ''
+                : 'none';
+
+        if (found)
+            visibleCount++;
+
+    });
+
+    document.getElementById(
+        'products-count'
+    ).textContent =
+        visibleCount;
 
 }
+
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+        const toast =
+            document.getElementById(
+                'successToast'
+            );
+
+        if (!toast) return;
+
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    'show'
+                );
+
+            },
+            5000
+        );
+
+    }
+);
+

@@ -1,42 +1,151 @@
-  const searchInput = document.getElementById('search');
-  const resultsDiv = document.getElementById('results');
-  const productSearchResult = document.getElementById('searchresults');
+const productSearchResult = document.getElementById('searchresults');
+const searchInput = document.getElementById('product-search');
+const searchResults = document.getElementById('search-results');
 
-  let timer;
+searchInput.addEventListener(
+    'input',
+    async () => {
 
-  searchInput.addEventListener('input', () => {
-    clearTimeout(timer);
+        const query =
+            searchInput.value.trim();
 
-    timer = setTimeout(async () => {
-      const q = searchInput.value;
+        if (query.length < 2) {
 
-      if (q.length < 2) {
-        resultsDiv.innerHTML = '';
-        productSearchResult.style.display = 'none';
-        return;
-      }
+            searchResults.style.display =
+                'none';
 
-      const response = await fetch(
-        `/search?q=${encodeURIComponent(q)}`
-      );
+            return;
 
-      const products = await response.json();
+        }
 
-      if (products.length === 0) {
-        resultsDiv.innerHTML = '';
-        productSearchResult.style.display = 'none';
-        return;
-      }
-      
-      resultsDiv.innerHTML = products.map(product => `
-        <div class="product" data-name='${product.name}' title='${product.name}' data-unit="${product.unit}" data-price="${product.price}">
-          <div class="nomin" >${product.name}</div>
-          <div class="price">${product.price}</div>
-        </div>
-      `).join('');
-      productSearchResult.style.display = 'block';
-    }, 300);
-  });
+        const response =
+            await fetch(
+                `/api/products/search?q=${encodeURIComponent(query)}`
+            );
+
+        const products =
+            await response.json();
+
+        searchResults.innerHTML =
+            '';
+
+        products.forEach(product => {
+
+            const item =
+                document.createElement(
+                    'button'
+                );
+
+            item.type =
+                'button';
+
+            item.className =
+                'list-group-item list-group-item-action';
+
+            item.innerHTML =
+                `
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <strong>
+                            ${product.name}
+                        </strong>
+
+                        <br>
+
+                        <small class="text-muted">
+
+                            Арт:
+                            ${product.sku || '-'}
+
+                            |
+                            ШК:
+                            ${product.barcode || '-'}
+
+                        </small>
+
+                    </div>
+
+                    <div class="text-end">
+
+                        <strong>
+
+                            ${product.sale_price} ₴
+
+                        </strong>
+
+                        <br>
+
+                        <small>
+
+                            Остаток:
+                            ${product.quantity}
+
+                        </small>
+
+                    </div>
+
+                </div>
+                `;
+
+            item.addEventListener(
+                'click',
+                () => {
+
+                    addProductToInvoice(
+                        product
+                    );
+
+                    searchInput.value =
+                        '';
+
+                    searchResults.style.display =
+                        'none';
+                    searchInput.focus();
+
+                }
+            );
+
+            searchResults.appendChild(
+                item
+            );
+
+        });
+
+        searchResults.style.display =
+            products.length
+                ? 'block'
+                : 'none';
+
+    }
+);
+
+searchInput.addEventListener(
+    'keydown',
+    e => {
+
+        if (
+            e.key === 'Enter'
+        ) {
+
+            const first =
+                searchResults.querySelector(
+                    '.list-group-item'
+                );
+
+            if (first) {
+
+                first.click();
+
+            }
+
+        }
+
+    }
+);
+
+
 
 function updateTotals() {
 
@@ -60,111 +169,132 @@ document
 
     });
 }
+function addProductToInvoice(product) {
 
-function addProduct(product) {
-  const rows = document.querySelectorAll('#item-products tr');
+    const rows =
+        document.querySelectorAll(
+            '#item-products tr'
+        );
 
     for (const row of rows) {
 
         const productName =
-            row.querySelector('.product-name').textContent.trim();
+            row.querySelector(
+                '.product-name'
+            ).textContent.trim();
 
-        if (productName === product.name.trim()) {
+        if (
+            productName ===
+            product.name.trim()
+        ) {
 
-            const qtyInput = row.querySelector('.qty');
+            const qtyInput =
+                row.querySelector(
+                    '.qty'
+                );
 
-            qtyInput.value = Number(qtyInput.value) + 1;
+            qtyInput.value =
+                Number(qtyInput.value) + 1;
 
-            updateQuantity(qtyInput);
+            updateQuantity(
+                qtyInput
+            );
 
             return;
+
         }
+
     }
 
-  const rowNumber =
-      document.querySelectorAll('#item-products tr').length + 1;
-  const html = `
-<tr>
+    const rowNumber =
+        document.querySelectorAll(
+            '#item-products tr'
+        ).length + 1;
 
-    <td>${rowNumber}</td>
+    const price =
+        Number(
+            product.sale_price || 0
+        );
 
-    <td
-        class="product-name"
-        data-name='${product.name}'
-        title='${product.name}'>
-        ${product.name}
-    </td>
 
-    <td>
-        <input
-            type="number"
-            class="form-control qty"
-            value="1"
-            min="1">
-    </td>
 
-    <td>${product.unit}</td>
+    const html =
+        `
+        <tr>
 
-    <td class="pricepoduct">
-        ${product.price.toFixed(2)}
-    </td>
+            <td>
+                ${rowNumber}
+            </td>
 
-    <td class="sum">
-        ${product.price.toFixed(2)}
-    </td>
+            <td
+                class="product-name"
+                data-id="${product.id}"
+                title='${product.name}'>
+                ${product.name}
 
-    <td>
-        <button
+            </td>
+
+            <td>
+
+                <input
+                    type="number"
+                    class="form-control qty"
+                    value="1"
+                    min="1">
+
+            </td>
+
+
+            <td class="pricepoduct" data-price="${price}">
+
+                ${price.toFixed(2)}
+
+            </td>
+
+            <td class="sum">
+
+                ${price.toFixed(2)}
+
+            </td>
+
+            <td>
+
+               <button
             type="button"
-            class="btn btn-outline-danger btn-sm remove">
-            ✕
+            class="btn btn-outline-danger btn-sm btn-remove remove">
+
+            <i class="bi bi-trash"></i>
+
         </button>
-    </td>
 
-</tr>
-`;
+            </td>
 
-  document
-      .getElementById('item-products')
-      .insertAdjacentHTML('beforeend', html);
+        </tr>
+        `;
 
-  updateTotals();
-  updateRowNumbers()
+    document
+        .getElementById(
+            'item-products'
+        )
+        .insertAdjacentHTML(
+            'beforeend',
+            html
+        );
+
+    updateTotals();
+
+    updateRowNumbers();
+
 }
 
-resultsDiv.addEventListener('click', (e) => {
-
-      const item = e.target.closest('.product');
-
-      if (!item) return;
-     
-      addProduct({
-          
-          name: item.dataset.name,
-          unit: item.dataset.unit,
-          price: Number(item.dataset.price)
-      });
-
-  });
 
 
-  
-// Копируеть текст при клике на элемент с классом .product-name
-  document.addEventListener('click', (e) => {
 
-  const product = e.target.closest('.product-name');
-  if (!product) return;
-  const text = product.dataset.name;
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-  
- 
-  // console.log('Скопировано:', text);
-});
+
+
+
+
+
 
 const cashInput = document.getElementById('cash');
 
@@ -231,118 +361,113 @@ document.addEventListener('input', (e) => {
     updateQuantity(e.target);
 
 });
-// Удаление текста в пойске
-document.getElementById('clearSearch').addEventListener('click', () => {
-    const input = document.getElementById('search');
-
-    input.value = '';
-    input.dispatchEvent(new Event('input'));
-    input.focus();
-});
-
-const search = document.getElementById('search');
-
-search.addEventListener('click', function () {
-    this.select();
-});
 
 // Добовляет дату в новом чеке
 document.getElementById('invoiceDate').value =
     new Date().toISOString().split('T')[0];
-// Сохранение чека
 async function saveInvoice() {
 
-    const items = [];
+    try {
 
-    document
-        .querySelectorAll('#item-products tr')
-        .forEach(row => {
+        const items = [];
 
-            items.push({
-                name: row.querySelector('.product-name')
-                    .dataset.name,
+        document
+            .querySelectorAll('#item-products tr')
+            .forEach(row => {
 
-                qty: Number(
-                    row.querySelector('.qty').value
-                ),
+                items.push({
 
-                price: Number(
-                    row.querySelector('.pricepoduct')
-                        .textContent
-                ),
+                    product_id:
+                        Number(
+                            row.querySelector('.product-name')
+                                .dataset.id
+                        ),
 
-                sum: Number(
-                    row.querySelector('.sum')
-                        .textContent
-                )
+                    quantity:
+                        Number(
+                            row.querySelector('.qty')
+                                .value
+                        ),
+
+                    price:
+                        Number(
+                            row.querySelector('.pricepoduct')
+                                .dataset.price
+                        )
+
+                });
+
             });
 
-            
+        if (!items.length) {
 
-        });
-
-        if (items.length === 0) {
-            alert('Добавьте хотя бы один товар');
-            return;
-
-        }
-
-        if (!document.getElementById('customer').value) {
-
-            alert('Выберите покупателя');
+            alert('Добавьте товары в чек');
 
             return;
 
         }
 
-        if (!document.getElementById('status').value) {
+        const response =
+            await fetch('/sales/save', {
 
-            alert('Выберите статус');
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+
+                    customer_id:
+                        document.querySelector('#customer')
+                            ?.value || null,
+
+                    payment_method:
+                        document.querySelector(
+                            '[name="paymentMethod"]'
+                        ).value,
+
+                    total:
+                        Number(
+                            document.getElementById(
+                                'total-sum'
+                            ).textContent
+                        ),
+
+                    items
+
+                })
+
+            });
+
+        const result =
+            await response.json();
+
+        if (!result.success) {
+
+            alert(
+                result.error ||
+                'Ошибка сохранения'
+            );
 
             return;
 
         }
 
-    const invoice = {
+        
 
-        customer:
-            document.getElementById('customer')
-                ?.value || '',
+        window.location =
+            '/sales';
 
-        status:
-            document.getElementById('status')
-                ?.value || '',
+    } catch (error) {
 
-        date:
-            document.getElementById('invoiceDate')
-                ?.value || '',
+        console.error(error);
 
-        total:
-            Number(
-                document.getElementById('total-sum')
-                    .textContent
-            ),
+        alert(
+            'Ошибка соединения с сервером'
+        );
 
-        items
-
-    };
-
-    const response = await fetch(
-        '/save-invoice',
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type':
-                    'application/json'
-            },
-            body: JSON.stringify(invoice)
-        }
-    );
-
-    const result = await response.json();
-
-    if (result.success) {
-        window.location.href = '/sales';
     }
 
 }

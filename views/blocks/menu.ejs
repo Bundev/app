@@ -8,7 +8,7 @@
         <li class="nav-item">
             <a class="nav-link <%= activeMenu === 'sales' ? 'active' : '' %>" href="/sales">🛒 <%= __('title.sales') %></a>
         </li>
-
+        <% if (user && user.role === 'admin') { %>
         <li class="nav-item">
             <a class="nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">📦 <%= __('title.products') %></a>
         </li>
@@ -21,12 +21,12 @@
         href="/finance/cash">
         💰 <%= __('title.finance') %>
         </a>
-
+        
         <a class="nav-link <%= activeMenu === 'suppliers' ? 'active' : '' %>"
         href="/suppliers">
         🚚 <%= __('title.suppliers') %>
         </a>
-        <% if (user && user.role === 'admin') { %>
+        
         <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>"
         href="/settings">
         ⚙️ <%= __('title.settings') %>

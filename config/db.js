@@ -7,7 +7,8 @@ const db = mysql.createPool({
     port: 3306,
     user: 'u891612247_bundev95',
     password: 'Bundev1995',
-    database: 'u891612247_crm'
+    database: 'u891612247_crm',
+    timezone: '+03:00'
     
 });
 

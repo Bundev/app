@@ -1,227 +1,136 @@
-/*Выпадающи список в поиске в новом счете  */
-
-
-#searchresults {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 1050;
-    background: #fff;
-    border-top: none;
-    max-height: 350px;
-    overflow-y: auto;
-    box-shadow: 0 8px 20px rgba(0,0,0,.08);
-
-    display: none;
-}
-
-#producttop {
-    position: sticky;
-    top: 0;
-    background: #f8f9fa;
-
-    display: grid;
-    grid-template-columns: 1fr 120px;
-
-    padding: 10px;
-
-    border-bottom: 1px solid #dee2e6;
-
-    z-index: 1;
-}
-
-.product {
-    display: grid;
-    grid-template-columns: 1fr 120px;
-
-    padding: 10px;
-
-    cursor: pointer;
-
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.product:hover {
-    background: #f8f9fa;
-}
-
-.price {
-    text-align: right;
-}
-
-#searchresults {
-    max-width: 900px;
-}
-
-.searchbox {
-    max-width: 900px;
-}
-
-
- #results{
-   max-height: 200px;
-   overflow-y: auto;
-   width: 100%;
-   
-   
-   
- }
-
- .product {
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    cursor: pointer;
-    
- }
-
-  .product:hover {
-    background-color: #f0f0f0;
-  }
-
-  .product:last-child {
-    border-bottom: none;
-  }
-
-  
-
- .nomin{
-   float: left;
-   width: 87%;
-   white-space: nowrap; /* Запрещаем перенос текста на новую строку */
-   overflow: hidden; /* Скрываем текст, который не помещается в блок */
-   text-overflow: ellipsis; /* Добавляем троеточие (...) в конце */
- }
-
- /*Выпадающи список в поиске в новом счете  */
- /* Пойск в новом счете */
-
- .searchbox {
-   position: relative;
-   width: 100vw;
-   
- }
-
-
-.searchbox {
-    position: relative;
-    width: 100%;
-}
-
- 
- input:focus{
-   box-shadow: none;
-   border-color: #007bff;
- }
- 
- /* Пойск в новом счете */
-
- 
 /* Таблица в новом счете */
-.table-sales thead {
-    background: #f8f9fa;
+.table-sales {
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .table-sales thead th {
-    color: #495057;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f8f9fa;
+    font-size: 13px;
     font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
     border-bottom: 2px solid #dee2e6;
+    box-shadow: 0 1px 0 #dee2e6;
+}
+
+.table-sales tbody tr {
+    height: 72px;
+    transition: .2s;
 }
 
 .table-sales tbody tr:hover {
-    background: #f8f9fa;
+    background: #f8fafc;
 }
 
-.table-sales td,
-.table-sales th {
+.table-sales td {
     padding: 12px;
     vertical-align: middle;
 }
 
 .product-name {
-    max-width: 500px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor:pointer;
+    font-weight: 600;
+    color: #212529;
+}
+
+.pricepoduct {
+    color: #198754;
+    font-weight: 600;
+}
+
+.sum {
+    font-weight: 700;
+    font-size: 16px;
+    color: #0d6efd;
 }
 
 .qty {
-    width: 90px;
+    width: 80px;
     text-align: center;
+    font-weight: 600;
+    border-radius: 10px;
 }
 
-.pricepoduct,
-.sum {
-    font-weight: 500;
-}
-
-.remove {
-    width: 32px;
-    height: 32px;
+.btn-remove {
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    padding: 0;
 }
 
-.card-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 100;
+.table-sales tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.card {
-  margin-top: 20px;
-}
-
-.table-container {
+.products-table-wrapper {
     height: 400px;
     overflow-y: auto;
-    border: 1px solid #dee2e6;
+    overflow-x: hidden;
+    position: relative;
 }
 
-.table-sales {
-    background: white;
+.products-table-wrapper::-webkit-scrollbar {
+    width: 8px;
 }
 
-.table-sales tbody tr:hover {
+.products-table-wrapper::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 10px;
+}
+
+.products-table-wrapper::-webkit-scrollbar-track {
     background: #f8f9fa;
 }
 
-.table-sales td,
-.table-sales th {
-    vertical-align: middle;
-}
+/* Таблица в новом счете */
 
-
-
-.table-sales thead th {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-
-    background: #ffffff;
-    color: #212529;
-
-    font-weight: 600;
-
-    border-bottom: 2px solid #dee2e6;
-}
-
-.table-sales tbody tr:hover {
-    background: #f8f9fa;
-}
-
-
+/* Нижняя панел */
 .card-footer {
     position: sticky;
     bottom: 0;
-    background: white;
     z-index: 100;
+    background: #fff !important;
     border-top: 1px solid #dee2e6;
+    box-shadow: 0 -2px 10px rgba(0,0,0,.05);
 }
 
+#total-sum {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0d6efd;
+}
 
-/* Таблица в новом счете */
+#change {
+    font-size: 20px;
+    font-weight: 700;
+    color: #198754;
+}
+
+#cash {
+    text-align: center;
+    font-weight: 600;
+}
+.card-footer {
+    position: fixed;
+    bottom: 0;
+    left: 260px; /* ширина меню */
+    right: 0;
+    z-index: 1050;
+    background: #fff !important;
+    border-top: 1px solid #dee2e6;
+    padding: 15px 20px;
+    box-shadow: 0 -2px 15px rgba(0,0,0,.08);
+}
+.content {
+    padding-bottom: 100px;
+}
+
+/* Нижняя панел */
 
 
 

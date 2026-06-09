@@ -12,12 +12,13 @@
         <div class="col content">
           <div class="d-flex justify-content-between align-items-center mb-3">
 
-              <h2 class="mb-0 new-header">
-                  🧾 Новый чек
-                  <span class="badge bg-primary ms-2">
-                      №<%= invoiceId %>
-                  </span>
-              </h2>
+              <h1 class="mb-0">
+                Новый чек
+            </h1>
+
+            <span class="badge bg-primary fs-4">
+                <%= invoiceNumber %>
+            </span>
 
           </div>
           <div class="card border-0 shadow-sm mb-3">
@@ -29,56 +30,22 @@
                             <select class="form-select" id="customer">
                             <option value="">Выберите покупателя</option>
 
-                            <option value="Основной покупатель" selected>
+                            <option value="0" selected>
                                 Основной покупатель
                             </option>
 
-                            <option value="Бунде Иван">
-                                Бунде Иван
-                            </option>
-
-                            <option value="Бундев Вячеслав">
-                                Бундев Вячеслав
-                            </option>
-
-                            <option value="Нотивский Иван">
-                                Нотивский Иван
-                            </option>
                         </select>
                         </div>
 
-                        <div class="col-12 col-md-3">
-                            <select
-                                name="status"
-                                id="status"
-                                class="form-select">
+                        
 
-                                <% Object.keys(statuses).forEach(key => { %>
-
-                                    <option
-                                        value="<%= key %>"
-                                        <%= (typeof invoice !== 'undefined'
-                                            ? invoice.status === key
-                                            : key === 'new')
-                                            ? 'selected'
-                                            : '' %>>
-
-                                        <%= statuses[key].title %>
-
-                                    </option>
-
-                                <% }) %>
-
-                            </select>
-                        </div>
-
-                        <div class="col-12 col-md-2">
+                        <!-- <div class="col-12 col-md-2">
                             <input
                                 id="invoiceDate"
                                 type="date"
                                 class="form-control"
                                 value="">
-                        </div>
+                        </div> -->
 
                         <div class="col-12 col-md-2">
                             <button class="btn btn-success w-100">
@@ -88,91 +55,124 @@
                     </div>
                 </div>
             </div>
-        <div class="input-group mb-3">
-            
-            <div class="searchbox flex-grow-1">
-                <div class="position-relative">
-                    <input class="form-control" id="search" type="text" placeholder="Введите название товара">
-                    <button type="button" id="clearSearch" class="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent">✕</button>
-                </div>
+<div class="card border-0 shadow-sm mb-3">
+<div class="card-body">
+<div class="position-relative">
 
-                <div id="searchresults">
-                    <div id="producttop">
-                        <div class="nomin"><b>Название товара</b></div>
-                        <div class="price"><b>Цена</b></div>
-                    </div>
-                    <div id="results"></div>
-                </div>
-            </div>
-        </div>
+    <input
+        type="text"
+        id="product-search"
+        class="form-control"
+        autocomplete="off"
+        placeholder="🔍 Название, артикул или штрихкод">
+
+    <div
+        id="search-results"
+        class="list-group position-absolute w-100 shadow"
+        style="
+            display:none;
+            z-index:9999;
+            max-height:300px;
+            overflow-y:auto;
+        ">
+    </div>
+
+</div>
+</div>
+</div>  
         <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-container">
-                    <table class="table table-hover align-middle table-sales">
+            <div class="card-body border-0 p-0">
+
+                <div class="products-table-wrapper border-0" >
+
+                    <table class="table table-sales align-middle">
+
                         <thead>
                             <tr>
-                                <th style="width:60px">№</th>
-                                <th>Название товара</th>
-                                <th style="width:120px">Кол-во</th>
-                                <th style="width:80px">Ед.</th>
-                                <th style="width:120px">Цена</th>
-                                <th style="width:120px">Сумма</th>
-                                <th style="width:80px"></th>
+                                <th width="60">№</th>
+                                <th>Товар</th>
+                                <th width="120">Кол-во</th>
+                                <th width="120">Цена</th>
+                                <th width="140">Сумма</th>
+                                <th width="70"></th>
                             </tr>
                         </thead>
+
                         <tbody id="item-products">
                         </tbody>
+
                     </table>
+
                 </div>
 
             </div>
 
             <div class="card-footer bg-white">
 
-                <div class="d-flex justify-content-end align-items-center gap-3">
-                    <div>
-                        <strong id="change">0.00 ₴</strong>
-                    </div>
-                    <input
-                        type="number"
-                        id="cash"
-                        class="form-control"
-                        style="width:140px"
-                        placeholder="Получено">
+<div class="d-flex justify-content-between align-items-center">
 
-                    <div>
-                        <strong>Итого:</strong>
-                        <span id="total-sum">0.00</span> ₴
-                    </div>
-                    <div class="col-md-4">
+    <div>
 
-                        <select
-                            name="paymentMethod"
-                            class="form-select">
+        <div class="text-muted">
+            Сдача
+        </div>
 
-                            <option value="cash">
-                                💵 Наличные
-                            </option>
+        <strong id="change">
+            0.00 ₴
+        </strong>
 
-                            <option value="card">
-                                💳 Карта
-                            </option>
+    </div>
 
-                            <option value="transfer">
-                                🏦 Перевод
-                            </option>
+    <input
+        type="number"
+        id="cash"
+        class="form-control"
+        style="width:140px"
+        placeholder="Получено">
 
-                        </select>
+    <select
+        name="paymentMethod"
+        class="form-select"
+        style="width:180px">
 
-                    </div>
-                    <button
-                        id="saveInvoice"
-                        class="btn btn-success" onclick="saveInvoice()">
-                        <i class="bi bi-save"></i>
-                        Сохранить чек
-                    </button>
+        <option value="cash">
+            💵 Наличные
+        </option>
 
-                </div>
+        <option value="card">
+            💳 Карта
+        </option>
+
+        <option value="transfer">
+            🏦 Перевод
+        </option>
+
+    </select>
+
+    <div>
+
+        <div class="text-muted">
+            Итого
+        </div>
+
+        <strong id="total-sum">
+            0.00 ₴
+        </strong>
+
+    </div>
+
+    <button
+        id="saveInvoice"
+        class="btn btn-success btn-lg"
+        onclick="saveInvoice()">
+
+        <i class="bi bi-save"></i>
+
+        Сохранить чек
+
+    </button>
+
+</div>
 
             </div>
 

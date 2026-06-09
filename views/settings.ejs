@@ -27,7 +27,7 @@
                     <div class="list-group shadow-sm">
 
                         <a href="#company"
-                        class="list-group-item list-group-item-action active"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'company' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             🏢 Компания
@@ -35,7 +35,7 @@
                         </a>
 
                         <a href="#users"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'users' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             👥 Сотрудники
@@ -43,7 +43,7 @@
                         </a>
 
                         <a href="#stores"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'stores' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             🏪 Магазины
@@ -51,7 +51,7 @@
                         </a>
 
                         <a href="#payments"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'payments' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             💳 Способы оплаты
@@ -59,7 +59,7 @@
                         </a>
 
                         <a href="#statuses"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action statuses <%= activeSettingsTab === 'statuses' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             📄 Статусы заказов
@@ -67,7 +67,7 @@
                         </a>
 
                         <a href="#invoice"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'invoice' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             🧾 Нумерация чеков
@@ -75,7 +75,7 @@
                         </a>
 
                         <a href="#language"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'language' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             🌍 Локализация
@@ -83,7 +83,7 @@
                         </a>
 
                         <a href="#security"
-                        class="list-group-item list-group-item-action"
+                        class="list-group-item list-group-item-action <%= activeSettingsTab === 'security' ? 'active' : '' %>"
                         data-bs-toggle="list">
 
                             🔒 Права доступа
@@ -99,7 +99,7 @@
                     <div class="tab-content">
 
                         <!-- Компания -->
-                        <div class="tab-pane fade show active"
+                        <div class="tab-pane fade <%= activeSettingsTab === 'company' ? 'show active' : '' %>"
                             id="company">
 
                             <div class="card shadow-sm">
@@ -154,7 +154,7 @@
 
 
                         <!-- Пользователи -->
-                        <div class="tab-pane fade" id="users">
+                        <div class="tab-pane fade <%= activeSettingsTab === 'users' ? 'show active' : '' %>" id="users">
 
                             <div class="card shadow-sm">
 
@@ -276,7 +276,7 @@
 
 
 
-                        <div class="tab-pane fade" id="stores">
+                        <div class="tab-pane fade <%= activeSettingsTab === 'stores' ? 'show active' : '' %>" id="stores">
                             <div class="card shadow-sm">
                                 <div class="card-header d-flex justify-content-between">
                                     <span>
@@ -298,7 +298,7 @@
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th width="80">ID</th>
+                                            
                                             <th>Название</th>
                                             <th>Адрес</th>
                                             <th>Телефон</th>
@@ -310,12 +310,6 @@
                                     <tbody>
                                         <% stores.forEach(store => { %>
                                         <tr>
-                                            <td>
-                                                <span class="badge bg-secondary">
-                                                    #<%= store.id %>
-                                                </span>
-                                            </td>
-
                                             <td>
                                                 <strong><%= store.name %></strong>
                                             </td>
@@ -363,7 +357,7 @@
                         </div>
 
                         <!-- Способы оплаты -->
-                        <div class="tab-pane fade"
+                        <div class="tab-pane fade <%= activeSettingsTab === 'payments' ? 'show active' : '' %>"
                             id="payments">
 
                             <div class="card shadow-sm">

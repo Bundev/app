@@ -4,6 +4,35 @@
    <%- include('blocks/head') -%>
   </head>
   <body>
+<% if (success) { %>
+
+<div
+    class="position-fixed top-0 end-0 p-3"
+    style="z-index: 9999">
+
+    <div
+        class="card border-success shadow">
+
+        <div
+            class="card-header bg-success text-white">
+
+            <i class="bi bi-check-circle"></i>
+
+            Импорт завершён
+
+        </div>
+
+        <div class="card-body">
+
+            <%= success %>
+
+        </div>
+
+    </div>
+
+</div>
+
+<% } %>
     <div id="overlay"></div>
     <%- include('blocks/header') -%>
     <div class="container-fluid" id="cont">
@@ -16,75 +45,216 @@
             <h2>
                 📦 Товары
             </h2>
+            
+<div class="d-flex gap-2">
 
-            <a href="/products/new"
-            class="btn btn-primary">
+    <a
+        href="/products/new"
+        class="btn btn-primary">
 
-                + Добавить товар
+        <i class="bi bi-plus-lg"></i>
+        Добавить товар
+
+    </a>
+
+    <a
+        href="/products/import"
+        class="btn btn-success">
+
+        <i class="bi bi-file-earmark-excel"></i>
+        Импорт Excel
+
+    </a>
+
+</div>
+
+        </div>
+
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-body">
+
+        <div class="d-flex justify-content-between mb-3">
+
+            <input
+    type="text"
+    class="form-control"
+    id="search-product"
+    placeholder="🔍 Поиск по названию, артикулу, штрихкоду..."
+    oninput="filterProducts()">
+
+            <span
+                id="products-count"
+                class="badge bg-primary align-self-center">
+
+                <%= products.length %>
+
+            </span>
+
+        </div>
+
+        <div class="table-responsive products-table-wrapper">
+
+            <table class="table table-hover align-middle">
+<thead class="table-light">
+
+<tr>
+
+    <th width="120">
+        Артикул
+    </th>
+
+    <th>
+        Товар
+    </th>
+
+    <th width="120">
+        Цена
+    </th>
+
+    <th width="100">
+        Остаток
+    </th>
+
+    <th width="120">
+        Действия
+    </th>
+
+</tr>
+
+</thead>
+                
+<tbody id="products-table">
+
+<% products.forEach(product => { %>
+
+<tr
+    data-name="<%= product.name %>"
+    data-sku="<%= product.sku || '' %>"
+    data-barcode="<%= product.barcode || '' %>"
+    data-category="<%= product.category_name || '' %>">
+
+    <td>
+
+        <code>
+            <%= product.sku || '-' %>
+        </code>
+
+    </td>
+
+    <td>
+
+        <div class="d-flex flex-column">
+
+            <span class="fw-semibold product-name">
+
+                <%= product.name %>
+
+            </span>
+
+            <div class="mt-1">
+
+                <span class="badge bg-light text-dark border">
+
+                    <%= product.category_name || 'Без категории' %>
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </td>
+
+    <td>
+
+        <div class="fw-bold text-success">
+
+            <%= product.sale_price %> ₴
+
+        </div>
+
+        <small class="text-muted">
+
+            Закупка:
+            <%= product.purchase_price %> ₴
+
+        </small>
+
+    </td>
+
+    <td>
+
+        <% if (product.quantity <= 0) { %>
+
+            <span class="badge bg-danger">
+
+                Нет
+
+            </span>
+
+        <% } else if (product.quantity < 5) { %>
+
+            <span class="badge bg-warning text-dark">
+
+                <%= product.quantity %>
+
+            </span>
+
+        <% } else { %>
+
+            <span class="badge bg-success">
+
+                <%= product.quantity %>
+
+            </span>
+
+        <% } %>
+
+    </td>
+
+    <td>
+
+        <div class="btn-group btn-group-sm">
+
+            <a
+                href="/products/<%= product.id %>"
+                class="btn btn-outline-primary">
+
+                👁
+
+            </a>
+
+            <a
+                href="/products/edit/<%= product.id %>"
+                class="btn btn-outline-secondary">
+
+                ✏️
 
             </a>
 
         </div>
 
-        <div class="card shadow-sm border-0">
+    </td>
 
-            <div class="card-body">
-
-                <div class="d-flex justify-content-between mb-3">
-
-                   <input
-        type="text"
-        class="form-control me-2"
-        id="search-product"
-        oninput="filterProducts()"
-        placeholder="🔍 Поиск товара">
-
-                    <span
-                        id="products-count"
-                        class="badge bg-primary align-self-center">
-
-                        <%= products.length %>
-
-                    </span>
-
-                </div>
-                <div class="table-scroll">
-
-                    <table class="table table-hover">
-
-                        <thead>
-                            <tr>
-                                <th>Код</th>
-                                <th>Название</th>
-                                <th>Цена</th>
-                                <th>Остаток</th>
-                            </tr>
-                        </thead>
-
-<tbody id="products-table">
-
-<% products.forEach(product => { %>
-
-<tr>
-    <td><%= product.id %></td>
-    <td><%= product.name %></td>
-    <td><%= product.price %></td>
-    <td><%= product.stock %></td>
 </tr>
 
 <% }) %>
 
 </tbody>
 
-                    </table>
-
-                </div>
-
-
-
-            </div>
+            </table>
 
         </div>
+
+    </div>
+
+</div>
+
+
+
+        
 
 
 

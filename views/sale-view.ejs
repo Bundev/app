@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <%- include('blocks/head') -%>
+</head>
+
+<body>
+
+<%- include('blocks/header') -%>
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <%- include('blocks/menu') -%>
+
+        <div class="col content">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between mb-4">
+
+                        <h2>
+                            🧾 Чек №<%= sale.invoice_number %>
+                        </h2>
+
+                        <a
+                            href="/sales"
+                            class="btn btn-outline-secondary">
+
+                            Назад
+
+                        </a>
+
+                    </div>
+
+                    <div class="row mb-4">
+
+                        <div class="col-md-3">
+
+                            <strong>Дата:</strong><br>
+
+                            <%= new Date(sale.created_at)
+                                .toLocaleString('ru-RU') %>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <strong>Клиент:</strong><br>
+
+                            <%= sale.customer_name || 'Основной покупатель' %>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <strong>Магазин:</strong><br>
+
+                            <%= sale.store_name %>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <strong>Оплата:</strong><br>
+
+                            <%= sale.payment_method %>
+
+                        </div>
+
+                    </div>
+
+                    <table class="table">
+
+                        <thead>
+
+                            <tr>
+                                <th>Артикул</th>
+                                <th>Товар</th>
+                                <th>Кол-во</th>
+                                <th>Цена</th>
+                                <th>Сумма</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        <% items.forEach(item => { %>
+
+                            <tr>
+
+                                <td>
+                                    <%= item.sku || '-' %>
+                                </td>
+
+                                <td>
+                                    <%= item.name %>
+                                </td>
+
+                                <td>
+                                    <%= item.quantity %>
+                                </td>
+
+                                <td>
+                                    <%= Number(item.price).toFixed(2) %> ₴
+                                </td>
+
+                                <td>
+                                    <%= Number(item.subtotal).toFixed(2) %> ₴
+                                </td>
+
+                            </tr>
+
+                        <% }) %>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="text-end mt-4">
+
+                        <h3>
+
+                            Итого:
+                            <%= Number(sale.total).toFixed(2) %> ₴
+
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<%- include('blocks/footer') -%>
+
+</body>
+</html>

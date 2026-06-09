@@ -18,7 +18,8 @@
 		"store-add": "title.store-add",
 		"user_views": "title.user_views",
 		"user": "title.user",
-		"user_new": "title.user_new"
+		"user_new": "title.user_new",
+		"products_import": "title.products_import"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",
@@ -101,5 +102,6 @@
 		"updatedAt": "Обновлено"
 	},
 	"Чек": "Чек",
-	"login": "login"
+	"login": "login",
+	"Импорт товаров": "Импорт товаров"
 }
