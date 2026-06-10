@@ -19,7 +19,9 @@
 		"user_views": "title.user_views",
 		"user": "title.user",
 		"user_new": "title.user_new",
-		"products_import": "title.products_import"
+		"products_import": "title.products_import",
+		"product-view": "title.product-view",
+		"product-edit": "title.product-edit"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",

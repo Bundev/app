@@ -58,13 +58,15 @@ function filterProducts() {
 
 }
 
+
+
 document.addEventListener(
     'DOMContentLoaded',
     () => {
 
         const toast =
             document.getElementById(
-                'successToast'
+                'importSuccess'
             );
 
         if (!toast) return;
@@ -72,8 +74,21 @@ document.addEventListener(
         setTimeout(
             () => {
 
-                toast.classList.remove(
-                    'show'
+                toast.style.transition =
+                    'all .4s ease';
+
+                toast.style.opacity = '0';
+
+                toast.style.transform =
+                    'translateX(30px)';
+
+                setTimeout(
+                    () => {
+
+                        toast.remove();
+
+                    },
+                    400
                 );
 
             },
@@ -82,4 +97,6 @@ document.addEventListener(
 
     }
 );
+
+
 

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('blocks/head') -%>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <%- include('blocks/header') -%>
+    <div class="container-fluid" id="cont">
+      <div class="row">
+        <%- include('blocks/menu') -%>
+        <div class="col content">
+
+
+
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+                <i class="bi bi-box-seam text-primary"></i>
+                <%= product.name %>
+            </h2>
+
+            <small class="text-muted">
+                Артикул: <strong><%= product.sku || '-' %></strong>
+            </small>
+
+        </div>
+
+        
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body text-center">
+
+                    <% if(product.image){ %>
+
+                         <img
+                            src="<%= product.image %>"
+                            class="img-fluid rounded shadow">
+
+                    <% } else { %>
+
+                        <div
+                            class="bg-light rounded d-flex align-items-center justify-content-center"
+                            style="height:300px">
+
+                            <i
+                                class="bi bi-image text-secondary"
+                                style="font-size:80px">
+
+                            </i>
+
+                        </div>
+
+                    <% } %>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-header bg-white">
+
+                    <h5 class="mb-0">
+                        Информация о товаре
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <small class="text-muted">
+                                Категория
+                            </small>
+
+                            <div class="fw-bold">
+                                <%= product.category_name || '-' %>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <small class="text-muted">
+                                Магазин
+                            </small>
+
+                            <div class="fw-bold">
+                                <%= product.store_name || '-' %>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <small class="text-muted">
+                                Закупочная цена
+                            </small>
+
+                            <div class="fw-bold text-secondary">
+                                <%= Number(product.purchase_price).toFixed(2) %> ₴
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <small class="text-muted">
+                                Цена продажи
+                            </small>
+
+                            <div class="fw-bold text-success">
+                                <%= Number(product.sale_price).toFixed(2) %> ₴
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <small class="text-muted">
+                                Остаток
+                            </small>
+
+                            <div>
+
+                                <% if(product.quantity > 10){ %>
+
+                                    <span class="badge bg-success">
+                                        <%= product.quantity %> шт
+                                    </span>
+
+                                <% } else if(product.quantity > 0){ %>
+
+                                    <span class="badge bg-warning text-dark">
+                                        <%= product.quantity %> шт
+                                    </span>
+
+                                <% } else { %>
+
+                                    <span class="badge bg-danger">
+                                        Нет на складе
+                                    </span>
+
+                                <% } %>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <small class="text-muted">
+                                Штрихкод
+                            </small>
+
+                            <div class="fw-bold">
+                                <%= product.barcode || '-' %>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white">
+
+                    <h5 class="mb-0">
+                        Описание
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <%= product.description || 'Описание отсутствует' %>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+        </div>
+      </div>
+    </div>
+    <%- include('blocks/footer') -%>
+  </body>
+</html>

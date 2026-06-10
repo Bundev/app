@@ -21,64 +21,65 @@
 
     <div class="card-body">
 
-        <form
-            action="/products/import"
-            method="POST"
-            enctype="multipart/form-data">
+<form id="importForm" action="/products/import"
+    method="POST"
+    enctype="multipart/form-data">
+<div class="row mb-3">
 
-            <div class="mb-3">
+    <div class="col-md-4">
 
-                <label class="form-label">
+        <label class="form-label">
+            Магазин
+        </label>
 
-                    Магазин
+        <select
+            name="store_id"
+            id="store_id"
+            class="form-select">
 
-                </label>
+            <% stores.forEach(store => { %>
 
-                <select
-                    name="store_id"
-                    class="form-select">
+                <option
+                    value="<%= store.id %>">
 
-                    <% stores.forEach(store => { %>
+                    <%= store.name %>
 
-                        <option value="<%= store.id %>">
+                </option>
 
-                            <%= store.name %>
+            <% }) %>
 
-                        </option>
+        </select>
 
-                    <% }) %>
+    </div>
 
-                </select>
+</div>
+    <input
+        type="file"
+        id="excelFile"
+        name="excel"
+        accept=".xlsx,.xls">
 
-            </div>
+    <button
+        type="button"
+        id="previewBtn"
+        class="btn btn-primary">
 
-            <div class="mb-3">
+        Предпросмотр
 
-                <label class="form-label">
+    </button>
 
-                    Excel файл
+</form>
 
-                </label>
+<div id="preview"></div>
 
-                <input
-                    type="file"
-                    name="excel"
-                    accept=".xlsx,.xls"
-                    class="form-control"
-                    required>
+<button
+    type="button"
+    id="startImport"
+    class="btn btn-success d-none">
 
-            </div>
+    Импортировать
 
-            <button
-                type="submit"
-                class="btn btn-success">
-
-                <i class="bi bi-upload"></i>
-                Начать импорт
-
-            </button>
-
-        </form>
+</button>
 
     </div>
 

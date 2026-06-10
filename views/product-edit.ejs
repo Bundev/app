@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('blocks/head') -%>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <%- include('blocks/header') -%>
+    <div class="container-fluid" id="cont">
+      <div class="row">
+        <%- include('blocks/menu') -%>
+        <div class="col content">
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-header">
+
+        <h4 class="mb-0">
+
+            Редактирование товара
+
+        </h4>
+
+    </div>
+
+    <div class="card-body">
+
+        <form
+            method="POST"
+            action="/products/edit/<%= product.id %>" enctype="multipart/form-data">
+
+            <div class="row">
+                <div class="text-center mb-3">
+
+                    <% if(product.image){ %>
+
+                        <img
+                            id="preview"
+                            src="<%= product.image %>"
+                            class="img-thumbnail"
+                            style="max-height:250px">
+
+                    <% } else { %>
+
+                        <img
+                            id="preview"
+                            src="/img/no-image.png"
+                            class="img-thumbnail"
+                            style="max-height:250px">
+
+                    <% } %>
+
+                </div>
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Фото товара
+
+                    </label>
+
+                    <input
+                        type="file"
+                        name="image"
+                        class="form-control"
+                        accept="image/*">
+
+                </div>
+                <div class="col-md-8 mb-3">
+
+                    <label class="form-label">
+
+                        Название товара
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="name"
+                        class="form-control"
+                        value="<%= product.name %>"
+                        required>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Артикул
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="sku"
+                        class="form-control"
+                        value="<%= product.sku || '' %>">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Штрихкод
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <input
+                            type="text"
+                            id="barcode"
+                            name="barcode"
+                            class="form-control"
+                            value="<%= product.barcode || '' %>">
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary"
+                            onclick="generateBarcode()">
+
+                            <i class="bi bi-upc"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Категория
+
+                    </label>
+
+                    <select
+                        name="category_id"
+                        class="form-select">
+
+                        <% categories.forEach(category => { %>
+
+                            <option
+                                value="<%= category.id %>"
+                                <%= category.id == product.category_id ? 'selected' : '' %>>
+
+                                <%= category.name %>
+
+                            </option>
+
+                        <% }) %>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Остаток
+
+                    </label>
+
+                    <input
+                        type="number"
+                        name="quantity"
+                        class="form-control"
+                        value="<%= product.quantity %>">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Закупочная цена
+
+                    </label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="purchase_price"
+                        class="form-control"
+                        value="<%= product.purchase_price %>">
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Цена продажи
+
+                    </label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="sale_price"
+                        class="form-control"
+                        value="<%= product.sale_price %>">
+
+                </div>
+
+                <div class="col-12 mb-3">
+
+                    <label class="form-label">
+
+                        Описание
+
+                    </label>
+
+                    <textarea
+                        name="description"
+                        rows="5"
+                        class="form-control"><%= product.description || '' %></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button
+                    type="submit"
+                    class="btn btn-success">
+
+                    💾 Сохранить
+
+                </button>
+
+                <a
+                    href="/products"
+                    class="btn btn-secondary">
+
+                    Отмена
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+        </div>
+      </div>
+    </div>
+    <%- include('blocks/footer') -%>
+  </body>
+</html>

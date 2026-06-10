@@ -8,7 +8,7 @@
 
 <div
     class="position-fixed top-0 end-0 p-3"
-    style="z-index: 9999">
+    style="z-index: 9999" id="importSuccess">
 
     <div
         class="card border-success shadow">
@@ -23,11 +23,13 @@
         </div>
 
         <div class="card-body">
-
-            <%= success %>
-
+        Категорий создано:
+        <%= success.categoriesCreated %><br>
+        Товаров создано:
+        <%= success.createdCount %><br>
+        Товаров обновлено:
+        <%= success.updatedCount %>
         </div>
-
     </div>
 
 </div>
@@ -219,7 +221,7 @@
         <div class="btn-group btn-group-sm">
 
             <a
-                href="/products/<%= product.id %>"
+                href="/products/view/<%= product.id %>"
                 class="btn btn-outline-primary">
 
                 👁

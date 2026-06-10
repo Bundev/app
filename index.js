@@ -9,6 +9,8 @@ const roles = require('./config/roles');
 const db = require('./config/db');
 const bcrypt = require('bcrypt');
 const upload = require('./config/upload');
+const bwipjs = require('bwip-js');
+const multer = require('multer');
 const port = 3000;
 
 
@@ -86,13 +88,55 @@ app.use((req, res, next) => {
 
 
 
-const workbook = XLSX.readFile('./db/db.xls');
-const sheet = workbook.Sheets['TDSheet'];
+const storage = multer.diskStorage({
 
-const data = XLSX.utils.sheet_to_json(sheet, {
-  range: 3,
-  header: 1
-});
+        destination:
+            (
+                req,
+                file,
+                cb
+            ) => {
+
+                cb(
+                    null,
+                    'public/uploads/products'
+                );
+
+            },
+
+        filename:
+            (
+                req,
+                file,
+                cb
+            ) => {
+
+                cb(
+                    null,
+                    Date.now() +
+                    '-' +
+                    file.originalname
+                );
+
+            }
+
+    });
+
+const uploadProduct =
+    multer({
+        storage
+    });
+
+
+
+
+// const workbook = XLSX.readFile('./db/db.xls');
+// const sheet = workbook.Sheets['TDSheet'];
+
+// const data = XLSX.utils.sheet_to_json(sheet, {
+//   range: 3,
+//   header: 1
+// });
 
 // const products = data.filter(row =>
 //       row[4] &&
@@ -368,18 +412,15 @@ app.get('/sales', auth, async (req, res) => {
                 ON c.id = s.customer_id
 
             LEFT JOIN user u
-                ON u.id_admin = s.user_id
+                ON u.company_id = s.company_id
 
             LEFT JOIN stores st
                 ON st.id = s.store_id
         `;
 
-        let params = [];
+        const params = [];
 
-        // Администратор видит все чеки своей компании
-        if (
-            req.session.user.role === 'admin'
-        ) {
+        if (req.session.user.role === 'admin') {
 
             sql += `
                 WHERE s.company_id = ?
@@ -391,7 +432,6 @@ app.get('/sales', auth, async (req, res) => {
 
         } else {
 
-            // Менеджер и продавец только свои
             sql += `
                 WHERE s.user_id = ?
             `;
@@ -413,11 +453,8 @@ app.get('/sales', auth, async (req, res) => {
             );
 
         res.render('sales', {
-
             titleKey: 'title.sales',
-
             activeMenu: 'sales',
-
             sales,
             statuses,
             script: [
@@ -425,36 +462,27 @@ app.get('/sales', auth, async (req, res) => {
                     src: 'sales.js'
                 }
             ],
-
             style: [
                 {
                     href: 'sales.css'
                 }
             ],
-
             breadcrumbs: [
                 {
-                    title: req.__(
-                        'title.dashboard'
-                    ),
+                    title: req.__('title.dashboard'),
                     url: '/'
                 },
                 {
-                    title: req.__(
-                        'title.sales'
-                    )
+                    title: req.__('title.sales')
                 }
             ]
-
         });
 
     } catch (error) {
 
         console.error(error);
 
-        res.status(500).send(
-            error.message
-        );
+        res.status(500).send(error.message);
 
     }
 
@@ -711,30 +739,7 @@ app.post('/sales/save', auth, async (req, res) => {
     }
 
 });
-// app.get('/search', auth, (req, res) => {
 
-//     const q = (req.query.q || '').toLowerCase();
-
-//   if (q.length < 2) {
-//     return res.json([]);
-//   }
-
-//   const result = [];
-//   const limit = 200;
-
-//   for (let i = 0; i < products.length; i++) {
-//     if (products[i].searchName.includes(q)) {
-//       result.push(products[i]);
-
-//       if (result.length === limit) {
-//         break;
-//       }
-//     }
-//   }
-
-//  res.json(result);
-    
-// });
 app.get('/new', auth, async (req, res) => {
 
     const year =
@@ -922,12 +927,265 @@ app.get('/products', auth, async (req, res) => {
 
 });
 
-
 app.get(
-    '/products/import',
+    '/products/view/:id',
     auth,
-    requireAdmin,
     async (req, res) => {
+
+        try {
+
+            const [rows] =
+                await db.execute(
+                    `
+                    SELECT
+                        p.*,
+                        c.name AS category_name,
+                        s.name AS store_name
+                    FROM products p
+
+                    LEFT JOIN categories c
+                        ON c.id = p.category_id
+
+                    LEFT JOIN stores s
+                        ON s.id = p.store_id
+
+                    WHERE p.id = ?
+                    LIMIT 1
+                    `,
+                    [
+                        req.params.id
+                    ]
+                );
+
+            if (!rows.length) {
+
+                return res
+                    .status(404)
+                    .send(
+                        'Товар не найден'
+                    );
+
+            }
+
+            res.render('product-view',{
+                    product: rows[0],
+                    activeMenu: 'products',
+                    script: [
+                        {
+                            src: 'product-view.js'
+                        }
+                    ],
+                    style: [
+                        {
+                            href: 'product-view.css'
+                        }
+                    ],
+                    breadcrumbs: [
+                        {
+                            title: req.__('title.dashboard'),
+                            url: '/'
+                        },
+                        {
+                            title: req.__('title.products'),
+                            url: '/products'
+                        },
+                        {
+                            title: req.__('title.product-view'),
+                            
+                        }
+                    ]                  
+                }
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                error.message
+            );
+
+        }
+
+    }
+);
+app.get(
+    '/products/edit/:id',
+    auth,
+    async (req, res) => {
+
+        try {
+
+            const [[product]] =
+                await db.query(
+                    `
+                    SELECT *
+                    FROM products
+                    WHERE id = ?
+                    `,
+                    [
+                        req.params.id
+                    ]
+                );
+
+            if (!product) {
+
+                return res.redirect(
+                    '/products'
+                );
+
+            }
+
+            const [categories] =
+                await db.query(
+                    `
+                    SELECT *
+                    FROM categories
+                    WHERE company_id = ?
+                    ORDER BY name
+                    `,
+                    [
+                        req.session.user.company_id
+                    ]
+                );
+
+            res.render(
+                'product-edit',
+                {
+                    product,
+                    categories,
+                    activeMenu: 'products',
+                    script: [
+                        {
+                            src: 'product-edit.js'
+                        }
+                    ],
+                    style: [
+                        {
+                            href: 'product-edit.css'
+                        }
+                    ],
+                    breadcrumbs: [
+                        {
+                            title: req.__('title.dashboard'),
+                            url: '/'
+                        },
+                        {
+                            title: req.__('title.products'),
+                            url: '/products'
+                        },
+                        {
+                            title: req.__('title.product-edit'),
+                            
+                        }
+                    ]   
+                }
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                error.message
+            );
+
+        }
+
+    }
+);
+
+app.post(
+    '/products/edit/:id',
+    auth,
+    uploadProduct.single('image'),
+    async (req, res) => {
+
+        try {
+
+            const {
+                name,
+                sku,
+                barcode,
+                category_id,
+                purchase_price,
+                sale_price,
+                quantity,
+                description
+            } = req.body;
+
+            let sql = `
+                UPDATE products
+                SET
+                    name = ?,
+                    sku = ?,
+                    barcode = ?,
+                    category_id = ?,
+                    purchase_price = ?,
+                    sale_price = ?,
+                    quantity = ?,
+                    description = ?
+            `;
+
+            const params = [
+                name,
+                sku,
+                barcode,
+                category_id,
+                purchase_price,
+                sale_price,
+                quantity,
+                description
+            ];
+
+            if (req.file) {
+
+                sql += `,
+                    image = ?
+                `;
+
+                params.push(
+                    '/uploads/products/' +
+                    req.file.filename
+                );
+
+            }
+
+            sql += `
+                WHERE id = ?
+            `;
+
+            params.push(
+                req.params.id
+            );
+
+            await db.query(
+                sql,
+                params
+            );
+
+            req.session.success =
+                'Товар успешно обновлён';
+
+            res.redirect(
+                '/products/view/' +
+                req.params.id
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                error.message
+            );
+
+        }
+
+    }
+);
+
+app.get('/products/import',auth,requireAdmin,async (req, res) => {
 
         const [stores] =
             await db.execute(
@@ -944,55 +1202,130 @@ app.get(
                 ]
             );
 
-        res.render(
-            'products_import',
-            {
-                titleKey:
-                    'Импорт товаров',
-                activeMenu:
-                    'products',
+        res.render('products_import',{
+                titleKey: 'Импорт товаров',
+                activeMenu: 'products',
                 stores,
-                user:
-                    req.session.user
+                user: req.session.user,
+                script: [
+                    {
+                        src: 'products_import.js'
+                    }
+                ],
+                style: [
+                    {
+                        href: 'products_import.css'
+                    }
+                ],
+                breadcrumbs: [
+                    {
+                        title: req.__('title.dashboard'),
+                        url: '/'
+                    },
+                    {
+                        title: req.__('title.products'),
+                        url: '/products'
+                    },
+                    {
+                        title: req.__('title.products_import')
+                    }
+                ]
+                
             }
         );
 
     }
 );
-const importProducts = require('./import/importProducts');
-app.post('/products/import',auth,requireAdmin,upload.single('excel'),async (req, res) => {
+app.post('/products/import/preview',
+    auth,
+    upload.single('excel'),
+    async (req, res) => {
+        console.log(req.file);
+        const XLSX = require('xlsx');
+        const workbook =
+            XLSX.readFile(req.file.path);
 
+        
+
+        const sheet =
+            workbook.Sheets[
+                workbook.SheetNames[0]
+            ];
+
+        const rows =
+            XLSX.utils.sheet_to_json(
+                sheet,
+                { header: 1 }
+            );
+
+        
+
+        res.json({
+            success: true,
+            rows: rows.slice(0, 20)
+        });
+
+    }
+);
+const importProducts = require('./import/importProducts');
+
+app.post('/products/import', auth, requireAdmin, upload.single('excel'),async (req, res) => {
+        console.log(req.file.path);
         try {
+
+            const [[userStore]] =
+                await db.query(
+                    `
+                    SELECT store_id
+                    FROM user_stores
+                    WHERE user_id = ?
+                    LIMIT 1
+                    `,
+                    [
+                        req.session.user.id
+                    ]
+                );
+
+            const storeId =
+                    Number(
+                        req.body.store_id
+                    );
+
+            if (!storeId) {
+
+                return res.status(400).send(
+                    'Магазин пользователя не найден'
+                );
+
+            }
 
             const result =
                 await importProducts(
                     db,
                     req.file.path,
-                    req.body.store_id
+                    storeId,
+                    req.session.user.company_id
                 );
 
-            req.session.success =
-                `Импорт завершён.
-                Категорий: ${result.categoriesCount},
-                Товаров: ${result.productsCount}`;
-
-            res.redirect(
-                '/products'
-            );
+            req.session.success = {
+                categoriesCreated: result.categoriesCreated,
+                createdCount: result.createdCount,
+                updatedCount: result.updatedCount
+            };
+            res.redirect('/products');
 
         } catch (error) {
 
             console.error(error);
 
             res.status(500).send(
-                'Ошибка импорта'
+                error.message
             );
 
         }
 
     }
 );
-
 app.get('/api/products/search', auth, async (req, res) => {
 
     try {
@@ -2087,10 +2420,10 @@ app.get('/settings', auth, async(req, res) => {
         `
         SELECT *
         FROM user
-        WHERE id_admin = ?
+        WHERE company_id = ?
         ORDER BY name
         `,
-        [req.session.user.id]
+        [req.session.user.company_id]
     );
 
     const tab =
@@ -2137,6 +2470,45 @@ app.get('/lang/:lang', (req, res) => {
 
     res.redirect(req.get('Referer') || '/');
 });
+
+app.get(
+    '/barcode/:code',
+    async (req, res) => {
+
+        try {
+
+            const png =
+                await bwipjs.toBuffer({
+
+                    bcid: 'code128',
+
+                    text:
+                        req.params.code,
+
+                    scale: 3,
+
+                    height: 10,
+
+                    includetext: true,
+
+                    textxalign: 'center'
+
+                });
+
+            res.type('png');
+
+            res.send(png);
+
+        } catch (err) {
+
+            res.status(500).send(
+                err.message
+            );
+
+        }
+
+    }
+);
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });

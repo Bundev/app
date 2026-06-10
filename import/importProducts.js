@@ -3,7 +3,8 @@ const XLSX = require('xlsx');
 module.exports = async (
     db,
     filePath,
-    storeId
+    storeId,
+    companyId
 ) => {
 
     const workbook =
@@ -31,9 +32,7 @@ module.exports = async (
             String(row[0] || '')
                 .trim();
 
-        /*
-         * Категория
-         */
+        // Категория
         if (
             category &&
             ![
@@ -50,9 +49,7 @@ module.exports = async (
 
         }
 
-        /*
-         * Товар
-         */
+        // Товар
         if (
             row[4] &&
             row[4] !== 'Номенклатура, Упаковка' &&
@@ -74,13 +71,7 @@ module.exports = async (
                         ? skuMatch[1]
                         : null,
 
-                name:
-                    row[4]
-                        .replace(
-                            /,\s*(шт|м)\.?$/i,
-                            ''
-                        )
-                        .trim(),
+                name:row[4],
 
                 purchase_price:
                     Number(row[13]),
@@ -88,8 +79,8 @@ module.exports = async (
                 sale_price:
                     Math.round(
                         row[13] > 100
-                            ? row[13] * 1.1
-                            : row[13] * 1.2
+                            ? row[13] * 1.10
+                            : row[13] * 1.20
                     ),
 
                 quantity:
@@ -101,13 +92,12 @@ module.exports = async (
 
     }
 
-    /*
-     * Создание категорий
-     */
-
     const categoryMap =
         new Map();
 
+    let categoriesCreated = 0;
+
+    // Создание категорий
     for (const product of products) {
 
         if (!product.category)
@@ -119,8 +109,13 @@ module.exports = async (
                 SELECT id
                 FROM categories
                 WHERE name = ?
+                AND company_id = ?
+                LIMIT 1
                 `,
-                [product.category]
+                [
+                    product.category,
+                    companyId
+                ]
             );
 
         let categoryId;
@@ -137,15 +132,24 @@ module.exports = async (
                     `
                     INSERT INTO categories
                     (
+                        company_id,
                         name
                     )
-                    VALUES (?)
+                    VALUES
+                    (
+                        ?, ?
+                    )
                     `,
-                    [product.category]
+                    [
+                        companyId,
+                        product.category
+                    ]
                 );
 
             categoryId =
                 result.insertId;
+
+            categoriesCreated++;
 
         }
 
@@ -156,12 +160,10 @@ module.exports = async (
 
     }
 
-    /*
-     * Импорт товаров
-     */
+    let createdCount = 0;
+    let updatedCount = 0;
 
-    let productsCount = 0;
-
+    // Импорт товаров
     for (const product of products) {
 
         const categoryId =
@@ -176,6 +178,7 @@ module.exports = async (
                 FROM products
                 WHERE sku = ?
                 AND store_id = ?
+                LIMIT 1
                 `,
                 [
                     product.sku,
@@ -183,9 +186,37 @@ module.exports = async (
                 ]
             );
 
-        if (exists.length)
+        // Обновление товара
+        if (exists.length) {
+
+            await db.execute(
+                `
+                UPDATE products
+                SET
+                    category_id = ?,
+                    name = ?,
+                    purchase_price = ?,
+                    sale_price = ?,
+                    quantity = ?
+                WHERE id = ?
+                `,
+                [
+                    categoryId,
+                    product.name,
+                    product.purchase_price,
+                    product.sale_price,
+                    product.quantity,
+                    exists[0].id
+                ]
+            );
+
+            updatedCount++;
+
             continue;
 
+        }
+
+        // Создание товара
         await db.execute(
             `
             INSERT INTO products
@@ -216,16 +247,20 @@ module.exports = async (
             ]
         );
 
-        productsCount++;
+        createdCount++;
 
     }
 
     return {
 
-        categoriesCount:
-            categoryMap.size,
+        categoriesCreated,
 
-        productsCount
+        createdCount,
+
+        updatedCount,
+
+        totalProducts:
+            products.length
 
     };
 
