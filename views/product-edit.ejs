@@ -108,7 +108,14 @@
                     </label>
 
                     <div class="input-group">
+                        <button
+                                type="button"
+                                id="scanBtn"
+                                class="btn btn-outline-primary" title="Сканер штрихкод">
 
+                                <i class="bi bi-upc-scan"></i>
+
+                            </button>
                         <input
                             type="text"
                             id="barcode"
@@ -119,13 +126,43 @@
                         <button
                             type="button"
                             class="btn btn-outline-primary"
-                            onclick="generateBarcode()">
+                            onclick="generateBarcode()" title="Генратор штрихкод">
 
                             <i class="bi bi-upc"></i>
 
                         </button>
 
                     </div>
+                    <div id="scannerModal">
+
+                            <div class="scanner-content">
+
+                                <div class="scanner-header">
+
+                                    <span>
+                                        📷 Сканирование товара
+                                    </span>
+
+                                    <button
+                                        id="closeScanner"
+                                        type="button">
+
+                                        ✕
+                                    </button>
+
+                                </div>
+
+                                <div id="reader"></div>
+
+                                <div class="scanner-footer">
+
+                                    Наведите камеру на штрихкод
+
+                                </div>
+
+                            </div>
+
+                        </div>
 
                 </div>
 
@@ -253,5 +290,96 @@
       </div>
     </div>
     <%- include('blocks/footer') -%>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+let scanner = null;
+
+document
+    .getElementById('scanBtn')
+    .addEventListener(
+        'click',
+        async () => {
+
+            document
+                .getElementById(
+                    'scannerModal'
+                )
+                .style.display =
+                'flex';
+
+            const reader =
+                document.getElementById(
+                    'reader'
+                );
+
+            reader.innerHTML = '';
+
+            scanner =
+                new Html5Qrcode(
+                    'reader'
+                );
+
+            await scanner.start(
+                {
+                    facingMode:
+                        'environment'
+                },
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                async decodedText => {
+                    document.getElementById('barcode').value = '';
+                    document.getElementById('barcode').value = decodedText;
+
+                    await scanner.stop();
+
+                    document
+                        .getElementById(
+                            'scannerModal'
+                        )
+                        .style.display =
+                        'none';
+
+                    
+                    
+                    
+
+                    
+
+                }
+            );
+
+        }
+    );
+
+document
+    .getElementById(
+        'closeScanner'
+    )
+    .addEventListener(
+        'click',
+        async () => {
+
+            if (scanner) {
+
+                try {
+
+                    await scanner.stop();
+
+                } catch (e) {}
+
+            }
+
+            document
+                .getElementById(
+                    'scannerModal'
+                )
+                .style.display =
+                'none';
+
+        }
+    );
+</script>
   </body>
 </html>
