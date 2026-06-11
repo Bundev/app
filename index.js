@@ -129,48 +129,11 @@ const uploadProduct =
 
 
 
-
-// const workbook = XLSX.readFile('./db/db.xls');
-// const sheet = workbook.Sheets['TDSheet'];
-
-// const data = XLSX.utils.sheet_to_json(sheet, {
-//   range: 3,
-//   header: 1
-// });
-
-// const products = data.filter(row =>
-//       row[4] &&
-//       row[4] !== 'Номенклатура, Упаковка' &&
-//       !isNaN(row[13])
-//   ).map((row, index) => ({
-//     id: index + 1,
-//     name: row[4]
-//       ?.replace(/,\s*(шт|м)\.?$/i, '')
-//       .trim(),
-//     unit: row[4]
-//         .toLowerCase()
-//         .includes(', м')
-//             ? 'м'
-//             : 'шт',
-//     searchName: row[4]?.toLowerCase()
-//       ?.toLowerCase()
-//       .replace(/,\s*(шт|м)\.?$/i, '')
-//       .replace(/[(),№]/g, ' ')
-//       .replace(/\s+/g, ' ')
-//       .trim(),
-//     price: Math.round(
-//     row[13] > 100
-//         ? row[13] * 1.1
-//         : row[13] * 1.2
-//     ),
-//     stock: row[14]
-//   }))
-//   .filter(item => item.name);
 // Проверка подключения
 (async () => {
     try {
         const [rows] = await db.query('SELECT 1');
-        console.log(rows);
+        console.log("База данных подключена!");
     } catch (err) {
         console.error(err);
     }
