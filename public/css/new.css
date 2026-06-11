@@ -190,7 +190,7 @@
 
 /*Заглловок*/
 
-.scanner-modal {
+#scannerModal {
 
     display: none;
 
@@ -198,30 +198,27 @@
 
     inset: 0;
 
-    background: rgba(0,0,0,.7);
+    background: rgba(0,0,0,.85);
 
-    z-index: 9999;
-
-    align-items: center;
+    z-index: 99999;
 
     justify-content: center;
 
+    align-items: center;
+
 }
 
-.scanner-box {
+.scanner-content {
 
-    width: 450px;
+    width: 95%;
 
-    max-width: 95%;
+    max-width: 500px;
 
     background: #fff;
 
-    border-radius: 15px;
+    border-radius: 16px;
 
     overflow: hidden;
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.25);
 
 }
 
@@ -239,28 +236,34 @@
 
     color: #fff;
 
+    font-size: 18px;
+
 }
 
-.scanner-header h5 {
+.scanner-header button {
 
-    margin: 0;
+    border: 0;
+
+    background: transparent;
+
+    color: #fff;
+
+    font-size: 24px;
 
 }
 
 #reader {
 
-    padding: 15px;
+    min-height: 300px;
 
 }
 
 .scanner-footer {
 
-    text-align: center;
-
     padding: 12px;
 
-    color: #666;
+    text-align: center;
 
-    background: #f8f9fa;
+    color: #666;
 
 }

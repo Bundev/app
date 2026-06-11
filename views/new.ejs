@@ -89,23 +89,21 @@
 
 </div>
 
-<div
-    id="scannerModal"
-    class="scanner-modal">
+<div id="scannerModal">
 
-    <div class="scanner-box">
+    <div class="scanner-content">
 
         <div class="scanner-header">
 
-            <h5>
-                <i class="bi bi-qr-code-scan"></i>
-                Сканирование товара
-            </h5>
+            <span>
+                📷 Сканирование товара
+            </span>
 
             <button
-                type="button"
                 id="closeScanner"
-                class="btn-close">
+                type="button">
+
+                ✕
             </button>
 
         </div>
@@ -235,60 +233,13 @@
     <%- include('blocks/footer') -%>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
+let scanner = null;
+
 document
     .getElementById('scanBtn')
     .addEventListener(
         'click',
-        () => {
-
-            const reader =
-                document.getElementById(
-                    'reader'
-                );
-
-            reader.style.display =
-                'block';
-
-            reader.innerHTML = '';
-
-            const scanner =
-                new Html5Qrcode(
-                    'reader'
-                );
-
-            scanner.start(
-                {
-                    facingMode:
-                        'environment'
-                },
-                {
-                    fps: 10,
-                    qrbox: 250
-                },
-                (decodedText) => {
-
-                    document
-                        .getElementById(
-                            'productSearch'
-                        )
-                        .value =
-                        decodedText;
-
-                    scanner.stop();
-
-                    reader.style.display =
-                        'none';
-
-                }
-            );
-
-        }
-    );
-    document
-    .getElementById('scanBtn')
-    .addEventListener(
-        'click',
-        () => {
+        async () => {
 
             document
                 .getElementById(
@@ -297,15 +248,73 @@ document
                 .style.display =
                 'flex';
 
+            const reader =
+                document.getElementById(
+                    'reader'
+                );
+
+            reader.innerHTML = '';
+
+            scanner =
+                new Html5Qrcode(
+                    'reader'
+                );
+
+            await scanner.start(
+                {
+                    facingMode:
+                        'environment'
+                },
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                async decodedText => {
+
+                    document
+                        .getElementById(
+                            'productSearch'
+                        )
+                        .value =
+                        decodedText;
+
+                    await scanner.stop();
+
+                    document
+                        .getElementById(
+                            'scannerModal'
+                        )
+                        .style.display =
+                        'none';
+
+                    // если есть функция поиска
+                    searchProducts(
+                        decodedText
+                    );
+
+                }
+            );
+
         }
     );
-    document
+
+document
     .getElementById(
         'closeScanner'
     )
     .addEventListener(
         'click',
-        () => {
+        async () => {
+
+            if (scanner) {
+
+                try {
+
+                    await scanner.stop();
+
+                } catch (e) {}
+
+            }
 
             document
                 .getElementById(
