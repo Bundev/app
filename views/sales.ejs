@@ -87,92 +87,92 @@
 
                 </div>
             </div>
-<div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm">
 
-    <div class="table-responsive">
+                <div class="table-responsive">
 
-        <table class="table sales-table mb-0">
+                    <table class="table sales-table mb-0">
 
-            <thead>
+                        <thead>
 
-                <tr>
-                    <th>Чек</th>
-                    <th>Дата</th>
-                    <th>Клиент</th>
-                    <th class="text-end">Сумма</th>
-                    <th class="text-center">Статус</th>
-                </tr>
+                            <tr>
+                                <th>Чек</th>
+                                <th>Дата</th>
+                                <th>Клиент</th>
+                                <th class="text-end">Сумма</th>
+                                <th class="text-center">Статус</th>
+                            </tr>
 
-            </thead>
+                        </thead>
 
-            <tbody>
+                        <tbody>
 
-            <% sales.forEach(sale => { %>
+                        <% sales.forEach(sale => { %>
 
-                <tr class="invoice-row" data-url="/sale/<%= sale.id %>">
+                            <tr class="invoice-row" data-url="/sale/<%= sale.id %>">
 
-                    <td>
+                                <td>
 
-                        <span class="invoice-badge">
-                            <%= sale.invoice_number %>
-                        </span>
+                                    <span class="invoice-badge">
+                                        <%= sale.invoice_number %>
+                                    </span>
 
-                    </td>
+                                </td>
 
-                    <td>
-                        <div class="fw-semibold">
-                            <%= new Date(sale.created_at).toLocaleDateString('ru-RU') %>
-                        </div>
+                                <td>
+                                    <div class="fw-semibold">
+                                        <%= new Date(sale.created_at).toLocaleDateString('ru-RU') %>
+                                    </div>
 
-                        <small class="text-muted">
-                            <%= new Date(sale.created_at).toLocaleTimeString(
-                                'ru-RU',
-                                {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                }
-                            ) %>
-                        </small>
-                        
-                    </td>
+                                    <small class="text-muted">
+                                        <%= new Date(sale.created_at).toLocaleTimeString(
+                                            'ru-RU',
+                                            {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            }
+                                        ) %>
+                                    </small>
+                                    
+                                </td>
 
-                    <td>
+                                <td>
 
-                        <div class="customer-name">
-                            <%= sale.customer_name %>
-                        </div>
+                                    <div class="customer-name">
+                                        <%= sale.customer_name || 'Розничный покупатель' %>
+                                    </div>
 
-                    </td>
+                                </td>
 
-                    <td class="text-end">
+                                <td class="text-end">
 
-                        <span class="sale-sum">
-                            <%= Number(sale.total).toFixed(2) %> ₴
-                        </span>
+                                    <span class="sale-sum">
+                                        <%= Number(sale.total).toFixed(2) %> ₴
+                                    </span>
 
-                    </td>
+                                </td>
 
-                    <td class="text-center">
+                                <td class="text-center">
 
-                        <span class="status-success">
-                            Продажа завершена
-                        </span>
+                                    <span class="status-success">
+                                        Продажа завершена
+                                    </span>
 
-                    </td>
+                                </td>
 
-                    
+                                
 
-                </tr>
+                            </tr>
 
-            <% }) %>
+                        <% }) %>
 
-            </tbody>
+                        </tbody>
 
-        </table>
+                    </table>
 
-    </div>
+                </div>
 
-</div>
+            </div>  
         </div>
       </div>
     </div>

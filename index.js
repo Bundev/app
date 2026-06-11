@@ -412,7 +412,7 @@ app.get('/sales', auth, async (req, res) => {
                 ON c.id = s.customer_id
 
             LEFT JOIN user u
-                ON u.company_id = s.company_id
+                ON u.id = s.user_id
 
             LEFT JOIN stores st
                 ON st.id = s.store_id
@@ -431,7 +431,7 @@ app.get('/sales', auth, async (req, res) => {
             );
 
         } else {
-
+            
             sql += `
                 WHERE s.user_id = ?
             `;
