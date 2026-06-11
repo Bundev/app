@@ -288,9 +288,27 @@ document
                         'none';
 
                     // если есть функция поиска
-                    searchProducts(
-                        decodedText
-                    );
+                    const response =
+                        await fetch(
+                            `/api/products/search?q=${encodeURIComponent(decodedText)}`
+                        );
+
+                    const products =
+                        await response.json();
+
+                    if (products.length) {
+
+                        addProductToInvoice(
+                            products[0]
+                        );
+
+                    } else {
+
+                        alert(
+                            'Товар не найден'
+                        );
+
+                    }
 
                 }
             );
