@@ -68,7 +68,7 @@
 }
 
 .products-table-wrapper {
-    height: 300px;
+    height: 500px;
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
@@ -130,25 +130,12 @@
     text-align: center;
     font-weight: 600;
 }
-.card-footer {
-    position: fixed;
-    bottom: 0;
-    left: 260px; /* ширина меню */
-    right: 0;
-    z-index: 1050;
-    background: #fff !important;
-    border-top: 1px solid #dee2e6;
-    padding: 15px 20px;
-    box-shadow: 0 -2px 15px rgba(0,0,0,.08);
-}
-.content {
-    padding-bottom: 100px;
-}
+
+
 
 @media (max-width: 768px) {
 
     .card-footer {
-        position: static;
         left: 0 !important;
         right: 0 !important;
         width: 100%;
