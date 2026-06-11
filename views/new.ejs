@@ -301,6 +301,21 @@ document
                         addProductToInvoice(
                             products[0]
                         );
+                        const searchInput =
+                            document.getElementById(
+                                'product-search'
+                            );
+
+                        searchInput.value = '';
+
+                        document
+                            .getElementById(
+                                'search-results'
+                            )
+                            .style.display =
+                            'none';
+
+                        searchInput.focus();
 
                     } else {
 
