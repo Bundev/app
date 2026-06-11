@@ -68,7 +68,7 @@
 }
 
 .products-table-wrapper {
-    height: 400px;
+    height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
@@ -85,6 +85,21 @@
 
 .products-table-wrapper::-webkit-scrollbar-track {
     background: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+
+    .products-table-wrapper {
+        overflow-x: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      
+    }
+
+    .table-sales {
+        min-width: 700px;
+    }
+
 }
 
 /* Таблица в новом счете */
@@ -130,59 +145,17 @@
     padding-bottom: 100px;
 }
 
-/* Нижняя панел */
-
-
-
-
 @media (max-width: 768px) {
 
-    .new-header {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-}
-@media (max-width: 768px) {
-
-    .card {
-        margin: 0;
-        border-radius: 10px;
-    }
-
-    .card-body {
-        padding: 12px;
-    }
-
-    .form-control,
-    .form-select {
-        font-size: 16px;
-        min-height: 44px;
-    }
-
-    .btn {
-        min-height: 44px;
-    }
-
-}
-
-
-@media (max-width: 768px) {
-
-    .input-group {
-        flex-direction: column;
-    }
-
-    .input-group > * {
+    .card-footer {
+        position: static;
+        left: 0 !important;
+        right: 0 !important;
         width: 100%;
-        margin-bottom: 8px;
+        padding: 10px;
+        
+
     }
-
-}
-
-@media (max-width: 768px) {
 
     .card-footer .d-flex {
         flex-direction: column;
@@ -190,8 +163,39 @@
         align-items: stretch !important;
     }
 
+    .card-footer .form-control,
+    .card-footer .form-select,
     .card-footer .btn {
-        width: 100%;
+        width: 100% !important;
+    }
+
+    #total-sum,
+    #change {
+        font-size: 22px;
     }
 
 }
+
+/* Нижняя панел */
+
+
+
+/*Заглловок*/
+@media (max-width: 768px) {
+
+    .new-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .new-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .new-header .badge {
+        font-size: 1rem !important;
+    }
+
+}
+/*Заглловок*/
+

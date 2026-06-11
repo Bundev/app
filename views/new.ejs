@@ -10,9 +10,9 @@
       <div class="row">
         <%- include('blocks/menu') -%>
         <div class="col content">
-          <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="new-header d-flex justify-content-between align-items-center mb-3">
 
-              <h1 class="mb-0">
+            <h1 class="mb-0">
                 🧾 Новый чек
             </h1>
 
@@ -20,7 +20,7 @@
                 <%= invoiceNumber %>
             </span>
 
-          </div>
+        </div>
           <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
                     <div class="row g-2">
@@ -109,73 +109,72 @@
 
             <div class="card-footer bg-white">
 
-<div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-stretch align-items-md-center">
 
-    <div>
+                    <div>
 
-        <div class="text-muted">
-            Сдача
-        </div>
+                        <div class="text-muted">
+                            Сдача
+                        </div>
 
-        <strong id="change">
-            0.00 ₴
-        </strong>
+                        <strong id="change">
+                            0.00 ₴
+                        </strong>
 
-    </div>
+                    </div>
 
-    <input
-        type="number"
-        id="cash"
-        class="form-control"
-        style="width:140px"
-        placeholder="Получено">
+                    <input
+                        type="number"
+                        id="cash"
+                        class="form-control"
+                        style="width:140px"
+                        placeholder="Получено">
 
-    <select
-        name="paymentMethod"
-        class="form-select"
-        style="width:180px">
+                    <select
+                        name="paymentMethod"
+                        class="form-select"
+                        style="width:180px">
 
-        <option value="cash">
-            💵 Наличные
-        </option>
+                        <option value="cash">
+                            💵 Наличные
+                        </option>
 
-        <option value="card">
-            💳 Карта
-        </option>
+                        <option value="card">
+                            💳 Карта
+                        </option>
 
-        <option value="transfer">
-            🏦 Перевод
-        </option>
+                        <option value="transfer">
+                            🏦 Перевод
+                        </option>
 
-    </select>
+                    </select>
 
-    <div>
+                    <div>
 
-        <div class="text-muted">
-            Итого
-        </div>
+                        <div class="text-muted">
+                            Итого
+                        </div>
 
-        <strong id="total-sum">
-            0.00 ₴
-        </strong>
+                        <strong id="total-sum">
+                            0.00 ₴
+                        </strong>
 
-    </div>
+                    </div>
 
-    <button
-        id="saveInvoice"
-        class="btn btn-success btn-lg"
-        onclick="saveInvoice()">
+                    <button
+                        id="saveInvoice"
+                        class="btn btn-success btn-lg"
+                        onclick="saveInvoice()">
 
-        <i class="bi bi-save"></i>
+                        <i class="bi bi-save"></i>
 
-        Сохранить чек
+                        Сохранить чек
 
-    </button>
+                    </button>
 
-</div>
+                </div>
 
             </div>
-
         </div>
 
 
