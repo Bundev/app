@@ -9,8 +9,10 @@ const roles = require('./config/roles');
 const db = require('./config/db');
 const bcrypt = require('bcrypt');
 const upload = require('./config/upload');
+const uploadImport = require('./config/upload-import');
 const bwipjs = require('bwip-js');
 const multer = require('multer');
+const PDFDocument = require('pdfkit');
 const port = 3000;
 
 
@@ -1201,9 +1203,11 @@ app.get('/products/import',auth,requireAdmin,async (req, res) => {
 );
 app.post('/products/import/preview',
     auth,
-    upload.single('excel'),
+    uploadImport.single('excel'),
     async (req, res) => {
-        console.log(req.file);
+
+    try{
+        
         const XLSX = require('xlsx');
         const workbook =
             XLSX.readFile(req.file.path);
@@ -1227,14 +1231,31 @@ app.post('/products/import/preview',
             success: true,
             rows: rows.slice(0, 20)
         });
+    }finally {
+
+            const fs = require('fs');
+
+            if (
+                req.file &&
+                fs.existsSync(req.file.path)
+            ) {
+
+                fs.unlinkSync(
+                    req.file.path
+                );
+
+            }
+
+        }
 
     }
 );
 const importProducts = require('./import/importProducts');
 
-app.post('/products/import', auth, requireAdmin, upload.single('excel'),async (req, res) => {
-        console.log(req.file.path);
+app.post('/products/import', auth, requireAdmin, uploadImport.single('excel'),async (req, res) => {
+        
         try {
+
 
             const [[userStore]] =
                 await db.query(
@@ -1270,11 +1291,15 @@ app.post('/products/import', auth, requireAdmin, upload.single('excel'),async (r
                     req.session.user.company_id
                 );
 
+
+
+
             req.session.success = {
                 categoriesCreated: result.categoriesCreated,
                 createdCount: result.createdCount,
                 updatedCount: result.updatedCount
             };
+            
             res.redirect('/products');
 
         } catch (error) {
@@ -1284,6 +1309,24 @@ app.post('/products/import', auth, requireAdmin, upload.single('excel'),async (r
             res.status(500).send(
                 error.message
             );
+
+        }   finally {
+            
+                const fs =
+                    require('fs');
+
+                if (
+                    req.file &&
+                    fs.existsSync(
+                        req.file.path
+                    )
+                ) {
+
+                    fs.unlinkSync(
+                        req.file.path
+                    );
+
+                }
 
         }
 
@@ -2469,6 +2512,99 @@ app.get(
             );
 
         }
+
+    }
+);
+
+app.get(
+    '/products/label/:id',
+    auth,
+    async (req, res) => {
+
+        const [[product]] =
+            await db.query(
+                `
+                SELECT *
+                FROM products
+                WHERE id = ?
+                `,
+                [
+                    req.params.id
+                ]
+            );
+
+        const doc =
+            new PDFDocument({
+                size: [
+                    200,
+                    120
+                ],
+                margin: 10
+            });
+
+        res.setHeader(
+            'Content-Type',
+            'application/pdf'
+        );
+
+        doc.pipe(res);
+
+        doc.font('./public/fonts/DejaVu_Sans.ttf');
+
+doc
+    .fontSize(9)
+    .text(
+        product.name,
+        10,
+        10,
+        {
+            width: 180,
+            align: 'center'
+        }
+    );
+
+doc
+    .fontSize(22)
+    .text(
+        `${product.sale_price} ₴`,
+        10,
+        45,
+        {
+            width: 180,
+            align: 'center'
+        }
+    );
+
+        // ШТРИХКОД
+
+        if (product.barcode) {
+
+            const barcode =
+                await bwipjs.toBuffer({
+
+                    bcid: 'code128',
+
+                    text:
+                        product.barcode,
+
+                    scale: 2,
+
+                    height: 10
+
+                });
+
+           doc.image(
+            barcode,
+            20,
+            80,
+            {
+                width: 160
+            }
+        );
+
+        }
+
+        doc.end();
 
     }
 );
