@@ -27,109 +27,223 @@
                             🧾 Чек <%= sale.invoice_number %>
                         </h2>
 
-                        <a
-                            href="/sales"
-                            class="btn btn-outline-secondary">
+                        <div class="btn-group">
 
-                            Назад
+                            <a
+                                href="/sales/print/<%= sale.id %>"
+                                class="btn btn-outline-success">
 
-                        </a>
+                                <i class="bi bi-printer"></i>
 
-                    </div>
+                                Печать
 
-                    <div class="row mb-4">
+                            </a>
 
-                        <div class="col-md-3">
+                            <a
+                                href="/sales/pdf/<%= sale.id %>"
+                                class="btn btn-outline-primary">
 
-                            <strong>Дата:</strong><br>
+                                <i class="bi bi-file-earmark-pdf"></i>
 
-                            <%= new Date(sale.created_at)
-                                .toLocaleString('ru-RU') %>
+                                PDF
 
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <strong>Клиент:</strong><br>
-
-                            <%= sale.customer_name || 'Основной покупатель' %>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <strong>Магазин:</strong><br>
-
-                            <%= sale.store_name %>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <strong>Оплата:</strong><br>
-
-                            <%= sale.payment_method %>
+                            </a>
 
                         </div>
 
                     </div>
 
-                    <table class="table">
+                    <div class="row g-3 mb-4">
 
-                        <thead>
+                        <div class="col-md-3">
 
-                            <tr>
-                                <th>Артикул</th>
-                                <th>Товар</th>
-                                <th>Кол-во</th>
-                                <th>Цена</th>
-                                <th>Сумма</th>
-                            </tr>
+                            <div class="card bg-light border-0">
 
-                        </thead>
+                                <div class="card-body">
 
-                        <tbody>
+                                    <small class="text-muted">
+                                        Дата продажи
+                                    </small>
 
-                        <% items.forEach(item => { %>
+                                    <div class="fw-bold">
 
-                            <tr>
+                                        <%= new Date(sale.created_at)
+                                            .toLocaleString('ru-RU') %>
 
-                                <td>
-                                    <%= item.sku || '-' %>
-                                </td>
+                                    </div>
 
-                                <td>
-                                    <%= item.name %>
-                                </td>
+                                </div>
 
-                                <td>
-                                    <%= item.quantity %>
-                                </td>
+                            </div>
 
-                                <td>
-                                    <%= Number(item.price).toFixed(2) %> ₴
-                                </td>
+                        </div>
 
-                                <td>
-                                    <%= Number(item.subtotal).toFixed(2) %> ₴
-                                </td>
+                        <div class="col-md-3">
 
-                            </tr>
+                            <div class="card bg-light border-0">
 
-                        <% }) %>
+                                <div class="card-body">
 
-                        </tbody>
+                                    <small class="text-muted">
+                                        Клиент
+                                    </small>
 
-                    </table>
+                                    <div class="fw-bold">
 
-                    <div class="text-end mt-4">
+                                        <%= sale.customer_name || 'Основной покупатель' %>
 
-                        <h3>
+                                    </div>
 
-                            Итого:
-                            <%= Number(sale.total).toFixed(2) %> ₴
+                                </div>
 
-                        </h3>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="card bg-light border-0">
+
+                                <div class="card-body">
+
+                                    <small class="text-muted">
+                                        Магазин
+                                    </small>
+
+                                    <div class="fw-bold">
+
+                                        <%= sale.store_name %>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="card bg-light border-0">
+
+                                <div class="card-body">
+
+                                    <small class="text-muted">
+                                        Оплата
+                                    </small>
+
+                                    <div class="fw-bold">
+
+                                        <% if(sale.payment_method === 'cash') { %>
+                                            Наличные
+                                        <% } else if(sale.payment_method === 'card'){%>
+                                            Карта
+                                        <%} else if(sale.payment_method === 'transfer'){%>
+                                            Первод
+                                        <%}%>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover align-middle">
+
+                            <thead class="table-primary">
+
+                                <tr>
+
+                                    <th>№</th>
+                                    <th>Артикул</th>
+                                    <th>Товар</th>
+                                    <th>Кол-во</th>
+                                    <th>Цена</th>
+                                    <th>Сумма</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                            <% items.forEach((item,index) => { %>
+
+                                <tr>
+
+                                    <td>
+                                        <%= index + 1 %>
+                                    </td>
+
+                                    <td>
+                                        <%= item.sku || '-' %>
+                                    </td>
+
+                                    <td class="product-name-copy" data-name="<%= item.name %>" title="Двойной клик для копирования">
+                                        <%= item.name %>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            <%= item.quantity %>
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <%= Number(item.price).toFixed(2) %> ₴
+                                    </td>
+
+                                    <td class="fw-bold">
+
+                                        <%= Number(item.subtotal).toFixed(2) %> ₴
+
+                                    </td>
+
+                                </tr>
+
+                            <% }) %>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="row mt-4">
+
+                        <div class="col-md-4 ms-auto">
+
+                            <div class="card border-primary shadow-sm">
+
+                                <div class="card-body text-end">
+
+                                    <div class="mb-2">
+
+                                        Товаров:
+                                        <strong>
+                                            <%= items.length %>
+                                        </strong>
+
+                                    </div>
+
+                                    <h2 class="text-primary mb-0">
+
+                                        Итого:
+                                        <%= Number(sale.total).toFixed(2) %> ₴
+
+                                    </h2>
+
+                                </div>
+
+                            </div>
+
+                        </div>
 
                     </div>
 

@@ -115,33 +115,33 @@
         <%- include('blocks/menu') -%>
         <div class="col content">
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex products-header justify-content-between align-items-center mb-4">
 
-            <h2>
+            <h2 class="products-title">
                 📦 Товары
             </h2>
             
-<div class="d-flex gap-2">
+            <div class="d-flex gap-2 products-actions">
 
-    <a
-        href="/products/new"
-        class="btn btn-primary">
+                <a
+                    href="/products/new"
+                    class="btn btn-primary" title="Добавить товар">
 
-        <i class="bi bi-plus-lg"></i>
-        Добавить товар
+                    <i class="bi bi-plus-lg"></i>
+                    
 
-    </a>
+                </a>
 
-    <a
-        href="/products/import"
-        class="btn btn-success">
+                <a
+                    href="/products/import"
+                    class="btn btn-success" title="Импортировать Exlx">
 
-        <i class="bi bi-file-earmark-excel"></i>
-        Импорт Excel
+                    <i class="bi bi-file-earmark-excel"></i>
+                    
 
-    </a>
+                </a>
 
-</div>
+            </div>
 
         </div>
 
@@ -302,7 +302,7 @@
 
     <td>
 
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group">
 
             <a
                 href="/products/view/<%= product.id %>"
@@ -320,13 +320,13 @@
 
             </a>
             <a
-    href="/products/label/<%= product.id %>"
-    target="_blank" title="Ценник"
-    class="btn btn-sm btn-outline-secondary">
+                href="/products/label/<%= product.id %>"
+                target="_blank" title="Ценник"
+                class="btn btn-sm btn-outline-secondary">
 
-    🏷 
+                🏷 
 
-</a>
+            </a>
 
         </div>
 

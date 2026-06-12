@@ -108,7 +108,7 @@
                                 <th>Клиент</th>
                                 <th class="text-end">Сумма</th>
                                 <th class="text-center">Статус</th>
-                                <th></th>
+                                <th>Действя</th>
                             </tr>
 
                         </thead>
@@ -172,17 +172,49 @@
                                     </span>
 
                                 </td>
-                                <td> 
+                                <td>
 
-                                    <div class="btn-group btn-sm">
+                                    <div
+                                        class="btn-group">
+
                                         <a
                                             href="/sale/<%= sale.id %>"
-                                            class="btn btn-sm ">
+                                            class="btn btn-outline-primary btn-sm"
+                                            title="Просмотр">
 
-                                            👁
+                                            <i class="bi bi-eye"></i>
 
                                         </a>
+
+                                        <a
+                                            href="/sales/print/<%= sale.id %>"
+                                            class="btn btn-outline-success btn-sm"
+                                            title="Печать">
+
+                                            <i class="bi bi-printer"></i>
+
+                                        </a>
+
+                                        <button
+                                            class="btn btn-outline-warning btn-sm"
+                                            onclick="copySale(<%= sale.id %>)"
+                                            title="Копировать">
+
+                                            <i class="bi bi-files"></i>
+
+                                        </button>
+
+                                        <button
+                                            class="btn btn-outline-danger btn-sm"
+                                            onclick="returnSale(<%= sale.id %>)"
+                                            title="Возврат">
+
+                                            <i class="bi bi-arrow-counterclockwise"></i>
+
+                                        </button>
+
                                     </div>
+
                                 </td>
 
                                 

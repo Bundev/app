@@ -25,33 +25,22 @@
 
         <div class="card-body">
 
-            <% stores.forEach(store => { %>
+        <% stores.forEach(store => { %>
 
-            <div class="form-check mb-2">
+        <label>
 
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    name="stores"
-                    value="<%= store.id %>"
+            <input
+                type="checkbox"
+                name="stores"
+                value="<%= store.id %>"
+                <%= selectedStores.includes(store.id) ? 'checked' : '' %>
+            >
 
-                    <%= selectedStores.some(
-                        s => s.store_id == store.id
-                    )
-                    ? 'checked'
-                    : ''
-                    %>
-                >
+            <%= store.name %>
 
-                <label class="form-check-label">
-
-                    <%= store.name %>
-
-                </label>
-
-            </div>
-
-            <% }) %>
+        </label>
+        <br>
+        <% }) %>
 
         </div>
 

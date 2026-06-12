@@ -543,6 +543,16 @@ app.get('/sale/:id', auth, async (req, res) => {
         sale,
         items,
         activeMenu: 'sales',
+        script: [
+            {
+                src: 'sale-view.js'
+            }
+        ],
+        style: [
+            {
+                href: 'sale-view.css'
+            }
+        ],
         breadcrumbs: [
             {
                 title: req.__('title.dashboard'),
@@ -553,7 +563,7 @@ app.get('/sale/:id', auth, async (req, res) => {
                 url: '/sales'
             },
             {
-                title: `Чек №${sale.invoice_number}`
+                title: `Чек`
             }
         ]
     });
@@ -2102,33 +2112,39 @@ app.get('/users/stores/:id', auth, async (req, res) => {
         );
 
     const [stores] =
-    await db.execute(
-        `
-        SELECT s.*
-        FROM stores s
-        INNER JOIN user_stores us
-            ON us.store_id = s.id
-        WHERE us.user_id = ?
-        ORDER BY s.name
-        `,
-        [req.session.user.id]
-    );
-
-    const [selectedStores] =
         await db.execute(
             `
-            SELECT store_id
-            FROM user_stores
-            WHERE user_id = ?
+            SELECT *
+            FROM stores
+            WHERE company_id = ?
+            ORDER BY name
             `,
-            [userId]
+            [
+                user[0].company_id
+            ]
         );
+
+        const [selectedStores] =
+            await db.execute(
+                `
+                SELECT store_id
+                FROM user_stores
+                WHERE user_id = ?
+                `,
+                [userId]
+            );
+
+
+    const selectedIds =
+    selectedStores.map(
+        item => item.store_id
+    );
 
     res.render('user_stores', {
 
         user_st: user[0],
         stores,
-        selectedStores,
+        selectedStores: selectedIds,
 
         titleKey: 'title.user_new',
         activeMenu: 'settings',
