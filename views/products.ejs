@@ -4,11 +4,12 @@
    <%- include('blocks/head') -%>
   </head>
   <body>
-<% if (success) { %>
+<% if (importSuccess) { %>
 
 <div
     class="position-fixed top-0 end-0 p-3"
-    style="z-index: 9999" id="importSuccess">
+    style="z-index:9999"
+    id="importSuccess">
 
     <div
         class="card border-success shadow">
@@ -23,18 +24,90 @@
         </div>
 
         <div class="card-body">
-        Категорий создано:
-        <%= success.categoriesCreated %><br>
-        Товаров создано:
-        <%= success.createdCount %><br>
-        Товаров обновлено:
-        <%= success.updatedCount %>
+
+            Категорий создано:
+            <%= importSuccess.categoriesCreated %>
+
+            <br>
+
+            Товаров создано:
+            <%= importSuccess.createdCount %>
+
+            <br>
+
+            Товаров обновлено:
+            <%= importSuccess.updatedCount %>
+
         </div>
+
     </div>
 
 </div>
 
 <% } %>
+<% if (productSuccess) { %>
+
+<div
+    class="position-fixed top-0 end-0 p-3"
+    style="z-index:9999"
+    id="productSuccess">
+
+    <div
+        class="card border-primary shadow">
+
+        <div
+            class="card-header bg-primary text-white">
+
+            <i class="bi bi-check-circle"></i>
+
+            Товар обновлён
+
+        </div>
+
+        <div class="card-body">
+
+            <%= productSuccess %>
+
+        </div>
+
+    </div>
+
+</div>
+
+<% } %>
+
+<div id="scannerModal">
+
+    <div class="scanner-content">
+
+        <div class="scanner-header">
+
+            <span>
+                📷 Сканирование товара
+            </span>
+
+            <button
+                id="closeScanner"
+                type="button">
+
+                ✕
+            </button>
+
+        </div>
+
+        <div id="reader"></div>
+
+        <div class="scanner-footer">
+
+            Наведите камеру на штрихкод
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
     <div id="overlay"></div>
     <%- include('blocks/header') -%>
     <div class="container-fluid" id="cont">
@@ -106,6 +179,9 @@
     <th width="120">
         Артикул
     </th>
+    <th width="120">
+        Штрихкод
+    </th>
 
     <th>
         Товар
@@ -137,10 +213,18 @@
     data-barcode="<%= product.barcode || '' %>"
     data-category="<%= product.category_name || '' %>">
 
-    <td>
+    <td >
 
         <code>
             <%= product.sku || '-' %>
+        </code>
+
+    </td>
+    <td class="barcode-cell"
+    data-id="<%= product.id %>">
+
+        <code>
+            <%= product.barcode || 'Сканировать' %>
         </code>
 
     </td>
@@ -272,5 +356,139 @@
       </div>
     </div>
     <%- include('blocks/footer') -%>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        // Обновлени штрихкода
+
+document
+    .querySelectorAll('.barcode-cell')
+    .forEach(cell => {
+
+        cell.addEventListener(
+            'dblclick',
+            () => {
+
+                currentProductId =
+                    cell.dataset.id;
+
+                document
+                    .getElementById(
+                        'scannerModal'
+                    )
+                    .style.display =
+                    'flex';
+
+                startBarcodeScanner();
+
+            }
+        );
+
+    });
+
+let currentProductId = null;
+let scanner = null;
+
+function startBarcodeScanner() {
+
+    scanner =
+        new Html5Qrcode(
+            'reader'
+        );
+
+    scanner.start(
+        {
+            facingMode:
+                'environment'
+        },
+        {
+            fps: 10,
+            qrbox: 250
+        },
+        async (barcode) => {
+
+            await saveBarcode(
+                currentProductId,
+                barcode
+            );
+
+        }
+    );
+
+}
+async function saveBarcode(
+    productId,
+    barcode
+) {
+
+    const response =
+        await fetch(
+            `/products/barcode/${productId}`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    barcode
+                })
+            }
+        );
+
+    const result =
+        await response.json();
+
+    if (result.success) {
+
+        const cell =
+            document.querySelector(
+                `.barcode-cell[data-id="${productId}"]`
+            );
+
+        cell.textContent =
+            barcode;
+
+        await scanner.stop();
+
+        document
+            .getElementById(
+                'scannerModal'
+            )
+            .style.display =
+            'none';
+
+    }
+
+}
+document
+    .getElementById(
+        'closeScanner'
+    )
+    .addEventListener(
+        'click',
+        async () => {
+
+            if (scanner) {
+
+                try {
+
+                    await scanner.stop();
+
+                } catch (e) {}
+
+            }
+
+            document
+                .getElementById(
+                    'scannerModal'
+                )
+                .style.display =
+                'none';
+
+        }
+    );
+    </script>
   </body>
 </html>

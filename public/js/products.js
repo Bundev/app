@@ -99,4 +99,41 @@ document.addEventListener(
 );
 
 
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+        const toast =
+            document.getElementById(
+                'productSuccess'
+            );
+
+        if (!toast) return;
+
+        setTimeout(
+            () => {
+
+                toast.style.transition =
+                    'all .4s ease';
+
+                toast.style.opacity = '0';
+
+                toast.style.transform =
+                    'translateX(30px)';
+
+                setTimeout(
+                    () => {
+
+                        toast.remove();
+
+                    },
+                    400
+                );
+
+            },
+            5000
+        );
+
+    }
+);
 

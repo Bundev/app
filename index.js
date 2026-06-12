@@ -4,6 +4,7 @@ const Fuse = require('fuse.js');
 const cookieParser = require('cookie-parser');
 const i18n = require('i18n');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const statuses = require('./config/statuses');
 const roles = require('./config/roles');
 const db = require('./config/db');
@@ -28,11 +29,47 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(session({
-    secret: 'mycrm_secret',
-    resave: false,
-    saveUninitialized: false
-}));
+
+const sessionStore =
+    new MySQLStore({
+
+        host: 'srv1798.hstgr.io',
+
+        user: 'u891612247_bundev95',
+
+        password: 'Bundev1995',
+
+        database: 'u891612247_crm'
+
+    });
+
+app.use(
+    session({
+
+        key: 'retailpro',
+
+        secret: 'super-secret-key',
+
+        store: sessionStore,
+
+        resave: false,
+
+        saveUninitialized: false,
+
+        cookie: {
+
+            maxAge:
+                1000 *
+                60 *
+                60 *
+                24 *
+                30
+
+        }
+
+    })
+);
+
 
 app.use((req, res, next) => {
 
@@ -836,10 +873,16 @@ app.get('/invoices/:id', auth, (req, res) => {
 // Роутер товаров
 app.get('/products', auth, async (req, res) => {
 
-    const success =
-        req.session.success;
+    const importSuccess =
+    req.session.importSuccess;
 
-    req.session.success =
+    const productSuccess =
+        req.session.productSuccess;
+
+    req.session.importSuccess =
+        null;
+
+    req.session.productSuccess =
         null;
 
     const [products] =
@@ -868,7 +911,8 @@ app.get('/products', auth, async (req, res) => {
         titleKey: 'title.products',
         activeMenu: 'products',
         products,
-        success,
+        importSuccess,
+        productSuccess,
         script: [
             {
                 src: 'products.js'
@@ -1129,8 +1173,8 @@ app.post(
                 params
             );
 
-            req.session.success =
-                'Товар успешно обновлён';
+            req.session.productSuccess =
+    'Товар успешно обновлён';
 
             res.redirect(
                 '/products'
@@ -1293,7 +1337,7 @@ app.post('/products/import', auth, requireAdmin, uploadImport.single('excel'),as
 
 
 
-            req.session.success = {
+            req.session.importSuccess = {
                 categoriesCreated: result.categoriesCreated,
                 createdCount: result.createdCount,
                 updatedCount: result.updatedCount
@@ -1437,6 +1481,41 @@ app.get('/api/products/search', auth, async (req, res) => {
 
 });
 
+app.post(
+    '/products/barcode/:id',
+    auth,
+    async (req, res) => {
+
+        try {
+
+            await db.execute(
+                `
+                UPDATE products
+                SET barcode = ?
+                WHERE id = ?
+                `,
+                [
+                    req.body.barcode,
+                    req.params.id
+                ]
+            );
+
+            res.json({
+                success: true
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.json({
+                success: false
+            });
+
+        }
+
+    }
+);
 app.get('/stores/new', auth, (req, res) => {
 
     if (!req.session.user || req.session.user.role !== 'admin') {
