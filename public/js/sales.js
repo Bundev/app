@@ -1,100 +1,166 @@
-const filters = [
-    'filter-number',
-    'filter-date',
-    'filter-customer',
-    'filter-status',
-    'filter-sum'
-];
+const filterInvoice =
+    document.getElementById(
+        'filterInvoice'
+    );
 
-filters.forEach(id => {
+const filterCustomer =
+    document.getElementById(
+        'filterCustomer'
+    );
 
-    document
-        .getElementById(id)
-        .addEventListener('input', filterInvoices);
+const filterAmount =
+    document.getElementById(
+        'filterAmount'
+    );
 
-});
+const filterStatus =
+    document.getElementById(
+        'filterStatus'
+    );
 
-function filterInvoices() {
+const dateFrom =
+    document.getElementById(
+        'dateFrom'
+    );
 
-    const number =
-        document.getElementById('filter-number')
-            .value
+const dateTo =
+    document.getElementById(
+        'dateTo'
+    );
+
+function filterSales() {
+
+    const invoice =
+        filterInvoice.value
             .toLowerCase();
-
-    const date =
-        document.getElementById('filter-date')
-            .value;
 
     const customer =
-        document.getElementById('filter-customer')
-            .value
+        filterCustomer.value
             .toLowerCase();
 
-    const status =
-        document.getElementById('filter-status')
-            .value;
+    const amount =
+        filterAmount.value;
 
-    const sum =
-        Number(
-            document.getElementById('filter-sum')
-                .value
-        ) || 0;
+    const status =
+        filterStatus.value;
+
+    const from =
+        dateFrom.value;
+
+    const to =
+        dateTo.value;
 
     document
-        .querySelectorAll('#invoice-table tr')
+        .querySelectorAll(
+            '#salesTable tr'
+        )
         .forEach(row => {
 
-            const rowNumber =
-                row.cells[0].textContent.toLowerCase();
-
-            const rowDate =
-                row.cells[1].dataset.date;
+            const rowInvoice =
+                row.dataset.invoice
+                    .toLowerCase();
 
             const rowCustomer =
-                row.cells[2].textContent.toLowerCase();
+                row.dataset.customer
+                    .toLowerCase();
 
-            const rowSum =
-                parseFloat(
-                    row.cells[3].textContent
+            const rowAmount =
+                Number(
+                    row.dataset.total
                 );
 
             const rowStatus =
-                row.cells[4].textContent.trim();
+                row.dataset.status;
+
+            const rowDate =
+                row.dataset.date;
+
+            let dateMatch =
+                true;
+
+            if (from) {
+
+                dateMatch =
+                    rowDate >= from;
+
+            }
+
+            if (to) {
+
+                dateMatch =
+                    dateMatch &&
+                    rowDate <= to;
+
+            }
 
             const visible =
 
-                rowNumber.includes(number) &&
+                rowInvoice.includes(
+                    invoice
+                )
 
-                (!date || rowDate === date) &&
+                &&
 
-                rowCustomer.includes(customer) &&
+                rowCustomer.includes(
+                    customer
+                )
 
-                (!status || rowStatus === status) &&
+                &&
 
-                rowSum >= sum;
+                (
+                    !amount
+                    ||
+                    rowAmount >=
+                    Number(amount)
+                )
+
+                &&
+
+                (
+                    !status
+                    ||
+                    rowStatus === status
+                )
+
+                &&
+
+                dateMatch;
 
             row.style.display =
-                visible ? '' : 'none';
+                visible
+                    ? ''
+                    : 'none';
 
         });
 
 }
 
-function clearFilters() {
-    filters.forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    filterInvoices();
-}
+filterInvoice.addEventListener(
+    'input',
+    filterSales
+);
 
-document.querySelectorAll('.invoice-row').forEach(row => {
-    row.addEventListener('click', (e) => {
+filterCustomer.addEventListener(
+    'input',
+    filterSales
+);
 
-        if (e.ctrlKey) {
-            window.open(row.dataset.url, '_blank');
-        } else {
-            window.location.href = row.dataset.url;
-        }
+filterAmount.addEventListener(
+    'input',
+    filterSales
+);
 
-    });
-});
+filterStatus.addEventListener(
+    'change',
+    filterSales
+);
+
+dateFrom.addEventListener(
+    'change',
+    filterSales
+);
+
+dateTo.addEventListener(
+    'change',
+    filterSales
+);

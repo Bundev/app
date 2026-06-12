@@ -13,83 +13,90 @@
             <div class="buttonblox">
                 <a href="/new" class="btn btn-primary">+ <%= __('title.new') %></a>
             </div>
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
-
-                    <div class="row g-2">
-
-                        <div class="col-md-2">
-                            <input
-                                type="text"
-                                id="filter-number"
-                                class="form-control"
-                                placeholder="№ чека">
-                        </div>
-
-                        <div class="col-md-2">
-                            <input
-                                type="date"
-                                id="filter-date"
-                                class="form-control">
-                        </div>
-
-                        <div class="col-md-3">
-                            <input
-                                type="text"
-                                id="filter-customer"
-                                class="form-control"
-                                placeholder="Покупатель">
-                        </div>
-                        <div class="col-md-2">
-                            <input
-                                type="number"
-                                id="filter-sum"
-                                class="form-control"
-                                placeholder="Сумма от">
-                        </div>
-                        <div class="col-md-2">
-                            <select
-                                id="filter-status"
-                                class="form-select">
-
-                                <option value="">
-                                    Все статусы
-                                </option>
 
 
+<div class="card mb-3">
+    <div class="card-body">
+<div class="row g-2 mb-3">
 
-                                 <% Object.keys(statuses).forEach(key => { %>
+    <div class="col-md-2">
 
-                                    <option value="<%= statuses[key].title %>">
+        <input
+            type="text"
+            id="filterInvoice"
+            class="form-control"
+            placeholder="№ чека">
 
-                                        <%= statuses[key].title %>
+    </div>
 
-                                    </option>
+    <div class="col-md-2">
 
-                                <% }) %>
+        <input
+            type="date"
+            id="dateFrom"
+            class="form-control">
+
+    </div>
+
+    <div class="col-md-2">
+
+        <input
+            type="date"
+            id="dateTo"
+            class="form-control">
+
+    </div>
+
+    <div class="col-md-2">
+
+        <input
+            type="text"
+            id="filterCustomer"
+            class="form-control"
+            placeholder="Покупатель">
+
+    </div>
+
+    <div class="col-md-2">
+
+        <input
+            type="number"
+            id="filterAmount"
+            class="form-control"
+            placeholder="Сумма">
+
+    </div>
+
+    <div class="col-md-2">
+
+        <select
+            id="filterStatus"
+            class="form-select">
+
+            <option value="">
+                Все статусы
+            </option>
+
+            <option value="completed">
+                Продажа завершена
+            </option>
+
+            <option value="returned">
+                Возврат
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+    </div>
+</div>
 
 
-                            </select>
-                        </div>
-
-                        
-
-                        <div class="col-md-1">
-                            <button
-                                class="btn btn-outline-secondary w-100"
-                                onclick="clearFilters()">
-
-                                ✕
-                            </button>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
             <div class="card border-0 shadow-sm">
 
-                <div class="table-responsive">
+                <div class="table-wrapper">
 
                     <table class="table sales-table mb-0">
 
@@ -101,15 +108,21 @@
                                 <th>Клиент</th>
                                 <th class="text-end">Сумма</th>
                                 <th class="text-center">Статус</th>
+                                <th></th>
                             </tr>
 
                         </thead>
 
-                        <tbody>
+                        <tbody id="salesTable">
 
                         <% sales.forEach(sale => { %>
 
-                            <tr class="invoice-row" data-url="/sale/<%= sale.id %>">
+                            <tr class="invoice-row" data-url="/sale/<%= sale.id %>"
+                             data-invoice="<%= sale.invoice_number %>"
+                            data-customer="<%= sale.customer_name || '' %>"
+                            data-total="<%= sale.total %>"
+                            data-status="<%= sale.status %>"
+                            data-date="<%= new Date(sale.created_at).toISOString().split('T')[0] %>">
 
                                 <td>
 
@@ -158,6 +171,18 @@
                                         Продажа завершена
                                     </span>
 
+                                </td>
+                                <td> 
+
+                                    <div class="btn-group btn-sm">
+                                        <a
+                                            href="/sale/<%= sale.id %>"
+                                            class="btn btn-sm ">
+
+                                            👁
+
+                                        </a>
+                                    </div>
                                 </td>
 
                                 

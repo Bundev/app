@@ -8,7 +8,14 @@ const db = mysql.createPool({
     user: 'u891612247_bundev95',
     password: 'Bundev1995',
     database: 'u891612247_crm',
-    timezone: '+03:00'
+    timezone: '+03:00',
+
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
     
 });
 

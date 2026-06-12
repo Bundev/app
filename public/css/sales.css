@@ -3,6 +3,8 @@
   margin-bottom: 20px;
 }
 /* Кнопка новый чек в разделе продажи */
+
+
 .sales-table {
     background: #fff;
 }
@@ -74,4 +76,29 @@
 
 .invoice-row{
     cursor: pointer;
+}
+.table-wrapper {
+
+    max-height: 450px;
+
+    overflow-y: auto;
+
+    border: 1px solid #dee2e6;
+
+    border-radius: 10px;
+
+}
+
+.table-wrapper thead th {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 10;
+
+    background: #fff;
+
+    border-bottom: 2px solid #dee2e6;
+
 }

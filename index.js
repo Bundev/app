@@ -1133,8 +1133,7 @@ app.post(
                 'Товар успешно обновлён';
 
             res.redirect(
-                '/products/view/' +
-                req.params.id
+                '/products'
             );
 
         } catch (error) {

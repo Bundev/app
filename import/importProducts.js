@@ -160,36 +160,97 @@ module.exports = async (
 
     }
 
-    let createdCount = 0;
-    let updatedCount = 0;
+let createdCount = 0;
+let updatedCount = 0;
 
-    // Импорт товаров
+const connection =
+    await db.getConnection();
+
+try {
+
+    let counter = 0;
+
     for (const product of products) {
+
+        counter++;
+
+        console.log(
+            `[${counter}/${products.length}] ${product.name}`
+        );
+
+        // Поиск дублей
+
+        let exists = [];
+
+        if (product.sku) {
+
+            [exists] =
+                await connection.execute(
+                    `
+                    SELECT id
+                    FROM products
+                    WHERE sku = ?
+                    AND store_id = ?
+                    ORDER BY id
+                    `,
+                    [
+                        product.sku,
+                        storeId
+                    ]
+                );
+
+        } else {
+
+            [exists] =
+                await connection.execute(
+                    `
+                    SELECT id
+                    FROM products
+                    WHERE name = ?
+                    AND store_id = ?
+                    ORDER BY id
+                    `,
+                    [
+                        product.name,
+                        storeId
+                    ]
+                );
+
+        }
+
+        if (exists.length > 1) {
+
+            const keepId =
+                exists[0].id;
+
+            const duplicateIds =
+                exists
+                    .slice(1)
+                    .map(item => item.id);
+
+            await connection.execute(
+                `
+                DELETE FROM products
+                WHERE id IN (${duplicateIds.map(() => '?').join(',')})
+                `,
+                duplicateIds
+            );
+
+            console.log(
+                `Удалены дубли товара: ${product.name}`
+            );
+
+        }
 
         const categoryId =
             categoryMap.get(
                 product.category
             ) || null;
 
-        const [exists] =
-            await db.execute(
-                `
-                SELECT id
-                FROM products
-                WHERE sku = ?
-                AND store_id = ?
-                LIMIT 1
-                `,
-                [
-                    product.sku,
-                    storeId
-                ]
-            );
-
-        // Обновление товара
+        
         if (exists.length) {
 
-            await db.execute(
+            await connection.execute(
                 `
                 UPDATE products
                 SET
@@ -212,44 +273,49 @@ module.exports = async (
 
             updatedCount++;
 
-            continue;
+        } else {
+
+            await connection.execute(
+                `
+                INSERT INTO products
+                (
+                    category_id,
+                    store_id,
+                    sku,
+                    name,
+                    purchase_price,
+                    sale_price,
+                    quantity,
+                    image
+                )
+                VALUES
+                (
+                    ?, ?, ?, ?, ?, ?, ?, ?
+                )
+                `,
+                [
+                    categoryId,
+                    storeId,
+                    product.sku,
+                    product.name,
+                    product.purchase_price,
+                    product.sale_price,
+                    product.quantity,
+                    '/img/no-image.png'
+                ]
+            );
+
+            createdCount++;
 
         }
 
-        // Создание товара
-        await db.execute(
-            `
-            INSERT INTO products
-            (
-                category_id,
-                store_id,
-                sku,
-                name,
-                purchase_price,
-                sale_price,
-                quantity,
-                image
-            )
-            VALUES
-            (
-                ?, ?, ?, ?, ?, ?, ?, ?
-            )
-            `,
-            [
-                categoryId,
-                storeId,
-                product.sku,
-                product.name,
-                product.purchase_price,
-                product.sale_price,
-                product.quantity,
-                '/img/no-image.png'
-            ]
-        );
-
-        createdCount++;
-
     }
+
+} finally {
+
+    connection.release();
+
+}
 
     return {
 
