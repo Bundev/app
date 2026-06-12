@@ -447,8 +447,8 @@ async function saveBarcode(
                 `.barcode-cell[data-id="${productId}"]`
             );
 
-        cell.textContent =
-            barcode;
+        cell.innerHTML =
+            '<code>'+barcode+'</code>';
 
         await scanner.stop();
 
