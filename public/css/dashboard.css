@@ -1,45 +1,30 @@
-.card {
-    border-radius: 12px;
+.top-products-body {
+    max-height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.card-header {
-    font-weight: 600;
+.top-products-body::-webkit-scrollbar {
+    width: 6px;
 }
 
-h3 {
-    font-weight: 700;
+.top-products-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 20px;
 }
 
-.table-hover tbody tr {
-    cursor: pointer;
-}
-.dashboard-table {
-    max-height: 500px;
+
+.top-products-body {
+    height: 420px;
     overflow-y: auto;
 }
 
-.invoice-row {
-    cursor: pointer;
+.dashboard-row {
+    display: flex;
+    align-items: stretch;
 }
 
-.invoice-row:hover {
-    background: #f8f9fa;
-}
-
-.table-scroll {
-    height: 400px; /* фиксированная высота */
-    overflow-y: auto;
-}
-
-.table-scroll table {
-    margin-bottom: 0;
-}
-
-.table-scroll thead th {
-    position: sticky;
-    top: 0;
-
-    background: white;
-    z-index: 10;
+.top-products-card {
+    height: 100%;
 }
 

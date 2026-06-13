@@ -27,27 +27,26 @@
                             🧾 Чек <%= sale.invoice_number %>
                         </h2>
 
-                        <div class="btn-group">
-
+                        <div class="btn-group sale-actions">
                             <a
                                 href="/sales/print/<%= sale.id %>"
-                                class="btn btn-outline-success">
-
+                                class="btn btn-outline-success btn-lg" title="Печать">
                                 <i class="bi bi-printer"></i>
-
-                                Печать
-
                             </a>
 
                             <a
                                 href="/sales/pdf/<%= sale.id %>"
-                                class="btn btn-outline-primary">
-
+                                class="btn btn-outline-primary btn-lg" title="PDF">
                                 <i class="bi bi-file-earmark-pdf"></i>
-
-                                PDF
-
                             </a>
+                            <% if (sale.status !== 'cancelled') { %>
+                                <a
+                                    href="/sale/<%= sale.id %>/return"
+                                    class="btn btn-outline-warning btn-lg" title="Возврат">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </a>
+
+                            <% } %>
 
                         </div>
 
@@ -156,7 +155,7 @@
 
                         <table class="table table-hover align-middle">
 
-                            <thead class="table-primary">
+                            <thead class="table-light">
 
                                 <tr>
 
@@ -214,7 +213,57 @@
                         </table>
 
                     </div>
+<% if (returns.length) { %>
 
+<div class="card mt-4">
+
+    <div class="card-header">
+
+        История возвратов
+
+    </div>
+
+    <div class="card-body">
+
+        <table class="table">
+
+            <tr>
+
+                <th>Дата</th>
+
+                <th>Сумма</th>
+
+            </tr>
+
+            <% returns.forEach(r => { %>
+
+                <tr>
+
+                    <td>
+
+                        <%= new Date(r.created_at)
+                            .toLocaleString('ru-RU') %>
+
+                    </td>
+
+                    <td>
+
+                        <%= Number(r.total)
+                            .toFixed(2) %> ₴
+
+                    </td>
+
+                </tr>
+
+            <% }) %>
+
+        </table>
+
+    </div>
+
+</div>
+
+<% } %>
                     <div class="row mt-4">
 
                         <div class="col-md-4 ms-auto">

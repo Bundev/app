@@ -22,7 +22,47 @@
                                 <div class="card-body">
 
                                     <div class="text-muted">
-                                        <%= __('dashboard.salesToday') %>
+                                        Продажи сегодня
+                                    </div>
+
+                                    <h3 class="mt-2">
+                                        <%= grossSalesToday.toFixed(2) %> ₴
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-xl-3">
+
+                            <div class="card border-0 shadow-sm">
+
+                                <div class="card-body">
+
+                                    <div class="text-muted">
+                                        Возвраты сегодня
+                                    </div>
+
+                                    <h3 class="mt-2">
+                                        <%= returnsToday.toFixed(2) %> ₴
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-xl-3">
+
+                            <div class="card border-0 shadow-sm">
+
+                                <div class="card-body">
+
+                                    <div class="text-muted">
+                                        Доход сегодня
                                     </div>
 
                                     <h3 class="mt-2">
@@ -42,51 +82,11 @@
                                 <div class="card-body">
 
                                     <div class="text-muted">
-                                        <%= __('dashboard.invoicesToday') %>
+                                        Чеков за сегодня
                                     </div>
 
                                     <h3 class="mt-2">
-                                        <%= invoicesToday %>
-                                    </h3>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-xl-3">
-
-                            <div class="card border-0 shadow-sm">
-
-                                <div class="card-body">
-
-                                    <div class="text-muted">
-                                        <%= __('dashboard.productsToday') %>
-                                    </div>
-
-                                    <h3 class="mt-2">
-                                        <%= productsToday %>
-                                    </h3>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-xl-3">
-
-                            <div class="card border-0 shadow-sm">
-
-                                <div class="card-body">
-
-                                    <div class="text-muted">
-                                        <%= __('dashboard.customers') %>
-                                    </div>
-
-                                    <h3 class="mt-2">
-                                        <%= clientsCount %>
+                                        <%= invoicesToday%>
                                     </h3>
 
                                 </div>
@@ -97,32 +97,83 @@
                     <div class="row g-3">
                         <div class="col-lg-8">
                             <div class="card border-0 shadow-sm">
-                                <div class="card-header bg-white">Последние чеки</div>    
-                                <div class="card-body p-0">
-                                    <div class="table-scroll table-responsive">
-                                        <table class="table table-hover align-middle mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>№</th>
-                                                    <th>Клиент</th>
-                                                    <th>Сумма</th>
-                                                    <th>Статус</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <% invoices.forEach(invoice => { %>
-                                                <tr class="invoice-row-dashboard" data-url="/invoices/<%= invoice.number %>">
-                                                    <td><span class="badge bg-light text-primary border">№<%= invoice.number %></span></td>
-                                                    <td><%= invoice.customer %></td>
-                                                    <td><%= Number(invoice.total).toFixed(2) %> ₴</td>
-                                                    <td><span class="badge <%= statuses[invoice.status].class %>"><%= statuses[invoice.status].title %></span></td>
-                                                </tr>
-                                                <% }) %>
-                                            </tbody>
-                                        </table>
-                                    </div>
+
+                                <div class="card-header bg-white fw-bold">
+
+                                    🔥 Самые продаваемые товары
+                                    <span class="text-muted">
+                                        (7 дней)
+                                    </span>
+
                                 </div>
+
+                                <div class="card-body top-products-body">
+
+                                    <% const maxQty =
+                                        topProducts.length
+                                            ? topProducts[0].total_qty
+                                            : 1;
+                                    %>
+
+                                    <% topProducts.forEach(item => { %>
+
+                                        <div class="mb-3">
+
+                                            <div class="d-flex justify-content-between">
+
+                                                <div>
+
+                                                    <strong>
+                                                        <%= item.name %>
+                                                    </strong>
+
+                                                </div>
+
+                                                <div>
+
+                                                    <span
+                                                        class="badge bg-primary">
+
+                                                        <%= item.total_qty %> шт
+
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+                                            <div
+                                                class="progress mt-2"
+                                                style="height:8px;">
+
+                                                <div
+                                                    class="progress-bar"
+
+                                                    style="
+                                                        width:
+                                                        <%= (item.total_qty / maxQty) * 100 %>%;
+                                                    ">
+                                                </div>
+
+                                            </div>
+
+                                            <small class="text-muted">
+
+                                                Продажи:
+                                                <%= Number(item.total_sales)
+                                                    .toFixed(2) %> ₴
+
+                                            </small>
+
+                                        </div>
+
+                                    <% }) %>
+
+                                </div>
+
                             </div>
+
+
                         </div>
                         <div class="col-lg-4">
                             <div class="card border-0 shadow-sm">
@@ -145,7 +196,7 @@
 
                                         </a>
 
-                                        <!-- <a href="/clients"
+                                        <a href="/clients"
                                         class="btn btn-outline-secondary">
 
                                             👥 Клиенты
@@ -157,7 +208,7 @@
 
                                             💰 Касса
 
-                                        </a> -->
+                                        </a>
                                     </div>
                                 </div>
                             </div>

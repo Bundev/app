@@ -15,88 +15,88 @@
             </div>
 
 
-<div class="card mb-3">
-    <div class="card-body">
-<div class="row g-2 mb-3">
+            <div class="card border-0 mb-3">
+                <div class="card-body ">
+                    <div class="row g-2 mb-3">
 
-    <div class="col-md-2">
+                        <div class="col-md-2">
 
-        <input
-            type="text"
-            id="filterInvoice"
-            class="form-control"
-            placeholder="№ чека">
+                            <input
+                                type="text"
+                                id="filterInvoice"
+                                class="form-control"
+                                placeholder="№ чека">
 
-    </div>
+                        </div>
 
-    <div class="col-md-2">
+                        <div class="col-md-2">
 
-        <input
-            type="date"
-            id="dateFrom"
-            class="form-control">
+                            <input
+                                type="date"
+                                id="dateFrom"
+                                class="form-control">
 
-    </div>
+                        </div>
 
-    <div class="col-md-2">
+                        <div class="col-md-2">
 
-        <input
-            type="date"
-            id="dateTo"
-            class="form-control">
+                            <input
+                                type="date"
+                                id="dateTo"
+                                class="form-control">
 
-    </div>
+                        </div>
 
-    <div class="col-md-2">
+                        <div class="col-md-2">
 
-        <input
-            type="text"
-            id="filterCustomer"
-            class="form-control"
-            placeholder="Покупатель">
+                            <input
+                                type="text"
+                                id="filterCustomer"
+                                class="form-control"
+                                placeholder="Покупатель">
 
-    </div>
+                        </div>
 
-    <div class="col-md-2">
+                        <div class="col-md-2">
 
-        <input
-            type="number"
-            id="filterAmount"
-            class="form-control"
-            placeholder="Сумма">
+                            <input
+                                type="number"
+                                id="filterAmount"
+                                class="form-control"
+                                placeholder="Сумма">
 
-    </div>
+                        </div>
 
-    <div class="col-md-2">
+                        <div class="col-md-2">
 
-        <select
-            id="filterStatus"
-            class="form-select">
+                            <select
+                                id="filterStatus"
+                                class="form-select">
 
-            <option value="">
-                Все статусы
-            </option>
+                                <option value="">
+                                    Все статусы
+                                </option>
 
-            <option value="completed">
-                Продажа завершена
-            </option>
+                                <option value="completed">
+                                    Продажа завершена
+                                </option>
 
-            <option value="returned">
-                Возврат
-            </option>
+                                <option value="returned">
+                                    Возврат
+                                </option>
 
-        </select>
+                            </select>
 
-    </div>
+                        </div>
 
-</div>
-    </div>
-</div>
+                    </div>
+                </div>
+            </div>
 
 
             <div class="card border-0 shadow-sm">
 
-                <div class="table-wrapper">
+                <div class="table-wrapper border-0 ">
 
                     <table class="table sales-table mb-0">
 
@@ -167,9 +167,25 @@
 
                                 <td class="text-center">
 
-                                    <span class="status-success">
-                                        Продажа завершена
+                                <% if (sale.status === 'returned') { %>
+
+                                    <span class="badge bg-danger">
+                                        Возврат
                                     </span>
+
+                                <% } else if (sale.status === 'partial_return') { %>
+
+                                    <span class="badge bg-warning text-dark">
+                                        Частичный возврат
+                                    </span>
+
+                                <% } else { %>
+
+                                    <span class="badge bg-success">
+                                        Продажа
+                                    </span>
+
+                                <% } %>
 
                                 </td>
                                 <td>
@@ -180,7 +196,7 @@
                                         <a
                                             href="/sale/<%= sale.id %>"
                                             class="btn btn-outline-primary btn-sm"
-                                            title="Просмотр">
+                                            title="Просмотр" target="_blank ">
 
                                             <i class="bi bi-eye"></i>
 
@@ -195,23 +211,7 @@
 
                                         </a>
 
-                                        <button
-                                            class="btn btn-outline-warning btn-sm"
-                                            onclick="copySale(<%= sale.id %>)"
-                                            title="Копировать">
-
-                                            <i class="bi bi-files"></i>
-
-                                        </button>
-
-                                        <button
-                                            class="btn btn-outline-danger btn-sm"
-                                            onclick="returnSale(<%= sale.id %>)"
-                                            title="Возврат">
-
-                                            <i class="bi bi-arrow-counterclockwise"></i>
-
-                                        </button>
+                                     
 
                                     </div>
 

@@ -220,11 +220,19 @@
         </code>
 
     </td>
-    <td class="barcode-cell"
+    <td class="barcode-cell text-center"
     data-id="<%= product.id %>">
 
         <code>
-            <%= product.barcode || 'Сканировать' %>
+           <% if (product.barcode) { %>
+
+                <%= product.barcode %>
+
+            <% } else { %>
+
+                <i class="bi bi-upc-scan barcode-icon"></i>
+
+            <% } %>
         </code>
 
     </td>

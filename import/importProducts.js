@@ -168,15 +168,11 @@ const connection =
 
 try {
 
-    let counter = 0;
+    
 
     for (const product of products) {
 
-        counter++;
-
-        console.log(
-            `[${counter}/${products.length}] ${product.name}`
-        );
+        
 
         // Поиск дублей
 

@@ -124,33 +124,35 @@ searchInput.addEventListener(
 );
 
 searchInput.addEventListener(
-    'blur',
+    'focus',
     () => {
 
-        setTimeout(() => {
+        if (
+            searchInput.value.trim().length < 2
+        ) {
+
+            searchResults.innerHTML = '';
 
             searchResults.style.display =
                 'none';
 
-        }, 200);
+        }
 
     }
 );
 
 searchInput.addEventListener(
-    'focus',
+    'blur',
     () => {
 
-        if (
-            searchInput.value.trim().length >= 2
-            &&
-            searchResults.children.length
-        ) {
+        setTimeout(() => {
+
+            searchResults.innerHTML = '';
 
             searchResults.style.display =
-                'block';
+                'none';
 
-        }
+        }, 150);
 
     }
 );

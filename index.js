@@ -220,115 +220,126 @@ function getNextInvoiceNumber() {
 
     return String(max + 1).padStart(6, '0');
 }
-function renderDashboard(req, res) {
+async function renderDashboard(req, res) {
   
+    const [[salesTodayRow]] =
+        await db.query(`
+            SELECT
+                COALESCE(SUM(total),0) AS total,
+                COUNT(*) AS invoices
+            FROM sales
+            WHERE DATE(created_at)=CURDATE()
+            AND status IN (
+                'completed',
+                'partial_return',
+                'returned'
+            )
+        `);
 
-    const nextInvoiceNumber =
-        getNextInvoiceNumber();
+    const [[returnsTodayRow]] =
+        await db.query(`
+            SELECT
+                COALESCE(SUM(total),0) AS total
+            FROM sale_returns
+            WHERE DATE(created_at)=CURDATE()
+        `);
 
-    const invoicesDir = path.join(
-        __dirname,
-        'data',
-        'invoices'
+    const [[clientsRow]] =
+        await db.query(`
+            SELECT COUNT(*) AS total
+            FROM customers
+        `);
+
+    const [[productsTodayRow]] =
+        await db.query(`
+            SELECT
+                COALESCE(
+                    SUM(si.quantity),
+                    0
+                ) AS total
+            FROM sale_items si
+            JOIN sales s
+                ON s.id = si.sale_id
+            WHERE DATE(s.created_at)=CURDATE()
+        `);
+
+    const [latestSales] =
+        await db.query(`
+            SELECT *
+            FROM sales
+            ORDER BY id DESC
+            LIMIT 10
+        `);
+
+const [topProducts] =
+    await db.query(
+        `
+        SELECT
+            p.name,
+
+            SUM(si.quantity)
+                AS total_qty,
+
+            SUM(si.subtotal)
+                AS total_sales
+
+        FROM sale_items si
+
+        JOIN products p
+            ON p.id = si.product_id
+
+        JOIN sales s
+            ON s.id = si.sale_id
+
+        WHERE s.created_at >=
+            DATE_SUB(
+                NOW(),
+                INTERVAL 7 DAY
+            )
+
+        GROUP BY
+            p.id,
+            p.name
+
+        ORDER BY
+            total_qty DESC
+
+        LIMIT 10
+        `
     );
 
-    let invoices = [];
-
-    if (fs.existsSync(invoicesDir)) {
-
-        const files = fs.readdirSync(invoicesDir);
-
-        invoices = files.map(file => {
-
-            return JSON.parse(
-                fs.readFileSync(
-                    path.join(invoicesDir, file),
-                    'utf8'
-                )
-            );
-
-        });
-
-    }
-
-    const today =
-        new Date().toISOString().split('T')[0];
 
     const salesToday =
-        invoices
-            .filter(
-                invoice => invoice.date === today &&
-                invoice.status === 'completed'
-            )
-            .reduce(
-                (sum, invoice) =>
-                    sum + Number(invoice.total),
-                0
-            );
+        Number(salesTodayRow.total);
 
-    const invoicesToday =
-        invoices.filter(
-            invoice => invoice.date === today &&
-            invoice.status === 'completed'
-        ).length;
+    const returnsToday =
+        Number(returnsTodayRow.total);
 
-    const clientsCount =
-        new Set(
-            invoices.map(
-                invoice => invoice.customer
-            )
-        ).size;
-
-    const productsCount =
-        invoices.reduce(
-            (total, invoice) =>
-                total +
-                (invoice.items
-                    ? invoice.items.length
-                    : 0),
-            0
-        );
-    const productsToday =
-    invoices
-        .filter(invoice =>
-            invoice.date === today &&
-            invoice.status === 'completed'
-        )
-        .reduce((total, invoice) => {
-
-            const items =
-                invoice.items || [];
-
-            return total +
-                items.reduce(
-                    (sum, item) =>
-                        sum + Number(item.qty || 0),
-                    0
-                );
-
-        }, 0);
-
-    invoices.sort((a, b) =>
-        Number(b.number) -
-        Number(a.number)
-    );
-
-    const latestInvoices =
-        invoices.slice(0, 10);
-
+    const incomeToday =
+        salesToday - returnsToday;
+    
     res.render('dashboard', {
         titleKey: 'title.dashboard',
         activeMenu: 'dashboard',
 
-        nextInvoiceNumber,
+        salesToday: incomeToday,
 
-        invoices: latestInvoices,
+        grossSalesToday: salesToday,
 
-        salesToday,
-        invoicesToday,
-        clientsCount,
-        productsCount,
-        productsToday,
+        returnsToday,
+        topProducts,
+        invoicesToday:
+            salesTodayRow.invoices,
+
+        clientsCount:
+            clientsRow.total,
+
+        productsToday:
+            productsTodayRow.total,
+
+        invoices:
+            latestSales,
+
         statuses,
         script: [
             {
@@ -489,6 +500,7 @@ app.get('/sales', auth, async (req, res) => {
     }
 
 });
+// Роут просмотра продажи
 app.get('/sale/:id', auth, async (req, res) => {
 
     const saleId = req.params.id;
@@ -538,10 +550,22 @@ app.get('/sale/:id', auth, async (req, res) => {
             [saleId]
         );
 
+    const [returns] =
+    await db.query(
+        `
+        SELECT *
+        FROM sale_returns
+        WHERE sale_id = ?
+        ORDER BY created_at DESC
+        `,
+        [saleId]
+    );
+
     res.render('sale-view', {
         titleKey: 'Чек',
         sale,
         items,
+        returns,
         activeMenu: 'sales',
         script: [
             {
@@ -570,7 +594,322 @@ app.get('/sale/:id', auth, async (req, res) => {
 
 });
 
-// Сохранение чека
+// Роут страницы возврата продажи
+app.get(
+    '/sale/:id/return',
+    auth,
+    async (req, res) => {
+
+        const saleId =
+            req.params.id;
+
+        const [[sale]] =
+            await db.query(
+                `
+                SELECT *
+                FROM sales
+                WHERE id = ?
+                `,
+                [saleId]
+            );
+
+        const [items] =
+            await db.query(
+                `
+                SELECT
+                    si.*,
+                    p.name,
+
+                    COALESCE(
+                        (
+                            SELECT
+                                SUM(sri.quantity)
+
+                            FROM sale_return_items sri
+
+                            WHERE sri.sale_item_id = si.id
+                        ),
+                        0
+                    ) AS returned_qty
+
+                FROM sale_items si
+
+                JOIN products p
+                    ON p.id = si.product_id
+
+                WHERE si.sale_id = ?
+                `,
+                [saleId]
+            );
+
+        res.render(
+            'sale_return',
+            {
+                titleKey: "Возврата товара",
+                sale,
+                items,
+                activeMenu: 'sales',
+                script: [
+                    {
+                        src: 'sale-return.js'
+                    }
+                ],
+                style: [
+                    {
+                        href: 'sale-return.css'
+                    }
+                ],
+                breadcrumbs: [
+                    {
+                        title: req.__('title.dashboard'),
+                        url: '/'
+                    },
+                    {
+                        title: 'Продажи',
+                        url: '/sales'
+                    },
+                    {
+                        title: `Возврать по чек`
+                    }
+                ]
+            }
+        );
+
+    }
+);
+// Роут сохранение возврата
+app.post(
+    '/sale/:id/return',
+    auth,
+    async (req, res) => {
+
+        try {
+
+            const saleId =
+                req.params.id;
+
+            const [saleItems] =
+                await db.query(
+                    `
+                    SELECT *
+                    FROM sale_items
+                    WHERE sale_id = ?
+                    `,
+                    [saleId]
+                );
+
+            const [ret] =
+                await db.query(
+                    `
+                    INSERT INTO sale_returns
+                    (
+                        sale_id,
+                        user_id,
+                        total
+                    )
+                    VALUES
+                    (
+                        ?, ?, 0
+                    )
+                    `,
+                    [
+                        saleId,
+                        req.session.user.id
+                    ]
+                );
+
+            let returnTotal = 0;
+
+            for (
+                const item of saleItems
+            ) {
+
+                const qty =
+                    Number(
+                        req.body[
+                            `return_${item.id}`
+                        ] || 0
+                    );
+
+                if (
+                    qty <= 0
+                ) {
+
+                    continue;
+
+                }
+
+                const [[returned]] =
+                    await db.query(
+                        `
+                        SELECT
+                            COALESCE(
+                                SUM(quantity),
+                                0
+                            ) qty
+
+                        FROM sale_return_items
+
+                        WHERE sale_item_id = ?
+                        `,
+                        [item.id]
+                    );
+
+                const available =
+                    item.quantity -
+                    returned.qty;
+
+                if (
+                    qty > available
+                ) {
+
+                    return res.send(
+                        'Ошибка возврата'
+                    );
+
+                }
+
+                const subtotal =
+                    qty *
+                    item.price;
+
+                returnTotal +=
+                    subtotal;
+
+                await db.query(
+                    `
+                    INSERT INTO sale_return_items
+                    (
+                        return_id,
+                        sale_item_id,
+                        product_id,
+                        quantity,
+                        price,
+                        subtotal
+                    )
+                    VALUES
+                    (
+                        ?, ?, ?, ?, ?, ?
+                    )
+                    `,
+                    [
+                        ret.insertId,
+                        item.id,
+                        item.product_id,
+                        qty,
+                        item.price,
+                        subtotal
+                    ]
+                );
+
+                await db.query(
+                    `
+                    UPDATE products
+                    SET quantity =
+                        quantity + ?
+                    WHERE id = ?
+                    `,
+                    [
+                        qty,
+                        item.product_id
+                    ]
+                );
+
+            }
+
+            await db.query(
+                `
+                UPDATE sale_returns
+                SET total = ?
+                WHERE id = ?
+                `,
+                [
+                    returnTotal,
+                    ret.insertId
+                ]
+            );
+
+             const [[stats]] =
+                await db.query(
+                    `
+                    SELECT
+
+                        SUM(si.quantity)
+                            AS sold,
+
+                        (
+                            SELECT
+                                COALESCE(
+                                    SUM(sri.quantity),
+                                    0
+                                )
+
+                            FROM sale_return_items sri
+
+                            JOIN sale_items sii
+                                ON sii.id =
+                                   sri.sale_item_id
+
+                            WHERE sii.sale_id = ?
+                        )
+                        AS returned
+
+                    FROM sale_items si
+
+                    WHERE si.sale_id = ?
+                    `,
+                    [
+                        saleId,
+                        saleId
+                    ]
+                );
+
+                let status =
+                    'completed';
+
+                if (
+                    stats.returned > 0
+                ) {
+
+                    status =
+                        stats.returned >=
+                        stats.sold
+                            ? 'returned'
+                            : 'partial_return';
+
+                }
+
+                await db.query(
+                    `
+                    UPDATE sales
+                    SET status = ?
+                    WHERE id = ?
+                    `,
+                    [
+                        status,
+                        saleId
+                    ]
+                );
+
+            
+
+            res.redirect(
+                `/sale/${saleId}`
+            );
+
+        } catch (error) {
+
+            console.log(error);
+
+            res.send(
+                error.message
+            );
+
+        }
+
+    }
+);
+//Роут Сохранение чека
 app.post('/sales/save', auth, async (req, res) => {
 
     try {

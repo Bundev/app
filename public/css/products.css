@@ -125,3 +125,19 @@ code {
 /*Мидел окно*/
 
 /*Стили заколовка*/
+
+/*Колонка для штрикода*/
+.barcode-cell{
+    text-align:center;
+    vertical-align:middle;
+    cursor:pointer;
+}
+
+.barcode-cell:hover .barcode-icon{
+    transform:scale(1.1);
+    transition:.2s;
+}
+.barcode-icon{
+    font-size:40px;
+    color:#0d6efd;
+}
