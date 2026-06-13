@@ -235,12 +235,24 @@ function addProductToInvoice(product) {
             </td>
 
             <td>
+                <div class="qty-control">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary minus">-
+                    </button>
+                    <input
+                        type="number"
+                        class="form-control qty"
+                        value="1"
+                        min="1">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary plus">
 
-                <input
-                    type="number"
-                    class="form-control qty"
-                    value="1"
-                    min="1">
+                        +
+
+                    </button>
+                </div>
 
             </td>
 
@@ -362,112 +374,31 @@ document.addEventListener('input', (e) => {
 
 });
 
-// Добовляет дату в новом чеке
-document.getElementById('invoiceDate').value =
-    new Date().toISOString().split('T')[0];
-async function saveInvoice() {
+document.addEventListener('click', e => {
 
-    try {
+    if (e.target.classList.contains('plus')) {
 
-        const items = [];
+        const input =
+            e.target.parentNode.querySelector('.qty');
 
-        document
-            .querySelectorAll('#item-products tr')
-            .forEach(row => {
+        input.value =
+            Number(input.value) + 1;
 
-                items.push({
-
-                    product_id:
-                        Number(
-                            row.querySelector('.product-name')
-                                .dataset.id
-                        ),
-
-                    quantity:
-                        Number(
-                            row.querySelector('.qty')
-                                .value
-                        ),
-
-                    price:
-                        Number(
-                            row.querySelector('.pricepoduct')
-                                .dataset.price
-                        )
-
-                });
-
-            });
-
-        if (!items.length) {
-
-            alert('Добавьте товары в чек');
-
-            return;
-
-        }
-
-        const response =
-            await fetch('/sales/save', {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
-
-                body: JSON.stringify({
-
-                    customer_id:
-                        document.querySelector('#customer')
-                            ?.value || null,
-
-                    payment_method:
-                        document.querySelector(
-                            '[name="paymentMethod"]'
-                        ).value,
-
-                    total:
-                        Number(
-                            document.getElementById(
-                                'total-sum'
-                            ).textContent
-                        ),
-
-                    items
-
-                })
-
-            });
-
-        const result =
-            await response.json();
-
-        if (!result.success) {
-
-            alert(
-                result.error ||
-                'Ошибка сохранения'
-            );
-
-            return;
-
-        }
-
-        
-
-        window.location =
-            '/sales';
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            'Ошибка соединения с сервером'
-        );
-
+        updateQuantity(input);
     }
 
-}
+    if (e.target.classList.contains('minus')) {
+
+        const input =
+            e.target.parentNode.querySelector('.qty');
+
+        if (input.value > 1) {
+
+            input.value =
+                Number(input.value) - 1;
+
+            updateQuantity(input);
+        }
+    }
+
+});
