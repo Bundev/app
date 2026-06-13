@@ -121,16 +121,35 @@
         min-width: 700px;
     }
 
-   #item-products tr {
-    display: block;
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-   }
+    /* скрываем № */
+    #item-products td:first-child,
+    .table thead th:first-child{
+        display:none;
+    }
 
-   #item-products td {
-    display: block;
-    width: 100%;
-   }
+    
+    
+
+    .product-name{
+        min-width:180px;
+        white-space:normal;
+        word-break:break-word;
+        font-size:18px;
+        font-weight:500;
+    }
+
+    .qty-control{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+    }
+
+    .qty{
+        width:70px;
+        text-align:center;
+    }
+   
 }
 
 

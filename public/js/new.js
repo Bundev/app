@@ -10,9 +10,10 @@ searchInput.addEventListener(
             searchInput.value.trim();
 
         if (query.length < 2) {
-
+            
             searchResults.style.display =
                 'none';
+            searchResults.innerHTML = '';
 
             return;
 
@@ -99,6 +100,7 @@ searchInput.addEventListener(
 
                     searchInput.value =
                         '';
+                    searchResults.innerHTML = '';
 
                     searchResults.style.display =
                         'none';
@@ -117,6 +119,38 @@ searchInput.addEventListener(
             products.length
                 ? 'block'
                 : 'none';
+
+    }
+);
+
+searchInput.addEventListener(
+    'blur',
+    () => {
+
+        setTimeout(() => {
+
+            searchResults.style.display =
+                'none';
+
+        }, 200);
+
+    }
+);
+
+searchInput.addEventListener(
+    'focus',
+    () => {
+
+        if (
+            searchInput.value.trim().length >= 2
+            &&
+            searchResults.children.length
+        ) {
+
+            searchResults.style.display =
+                'block';
+
+        }
 
     }
 );
@@ -144,7 +178,23 @@ searchInput.addEventListener(
 
     }
 );
+document.addEventListener(
+    'click',
+    e => {
 
+        if (
+            !searchInput.contains(e.target)
+            &&
+            !searchResults.contains(e.target)
+        ) {
+
+            searchResults.style.display =
+                'none';
+
+        }
+
+    }
+);
 
 
 function updateTotals() {
@@ -257,28 +307,35 @@ function addProductToInvoice(product) {
             </td>
 
 
-            <td class="pricepoduct" data-price="${price}">
+            <td >
 
-                ${price.toFixed(2)}
+                <div class="pricepoduct" data-price="${price}">
+                    ${price.toFixed(2)} ₴
+                </div>
+
+                <small class="text-muted">
+
+                    Сумма:<br>
+                    <span class="sum-mobile sum">
+
+                        ${price.toFixed(2)}
+
+                    </span> ₴
+
+                </small>
 
             </td>
 
-            <td class="sum">
-
-                ${price.toFixed(2)}
-
-            </td>
+            
 
             <td>
-
                <button
-            type="button"
-            class="btn btn-outline-danger btn-sm btn-remove remove">
+                    type="button"
+                    class="btn btn-outline-danger btn-sm btn-remove remove">
 
-            <i class="bi bi-trash"></i>
+                    <i class="bi bi-trash"></i>
 
-        </button>
-
+                </button>
             </td>
 
         </tr>
@@ -347,21 +404,42 @@ document.addEventListener('click', e => {
 function updateQuantity(input) {
 
     if (input.value < 1) {
+
         input.value = 1;
+
     }
 
-    const row = input.closest('tr');
+    const row =
+        input.closest('tr');
 
-    const qty = Number(input.value);
+    const qty =
+        Number(input.value);
 
-    const price = Number(
-        row.querySelector('.pricepoduct').textContent
-    );
+    const price =
+        Number(
+            row.querySelector('.pricepoduct')
+                .dataset.price
+        );
 
-    row.querySelector('.sum').textContent =
-        (qty * price).toFixed(2);
+    const sum =
+        qty * price;
+
+    row.querySelector('.sum')
+        .textContent =
+        sum.toFixed(2);
+
+    const mobileSum =
+        row.querySelector('.sum-mobile');
+
+    if (mobileSum) {
+
+        mobileSum.textContent =
+            sum.toFixed(2);
+
+    }
 
     updateTotals();
+
 }
 
 document.addEventListener('input', (e) => {
@@ -373,7 +451,7 @@ document.addEventListener('input', (e) => {
     updateQuantity(e.target);
 
 });
-
+//Скрипт для конопок плюс и минус 
 document.addEventListener('click', e => {
 
     if (e.target.classList.contains('plus')) {
@@ -402,3 +480,126 @@ document.addEventListener('click', e => {
     }
 
 });
+
+// Сохраняет чек
+async function saveInvoice() {
+
+    try {
+
+        const items = [];
+
+        document
+            .querySelectorAll(
+                '#item-products tr'
+            )
+            .forEach(row => {
+
+                items.push({
+
+                    product_id:
+                        Number(
+                            row.querySelector(
+                                '.product-name'
+                            ).dataset.id
+                        ),
+
+                    quantity:
+                        Number(
+                            row.querySelector(
+                                '.qty'
+                            ).value
+                        ),
+
+                    price:
+                        Number(
+                            row.querySelector(
+                                '.pricepoduct'
+                            ).dataset.price
+                        )
+
+                });
+
+            });
+
+        if (!items.length) {
+
+            alert(
+                'Добавьте товары в чек'
+            );
+
+            return;
+
+        }
+
+        const total =
+            Number(
+                document
+                    .getElementById(
+                        'total-sum'
+                    )
+                    .textContent
+                    .replace('₴', '')
+                    .trim()
+            );
+
+        const response =
+            await fetch(
+                '/sales/save',
+                {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        customer_id:
+                            document.querySelector(
+                                '#customer'
+                            )?.value || null,
+
+                        payment_method:
+                            document.querySelector(
+                                '[name="paymentMethod"]'
+                            ).value,
+
+                        total,
+
+                        items
+
+                    })
+
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (!result.success) {
+
+            alert(
+                result.error ||
+                'Ошибка сохранения'
+            );
+
+            return;
+
+        }
+
+        window.location =
+            `/new`;
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            'Ошибка соединения с сервером'
+        );
+
+    }
+
+}
