@@ -50,11 +50,32 @@
     color: #0d6efd;
 }
 
-.qty {
-    width: 80px;
+.qty{
+    width: 80px !important;
+    min-width: 80px;
+    
+    font-size: 22px;
     text-align: center;
-    font-weight: 600;
-    border-radius: 10px;
+}
+
+.qty-control{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+
+.qty-control .btn{
+    width:42px;
+    height:42px;
+    padding:0;
+    flex-shrink:0;
+}
+
+.qty-control .qty{
+    width:60px;
+    height:42px;
+    text-align:center;
 }
 
 .btn-remove {
@@ -100,23 +121,18 @@
         min-width: 700px;
     }
 
+    table.sales-table,
+    table.sales-table thead,
+    table.sales-table tbody,
+    table.sales-table tr,
+    table.sales-table td{
+        display:block;
+    }
 }
 
-.qty-control{
-    display:flex;
-    align-items:center;
-    gap:5px;
-}
 
-.qty-control .btn{
-    width:40px;
-    height:40px;
-    padding:0;
-}
 
-.qty-control .qty{
-    width:60px;
-}
+
 
 /* Таблица в новом счете */
 
