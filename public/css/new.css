@@ -121,13 +121,16 @@
         min-width: 700px;
     }
 
-    table.sales-table,
-    table.sales-table thead,
-    table.sales-table tbody,
-    table.sales-table tr,
-    table.sales-table td{
-        display:block;
-    }
+   #item-products tr {
+    display: block;
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+   }
+
+   #item-products td {
+    display: block;
+    width: 100%;
+   }
 }
 
 
