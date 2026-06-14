@@ -201,15 +201,60 @@ document.addEventListener(
 
 function updateTotals() {
 
-  let total = 0;
+    let subtotal = 0;
 
-  document.querySelectorAll('.sum').forEach(item => {
-      total += Number(item.textContent);
-  });
+    document
+        .querySelectorAll('.line-sum')
+        .forEach(cell => {
 
-  document.getElementById('total-sum').textContent =
-      total.toFixed(2);
+            subtotal += Number(
+                cell.textContent
+            );
+
+        });
+
+    const discountPercent =
+        Number(
+            document.getElementById(
+                'discount'
+            ).value
+        ) || 0;
+
+        document.getElementById(
+    'discount-label'
+).textContent =
+    discountPercent;
+
+    const discountAmount =
+        subtotal *
+        discountPercent / 100;
+
+    const total =
+        subtotal -
+        discountAmount;
+
+    document.getElementById(
+        'discount-sum'
+    ).textContent =
+        discountAmount.toFixed(2) + ' ₴';
+
+    document.getElementById(
+        'total-sum'
+    ).textContent =
+        total.toFixed(2) + ' ₴';
+    document.getElementById(
+        'subtotal-sum'
+    ).textContent =
+        subtotal.toFixed(2) + ' ₴';
+        updateChange();
 }
+// скрипт скидки
+document
+    .getElementById('discount')
+    .addEventListener(
+        'input',
+        updateTotals
+    );
 
 function updateRowNumbers() {
 
@@ -318,7 +363,7 @@ function addProductToInvoice(product) {
                 <small class="text-muted">
 
                     Сумма:<br>
-                    <span class="sum-mobile sum">
+                    <span class="line-sum">
 
                         ${price.toFixed(2)}
 
@@ -359,39 +404,71 @@ function addProductToInvoice(product) {
 }
 
 
+function updateChange() {
 
+    const cash =
+        parseFloat(
+            document.getElementById('cash').value
+        ) || 0;
 
+    const total =
+        parseFloat(
+            document
+                .getElementById('total-sum')
+                .textContent
+                .replace('₴', '')
+                .trim()
+        ) || 0;
 
+    const change =
+        cash - total;
 
+    document.getElementById(
+        'change'
+    ).textContent =
+        change > 0
+            ? change.toFixed(2) + ' ₴'
+            : '0.00 ₴';
 
+}
 
-
-
-const cashInput = document.getElementById('cash');
-
-cashInput.addEventListener('input', calculateChange);
-
-function calculateChange() {
-
-    const cashInput = document.getElementById('cash');
-
-    if (!cashInput.value) {
-
-        document.getElementById('change').textContent = '0.00 ₴';
-
-        return;
-    }
-
-    const total = Number(
-        document.getElementById('total-sum').textContent
+document
+    .getElementById('cash')
+    .addEventListener(
+        'input',
+        updateChange
     );
 
-    const cash = Number(cashInput.value);
+
+
+
+
+
+// const cashInput = document.getElementById('cash');
+
+// cashInput.addEventListener('input', calculateChange);
+
+// function calculateChange() {
+
+//     const cashInput = document.getElementById('cash');
+
+//     if (!cashInput.value) {
+
+//         document.getElementById('change').textContent = '0.00 ₴';
+
+//         return;
+//     }
+
+//     const total = Number(
+//         document.getElementById('total-sum').textContent
+//     );
+
+//     const cash = Number(cashInput.value);
 
     
-    document.getElementById('change').textContent =
-    Math.max(cash - total, 0).toFixed(2)+ ' ₴';
-}
+//     document.getElementById('change').textContent =
+//     Math.max(cash - total, 0).toFixed(2)+ ' ₴';
+// }
 
 document.addEventListener('click', e => {
 
@@ -426,19 +503,19 @@ function updateQuantity(input) {
     const sum =
         qty * price;
 
-    row.querySelector('.sum')
+    row.querySelector('.line-sum')
         .textContent =
         sum.toFixed(2);
 
-    const mobileSum =
-        row.querySelector('.sum-mobile');
+    // const mobileSum =
+    //     row.querySelector('.sum-mobile');
 
-    if (mobileSum) {
+    // if (mobileSum) {
 
-        mobileSum.textContent =
-            sum.toFixed(2);
+    //     mobileSum.textContent =
+    //         sum.toFixed(2);
 
-    }
+    // }
 
     updateTotals();
 
@@ -485,6 +562,17 @@ document.addEventListener('click', e => {
 
 // Сохраняет чек
 async function saveInvoice() {
+    let subtotal = 0;
+
+    document
+        .querySelectorAll('.line-sum')
+        .forEach(cell => {
+
+            subtotal += Number(
+                cell.textContent
+            );
+
+    });
 
     try {
 
@@ -544,6 +632,17 @@ async function saveInvoice() {
                     .trim()
             );
 
+        const discountPercent =
+            Number(
+                document.getElementById(
+                    'discount'
+                ).value
+            ) || 0;
+
+        const discountAmount =
+            subtotal *
+            discountPercent / 100;
+
         const response =
             await fetch(
                 '/sales/save',
@@ -569,6 +668,11 @@ async function saveInvoice() {
                             ).value,
 
                         total,
+                        discount_percent:
+                            discountPercent,
+
+                        discount_amount:
+                            discountAmount,
 
                         items
 

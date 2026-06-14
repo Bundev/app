@@ -25,6 +25,31 @@
 
                         <h2>
                             🧾 Чек <%= sale.invoice_number %>
+                           <% if (returnTotal >= sale.total) { %>
+
+                            <span class="badge bg-danger">
+                                Полный возврат
+                            </span>
+
+                            <% } else if (returnTotal > 0) { %> 
+                                <%
+                                  const returnPercent =
+                                        sale.total > 0
+                                            ? Math.min(
+                                                100,
+                                                Math.round(
+                                                    Number(returnTotal) /
+                                                    Number(sale.total) * 100
+                                                )
+                                            )
+                                            : 0;
+                                    %>
+
+                                <span class="badge bg-warning text-dark">
+                                    Частичный возврат (<%= returnPercent %>%)
+                                </span>
+
+                            <% } %>
                         </h2>
 
                         <div class="btn-group sale-actions">
@@ -134,11 +159,11 @@
                                     <div class="fw-bold">
 
                                         <% if(sale.payment_method === 'cash') { %>
-                                            Наличные
+                                            💵 Наличные
                                         <% } else if(sale.payment_method === 'card'){%>
-                                            Карта
+                                            💳 Карта
                                         <%} else if(sale.payment_method === 'transfer'){%>
-                                            Первод
+                                            🏦 Перевод
                                         <%}%>
 
                                     </div>
@@ -213,80 +238,137 @@
                         </table>
 
                     </div>
-<% if (returns.length) { %>
+                    <% if (returns.length) { %>
 
-<div class="card mt-4">
+                    <div class="card mt-4">
 
-    <div class="card-header">
+                        <div class="card-header d-flex justify-content-between"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#returnsHistory"
+                            style="cursor:pointer"> 
 
-        История возвратов
+                            <span >
+                                ↩ История возвратов
+                            </span>
 
-    </div>
+                            <span class="badge bg-warning text-dark">
 
-    <div class="card-body">
+                                <%= returns.length %> возврат(ов)
 
-        <table class="table">
+                            </span>
 
-            <tr>
+                        </div>
 
-                <th>Дата</th>
+                        <div class="card-body" id="returnsHistory"
+                            class="collapse show">
 
-                <th>Сумма</th>
+                    <table class="table table-sm align-middle mb-0">
 
-            </tr>
+                        <thead>
 
-            <% returns.forEach(r => { %>
+                            <tr>
+                                <th>№</th>
+                                <th>Дата</th>
+                                <th>Сумма</th>
+                                <th>Кассир</th>
+                            </tr>
 
-                <tr>
+                        </thead>
 
-                    <td>
+                        <tbody>
 
-                        <%= new Date(r.created_at)
-                            .toLocaleString('ru-RU') %>
+                        <% returns.forEach((item,index) => { %>
 
-                    </td>
+                            <tr>
 
-                    <td>
+                                <td>
+                                    #<%= index + 1 %>
+                                </td>
 
-                        <%= Number(r.total)
-                            .toFixed(2) %> ₴
+                                <td>
+                                    <%= new Date(item.created_at)
+                        .toLocaleString('ru-RU') %>
+                                </td>
 
-                    </td>
+                                <td class="text-danger fw-bold">
+                                    -<%= Number(item.total).toFixed(2) %> ₴
+                                </td>
 
-                </tr>
+                                <td>
+                                    <%= item.user_name %>
+                                </td>
 
-            <% }) %>
+                            </tr>
 
-        </table>
+                        <% }) %>
 
-    </div>
+                        </tbody>
 
-</div>
+                    </table>
 
-<% } %>
+                        </div>
+
+                    </div>
+
+                    <% } %>
                     <div class="row mt-4">
 
                         <div class="col-md-4 ms-auto">
 
-                            <div class="card border-primary shadow-sm">
+                            <div class="receipt-total-card">
 
-                                <div class="card-body text-end">
+                                <div class="receipt-row">
+                                    <span>Позиции</span>
+                                    <strong><%= items.length %></strong>
+                                </div>
 
-                                    <div class="mb-2">
+                                <div class="receipt-row">
+                                    <span>Подытог</span>
+                                    <strong><%= subtotal.toFixed(2) %> ₴</strong>
+                                </div>
 
-                                        Товаров:
+                                <% if (sale.discount_percent > 0) { %>
+                                    <div class="receipt-row discount">
+                                        <span>
+                                            Скидка <%= sale.discount_percent %>%
+                                        </span>
+
                                         <strong>
-                                            <%= items.length %>
+                                            -<%= Number(sale.discount_amount).toFixed(2) %> ₴
                                         </strong>
-
                                     </div>
+                                <% } %>
 
-                                    <h2 class="text-primary mb-0">
+                                <% if (returnTotal > 0) { %>
+                                    <div class="receipt-row returns">
+                                        <span>
+                                            Возвраты (<%= sale.return_percent %>%)
+                                        </span>
 
-                                        Итого:
-                                        <%= Number(sale.total).toFixed(2) %> ₴
+                                        <strong>
+                                            -<%= Number(returnTotal).toFixed(2) %> ₴
+                                        </strong>
+                                    </div>
+                                <% } %>
 
-                                    </h2>
+                                <hr>
+
+                                <div class="receipt-total">
+
+                                    <% if (returnTotal > 0) { %>
+
+                                        <div class="small text-muted mb-2">
+                                            Осталось после возвратов
+                                        </div>
+
+                                    <% } %>
+
+                                    <span>
+                                        <%= (
+                                            Number(sale.total) -
+                                            Number(returnTotal)
+                                        ).toFixed(2) %> ₴
+                                    </span>
 
                                 </div>
 

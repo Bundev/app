@@ -162,7 +162,7 @@
                         type="number"
                         id="cash"
                         class="form-control"
-                        style="width:140px"
+                        style="width:120px"
                         placeholder="Получено">
 
                     <select
@@ -184,16 +184,59 @@
 
                     </select>
 
-                    <div>
+                    <div class="input-group" style="width:110px">
 
+                        <input
+                            type="number"
+                            id="discount"
+                            class="form-control"
+                            value=""
+                            min="0">
+
+                        <span class="input-group-text">
+
+                            %
+
+                        </span>
+
+                    </div>
+
+                    <div>
                         <div class="text-muted">
-                            Итого
+                            Подытог
                         </div>
 
-                        <strong id="total-sum">
+                        <strong id="subtotal-sum">
                             0.00 ₴
                         </strong>
+                    </div>
 
+                    <div>
+                        <div class="text-muted">
+                            Скидка (<span id="discount-label">0</span>%)
+                        </div>
+
+                        <strong
+                            id="discount-sum"
+                            class="text-danger">
+
+                            0.00₴
+
+                        </strong>
+                    </div>
+
+                    <div>
+                        <div class="text-muted">
+                            К оплате
+                        </div>
+
+                        <strong
+                            id="total-sum"
+                            class="text-primary">
+
+                            0.00 ₴
+
+                        </strong>
                     </div>
 
                     <button

@@ -13,9 +13,9 @@ const database2 = "u891612247_crm_clon";
 const db = mysql.createPool({
     host: 'srv1798.hstgr.io.',
     port: 3306,
-    user: user1,
-    password: password1,
-    database: database1,
+    user: user2,
+    password: password2,
+    database: database2,
     timezone: '+03:00',
 
     waitForConnections: true,

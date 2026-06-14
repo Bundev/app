@@ -1,3 +1,65 @@
 .product-name-copy {
     cursor: pointer;
 }
+
+
+
+
+
+
+
+
+
+
+.receipt-total-card{
+    width:320px;
+    margin-left:auto;
+
+    background:#fff;
+    border-radius:16px;
+
+    padding:20px;
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,.08);
+
+    border:1px solid #e9ecef;
+}
+
+.receipt-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:12px;
+
+    font-size:16px;
+}
+
+.receipt-row strong{
+    font-weight:700;
+}
+
+.receipt-row.discount{
+    color:#dc3545;
+}
+
+.receipt-row.returns{
+    color:#fd7e14;
+}
+
+.receipt-total{
+    text-align:center;
+    padding-top:10px;
+}
+
+.receipt-total span{
+    font-size:42px;
+    font-weight:800;
+    color:#0d6efd;
+    line-height:1;
+}
+
+.receipt-total-card hr{
+    margin:15px 0;
+}

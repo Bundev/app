@@ -553,19 +553,50 @@ app.get('/sale/:id', auth, async (req, res) => {
     const [returns] =
     await db.query(
         `
-        SELECT *
-        FROM sale_returns
-        WHERE sale_id = ?
-        ORDER BY created_at DESC
-        `,
-        [saleId]
+        SELECT
+            sr.*,
+            u.name AS user_name
+        FROM sale_returns sr
+
+        LEFT JOIN user u
+            ON u.id = sr.user_id
+
+        WHERE sr.sale_id = ?
+                `,
+                [saleId]
+            );
+
+    const subtotal =
+    Number(sale.total) +
+    Number(sale.discount_amount || 0);
+
+const returnTotal =
+    returns.reduce(
+        (sum, item) =>
+            sum + Number(item.total || 0),
+        0
     );
 
+sale.return_percent =
+    sale.total > 0
+        ? Math.min(
+            100,
+            Math.round(
+                returnTotal /
+                Number(sale.total) *
+                100
+            )
+        )
+        : 0;
+
+        
     res.render('sale-view', {
         titleKey: 'Чек',
         sale,
         items,
         returns,
+        returnTotal,
+        subtotal, 
         activeMenu: 'sales',
         script: [
             {
@@ -688,6 +719,16 @@ app.post(
             const saleId =
                 req.params.id;
 
+            const [[sale]] =
+                await db.query(
+                    `
+                    SELECT *
+                    FROM sales
+                    WHERE id = ?
+                    `,
+                    [saleId]
+                );
+
             const [saleItems] =
                 await db.query(
                     `
@@ -698,31 +739,75 @@ app.post(
                     [saleId]
                 );
 
+            const saleSubtotal =
+                saleItems.reduce(
+                    (sum, item) =>
+                        sum +
+                        Number(item.subtotal),
+                    0
+                );
+
+            const year =
+                new Date().getFullYear();
+
+            const [[lastReturn]] =
+                await db.query(
+                    `
+                    SELECT return_number
+                    FROM sale_returns
+                    WHERE return_number LIKE ?
+                    ORDER BY id DESC
+                    LIMIT 1
+                    `,
+                    [
+                        `RET-${year}-%`
+                    ]
+                );
+
+            let nextNumber = 1;
+
+            if (
+                lastReturn &&
+                lastReturn.return_number
+            ) {
+
+                nextNumber =
+                    Number(
+                        lastReturn.return_number
+                            .split('-')[2]
+                    ) + 1;
+
+            }
+
+            const returnNumber =
+                `RET-${year}-${String(nextNumber)
+                    .padStart(6, '0')}`;
+
             const [ret] =
                 await db.query(
                     `
                     INSERT INTO sale_returns
                     (
                         sale_id,
+                        return_number,
                         user_id,
                         total
                     )
                     VALUES
                     (
-                        ?, ?, 0
+                        ?, ?, ?, 0
                     )
                     `,
                     [
                         saleId,
+                        returnNumber,
                         req.session.user.id
                     ]
                 );
 
             let returnTotal = 0;
 
-            for (
-                const item of saleItems
-            ) {
+            for (const item of saleItems) {
 
                 const qty =
                     Number(
@@ -731,12 +816,8 @@ app.post(
                         ] || 0
                     );
 
-                if (
-                    qty <= 0
-                ) {
-
+                if (qty <= 0) {
                     continue;
-
                 }
 
                 const [[returned]] =
@@ -747,9 +828,7 @@ app.post(
                                 SUM(quantity),
                                 0
                             ) qty
-
                         FROM sale_return_items
-
                         WHERE sale_item_id = ?
                         `,
                         [item.id]
@@ -764,14 +843,14 @@ app.post(
                 ) {
 
                     return res.send(
-                        'Ошибка возврата'
+                        'Количество превышает доступный остаток'
                     );
 
                 }
 
                 const subtotal =
                     qty *
-                    item.price;
+                    Number(item.price);
 
                 returnTotal +=
                     subtotal;
@@ -817,6 +896,17 @@ app.post(
 
             }
 
+            // возврат с учетом скидки
+
+            const actualReturnTotal =
+                saleSubtotal > 0
+                    ? (
+                        returnTotal *
+                        Number(sale.total) /
+                        saleSubtotal
+                    )
+                    : 0;
+
             await db.query(
                 `
                 UPDATE sale_returns
@@ -824,12 +914,12 @@ app.post(
                 WHERE id = ?
                 `,
                 [
-                    returnTotal,
+                    actualReturnTotal,
                     ret.insertId
                 ]
             );
 
-             const [[stats]] =
+            const [[stats]] =
                 await db.query(
                     `
                     SELECT
@@ -840,10 +930,11 @@ app.post(
                         (
                             SELECT
                                 COALESCE(
-                                    SUM(sri.quantity),
+                                    SUM(
+                                        sri.quantity
+                                    ),
                                     0
                                 )
-
                             FROM sale_return_items sri
 
                             JOIN sale_items sii
@@ -864,34 +955,32 @@ app.post(
                     ]
                 );
 
-                let status =
-                    'completed';
+            let status =
+                'completed';
 
-                if (
-                    stats.returned > 0
-                ) {
+            if (
+                Number(stats.returned) > 0
+            ) {
 
-                    status =
-                        stats.returned >=
-                        stats.sold
-                            ? 'returned'
-                            : 'partial_return';
+                status =
+                    Number(stats.returned) >=
+                    Number(stats.sold)
+                        ? 'returned'
+                        : 'partial_return';
 
-                }
+            }
 
-                await db.query(
-                    `
-                    UPDATE sales
-                    SET status = ?
-                    WHERE id = ?
-                    `,
-                    [
-                        status,
-                        saleId
-                    ]
-                );
-
-            
+            await db.query(
+                `
+                UPDATE sales
+                SET status = ?
+                WHERE id = ?
+                `,
+                [
+                    status,
+                    saleId
+                ]
+            );
 
             res.redirect(
                 `/sale/${saleId}`
@@ -899,9 +988,9 @@ app.post(
 
         } catch (error) {
 
-            console.log(error);
+            console.error(error);
 
-            res.send(
+            res.status(500).send(
                 error.message
             );
 
@@ -909,6 +998,123 @@ app.post(
 
     }
 );
+app.get(
+    '/return/:id',
+    auth,
+    async (req, res) => {
+
+        const returnId =
+            req.params.id;
+
+        const [[ret]] =
+            await db.query(
+                `
+                SELECT
+                    sr.*,
+                    s.invoice_number,
+                    c.name AS customer_name,
+                    u.name AS user_name,
+                    st.name AS store_name
+
+                FROM sale_returns sr
+
+                JOIN sales s
+                    ON s.id = sr.sale_id
+
+                LEFT JOIN customers c
+                    ON c.id = s.customer_id
+
+                LEFT JOIN user u
+                    ON u.id = sr.user_id
+
+                LEFT JOIN stores st
+                    ON st.id = s.store_id
+
+                WHERE sr.id = ?
+                `,
+                [returnId]
+            );
+
+        if (!ret) {
+
+            return res.redirect(
+                '/sales'
+            );
+
+        }
+
+        const [items] =
+            await db.query(
+                `
+                SELECT
+                    sri.*,
+                    p.name,
+                    p.sku
+
+                FROM sale_return_items sri
+
+                JOIN products p
+                    ON p.id =
+                       sri.product_id
+
+                WHERE sri.return_id = ?
+                `,
+                [returnId]
+            );
+
+        res.render(
+            'return-view',
+            {
+
+                titleKey:
+                    'Возврат',
+
+                ret,
+                items,
+
+                activeMenu:
+                    'sales',
+
+                script: [
+                    {
+                        src:
+                            'return-view.js'
+                    }
+                ],
+
+                style: [
+                    {
+                        href:
+                            'return-view.css'
+                    }
+                ],
+
+                breadcrumbs: [
+                    {
+                        title:
+                            req.__(
+                                'title.dashboard'
+                            ),
+                        url: '/'
+                    },
+                    {
+                        title:
+                            'Продажи',
+                        url:
+                            '/sales'
+                    },
+                    {
+                        title:
+                            'Возврат'
+                    }
+                ]
+
+            }
+        );
+
+    }
+);
+
 //Роут Сохранение чека
 app.post('/sales/save', auth, async (req, res) => {
 
@@ -918,6 +1124,8 @@ app.post('/sales/save', auth, async (req, res) => {
             customer_id,
             payment_method,
             total,
+            discount_percent,
+            discount_amount,
             items
         } = req.body;
 
@@ -1000,13 +1208,15 @@ app.post('/sales/save', auth, async (req, res) => {
                     user_id,
                     store_id,
                     total,
+                    discount_percent,
+                    discount_amount,
                     payment_method,
                     status,
                     created_at
                 )
                 VALUES
                 (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
                 `,
                 [
@@ -1018,6 +1228,8 @@ app.post('/sales/save', auth, async (req, res) => {
                     req.session.user.id,
                     store_id,
                     total,
+                    discount_percent,
+                    discount_amount,
                     payment_method,
                     'completed',
                     created_at

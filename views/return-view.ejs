@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('blocks/head') -%>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <%- include('blocks/header') -%>
+    <div class="container-fluid" id="cont">
+      <div class="row">
+        <%- include('blocks/menu') -%>
+        <div class="col content">
+
+<h2>
+    Возврат
+    <%= ret.return_number %>
+</h2>
+
+<div class="alert alert-warning">
+
+    Основание:
+
+    <a href="/sale/<%= ret.sale_id %>">
+
+        <%= ret.invoice_number %>
+
+    </a>
+
+</div>
+        </div>
+      </div>
+    </div>
+    <%- include('blocks/footer') -%>
+  </body>
+</html>
