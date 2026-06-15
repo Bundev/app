@@ -89,7 +89,7 @@
 }
 
 .products-table-wrapper {
-    height: 500px;
+    height: 400px;
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
@@ -199,6 +199,7 @@
 @media (max-width: 768px) {
 
     .card-footer {
+        position: static;
         left: 0 !important;
         right: 0 !important;
         width: 100%;
