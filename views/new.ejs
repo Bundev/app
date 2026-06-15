@@ -1,13 +1,5 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <%- include('blocks/head') -%>
-  </head>
-  <body>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
+        <%- include('blocks/head') -%>
+        <%- include('blocks/header') -%>
         <%- include('blocks/menu') -%>
         <div class="col content">
           <div class="new-header d-flex justify-content-between align-items-center mb-3">
@@ -116,265 +108,133 @@
                     </div>
                 </div>
             </div>  
-        <div class="card shadow-sm border-0">
-            <div class="card-body border-0 p-0">
+            <div class="card shadow-sm border-0">
+                <div class="card-body border-0 p-0">
 
-                <div class="products-table-wrapper border-0" >
+                    <div class="products-table-wrapper border-0" >
 
-                    <table class="table table-sales align-middle">
+                        <table class="table table-sales align-middle">
 
-                        <thead>
-                            <tr>
-                                <th width="60">№</th>
-                                <th>Товар</th>
-                                <th width="120">Кол-во</th>
-                                <th width="120">Цена</th>
-                                <th width="70">Действия</th>
-                            </tr>
-                        </thead>
+                            <thead>
+                                <tr>
+                                    <th width="60">№</th>
+                                    <th>Товар</th>
+                                    <th width="120">Кол-во</th>
+                                    <th width="120">Цена</th>
+                                    <th width="70">Действия</th>
+                                </tr>
+                            </thead>
 
-                        <tbody id="item-products">
-                        </tbody>
+                            <tbody id="item-products">
+                            </tbody>
 
-                    </table>
-
-                </div>
-
-            </div>
-            
-            <div class="card-footer bg-white">
-
-                <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-stretch align-items-md-center ">
-
-                    <div>
-
-                        <div class="text-muted">
-                            Сдача
-                        </div>
-
-                        <strong id="change">
-                            0.00 ₴
-                        </strong>
+                        </table>
 
                     </div>
 
-                    <input
-                        type="number"
-                        id="cash"
-                        class="form-control"
-                        style="width:120px"
-                        placeholder="Получено">
+                </div>
+                
+                <div class="card-footer bg-white">
 
-                    <select
-                        name="paymentMethod"
-                        class="form-select"
-                        style="width:180px">
+                    <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-stretch align-items-md-center ">
 
-                        <option value="cash">
-                            💵 Наличные
-                        </option>
+                        <div>
 
-                        <option value="card">
-                            💳 Карта
-                        </option>
+                            <div class="text-muted">
+                                Сдача
+                            </div>
 
-                        <option value="transfer">
-                            🏦 Перевод
-                        </option>
+                            <strong id="change">
+                                0.00 ₴
+                            </strong>
 
-                    </select>
+                        </div>
 
-                    <input
+                        <input
                             type="number"
-                            id="discount"
+                            id="cash"
                             class="form-control"
-                            value=""
-                            min="0" placeholder="Скидка %">
+                            style="width:120px"
+                            placeholder="Получено">
 
-                    
+                        <select
+                            name="paymentMethod"
+                            class="form-select"
+                            style="width:180px">
 
-                    <div>
-                        <div class="text-muted">
-                            Подытог
+                            <option value="cash">
+                                💵 Наличные
+                            </option>
+
+                            <option value="card">
+                                💳 Карта
+                            </option>
+
+                            <option value="transfer">
+                                🏦 Перевод
+                            </option>
+
+                        </select>
+
+                        <input
+                                type="number"
+                                id="discount"
+                                class="form-control"
+                                value=""
+                                min="0" placeholder="Скидка %">
+
+                        
+
+                        <div>
+                            <div class="text-muted">
+                                Подытог
+                            </div>
+
+                            <strong id="subtotal-sum">
+                                0.00 ₴
+                            </strong>
                         </div>
 
-                        <strong id="subtotal-sum">
-                            0.00 ₴
-                        </strong>
-                    </div>
+                        <div>
+                            <div class="text-muted">
+                                Скидка (<span id="discount-label">0</span>%)
+                            </div>
 
-                    <div>
-                        <div class="text-muted">
-                            Скидка (<span id="discount-label">0</span>%)
+                            <strong
+                                id="discount-sum"
+                                class="text-danger">
+
+                                0.00₴
+
+                            </strong>
                         </div>
 
-                        <strong
-                            id="discount-sum"
-                            class="text-danger">
+                        <div>
+                            <div class="text-muted">
+                                К оплате
+                            </div>
 
-                            0.00₴
+                            <strong
+                                id="total-sum"
+                                class="text-primary">
 
-                        </strong>
-                    </div>
+                                0.00 ₴
 
-                    <div>
-                        <div class="text-muted">
-                            К оплате
+                            </strong>
                         </div>
 
-                        <strong
-                            id="total-sum"
-                            class="text-primary">
+                        <button
+                            id="saveInvoice"
+                            class="btn btn-success btn-lg"
+                            onclick="saveInvoice()">
 
-                            0.00 ₴
+                            <i class="bi bi-save"></i>
 
-                        </strong>
+                            Сохранить чек
+
+                        </button>
                     </div>
-
-                    <button
-                        id="saveInvoice"
-                        class="btn btn-success btn-lg"
-                        onclick="saveInvoice()">
-
-                        <i class="bi bi-save"></i>
-
-                        Сохранить чек
-
-                    </button>
                 </div>
             </div>
         </div>
-        </div>
-      </div>
-    </div>
     <%- include('blocks/footer') -%>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script>
-let scanner = null;
-
-document
-    .getElementById('scanBtn')
-    .addEventListener(
-        'click',
-        async () => {
-
-            document
-                .getElementById(
-                    'scannerModal'
-                )
-                .style.display =
-                'flex';
-
-            const reader =
-                document.getElementById(
-                    'reader'
-                );
-
-            reader.innerHTML = '';
-
-            scanner =
-                new Html5Qrcode(
-                    'reader'
-                );
-
-            await scanner.start(
-                {
-                    facingMode:
-                        'environment'
-                },
-                {
-                    fps: 10,
-                    qrbox: 250
-                },
-                async decodedText => {
-
-                    document
-                        .getElementById(
-                            'product-search'
-                        )
-                        .value =
-                        decodedText;
-
-                    await scanner.stop();
-
-                    document
-                        .getElementById(
-                            'scannerModal'
-                        )
-                        .style.display =
-                        'none';
-
-                    // если есть функция поиска
-                    const response =
-                        await fetch(
-                            `/api/products/search?q=${encodeURIComponent(decodedText)}`
-                        );
-
-                    const products =
-                        await response.json();
-
-                    if (products.length) {
-
-                        addProductToInvoice(
-                            products[0]
-                        );
-                        const searchInput =
-                            document.getElementById(
-                                'product-search'
-                            );
-
-                        searchInput.value = '';
-
-                        document
-                            .getElementById(
-                                'search-results'
-                            )
-                            .style.display =
-                            'none';
-
-                        // searchInput.focus();
-
-                    } else {
-
-                        alert(
-                            'Товар не найден!'
-                        );
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-document
-    .getElementById(
-        'closeScanner'
-    )
-    .addEventListener(
-        'click',
-        async () => {
-
-            if (scanner) {
-
-                try {
-
-                    await scanner.stop();
-
-                } catch (e) {}
-
-            }
-
-            document
-                .getElementById(
-                    'scannerModal'
-                )
-                .style.display =
-                'none';
-
-        }
-    );
-</script>
-  </body>
-</html>

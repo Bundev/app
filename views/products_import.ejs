@@ -1,93 +1,81 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <%- include('blocks/head') -%>
-  </head>
-  <body>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
-        <%- include('blocks/menu') -%>
-        <div class="col content">
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
 
-<div class="card shadow-sm">
+    <div class="card shadow-sm">
 
-    <div class="card-header">
+        <div class="card-header">
 
-        Импорт товаров из Excel
-
-    </div>
-
-    <div class="card-body">
-
-<form id="importForm" action="/products/import"
-    method="POST"
-    enctype="multipart/form-data">
-<div class="row mb-3">
-
-    <div class="col-md-4">
-
-        <label class="form-label">
-            Магазин
-        </label>
-
-        <select
-            name="store_id"
-            id="store_id"
-            class="form-select">
-
-            <% stores.forEach(store => { %>
-
-                <option
-                    value="<%= store.id %>">
-
-                    <%= store.name %>
-
-                </option>
-
-            <% }) %>
-
-        </select>
-
-    </div>
-
-</div>
-    <input
-        type="file"
-        id="excelFile"
-        name="excel"
-        accept=".xlsx,.xls">
-
-    <button
-        type="button"
-        id="previewBtn"
-        class="btn btn-primary">
-
-        Предпросмотр
-
-    </button>
-
-</form>
-
-<div id="preview"></div>
-
-<button
-    type="button"
-    id="startImport"
-    class="btn btn-success d-none">
-
-    Импортировать
-
-</button>
-
-    </div>
-
-</div>
+            Импорт товаров из Excel
 
         </div>
-      </div>
+
+        <div class="card-body">
+
+            <form id="importForm" action="/products/import"
+                method="POST"
+                enctype="multipart/form-data">
+            <div class="row mb-3">
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Магазин
+                    </label>
+
+                    <select
+                        name="store_id"
+                        id="store_id"
+                        class="form-select">
+
+                        <% stores.forEach(store => { %>
+
+                            <option
+                                value="<%= store.id %>">
+
+                                <%= store.name %>
+
+                            </option>
+
+                        <% }) %>
+
+                    </select>
+
+                </div>
+
+            </div>
+                <input
+                    type="file"
+                    id="excelFile"
+                    name="excel"
+                    accept=".xlsx,.xls">
+
+                <button
+                    type="button"
+                    id="previewBtn"
+                    class="btn btn-primary">
+
+                    Предпросмотр
+
+                </button>
+
+            </form>
+
+        <div id="preview"></div>
+
+        <button
+            type="button"
+            id="startImport"
+            class="btn btn-success d-none">
+
+            Импортировать
+
+        </button>
+
+        </div>
+
     </div>
-    <%- include('blocks/footer') -%>
-  </body>
-</html>
+
+</div>
+<%- include('blocks/footer') -%>

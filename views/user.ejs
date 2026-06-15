@@ -1,181 +1,168 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <%- include('blocks/head') -%>
-  </head>
-  <body>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
-        <%- include('blocks/menu') -%>
-        <div class="col content">
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
+    <div class="card shadow-sm border-0">
 
-<div class="card shadow-sm border-0">
+        <div class="card-body">
 
-    <div class="card-body">
+            <div class="row">
 
-        <div class="row">
+                <div class="col-md-3 text-center">
 
-            <div class="col-md-3 text-center">
+                    <img
+                        src="<%= user_st.avatar %>"
+                        class="rounded-circle border"
+                        width="140">
 
-                <img
-                    src="<%= user_st.avatar %>"
-                    class="rounded-circle border"
-                    width="140">
+                    <h4 class="mt-3">
 
-                <h4 class="mt-3">
+                        <%= user_st.name %>
 
-                    <%= user_st.name %>
+                    </h4>
 
-                </h4>
+                    <span class="badge bg-primary">
 
-                <span class="badge bg-primary">
+                        <%= user_st.role %>
 
-                    <%= user_st.role %>
+                    </span>
+
+                </div>
+
+                <div class="col-md-9">
+
+                    <table class="table">
+
+                        <tr>
+
+                            <th>Логин</th>
+
+                            <td>
+                                <%= user_st.login %>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Email</th>
+
+                            <td>
+                                <%= user_st.email %>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Телефон</th>
+
+                            <td>
+                                <%= user_st.phone || '-' %>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Должность</th>
+
+                            <td>
+                                <%= user_st.position || '-' %>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Зарплата</th>
+
+                            <td>
+                                <%= user_st.salary || 0 %> ₴
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card mt-3">
+
+        <div class="card-header">
+
+            🏪 Назначенные магазины
+
+        </div>
+
+        <div class="card-body">
+
+            <% stores.forEach(store => { %>
+
+                <span class="badge bg-success me-2">
+
+                    <%= store.name %>
 
                 </span>
 
-            </div>
-
-            <div class="col-md-9">
-
-                <table class="table">
-
-                    <tr>
-
-                        <th>Логин</th>
-
-                        <td>
-                            <%= user_st.login %>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <th>Email</th>
-
-                        <td>
-                            <%= user_st.email %>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <th>Телефон</th>
-
-                        <td>
-                            <%= user_st.phone || '-' %>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <th>Должность</th>
-
-                        <td>
-                            <%= user_st.position || '-' %>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <th>Зарплата</th>
-
-                        <td>
-                            <%= user_st.salary || 0 %> ₴
-                        </td>
-
-                    </tr>
-
-                </table>
-
-            </div>
+            <% }) %>
 
         </div>
 
     </div>
+    <div class="mt-3">
 
-</div>
+        <a
+            href="/users/edit/<%= user_st.id %>"
+            class="btn btn-primary">
 
-<div class="card mt-3">
+            ✏️ Редактировать
 
-    <div class="card-header">
+        </a>
 
-        🏪 Назначенные магазины
+        <a
+            href="/users/stores/<%= user_st.id %>"
+            class="btn btn-info">
+
+            🏪 Магазины
+
+        </a>
+        <% if(user_st.status === 'active'){%>
+        <a
+            href="/users/block/<%= user_st.id %>"
+            class="btn btn-warning" onclick="return confirm('Заблокировать сотрудника?')">
+            <i class="bi bi-lock"></i>
+            Заблокировать
+        </a>
+        <% }else if(user_st.status === 'blocked'){%>
+        <a
+            href="/users/unblock/<%= user_st.id %>"
+            class="btn btn-success" onclick="return confirm('Разблокировать сотрудника?')">
+
+            <i class="bi bi-unlock"></i>
+
+            Разблокировать
+
+        </a>
+        <% } %>
+        <a
+            href="/users/delete/<%= user_st.id %>"
+            class="btn btn-danger"
+            onclick="return confirm('Удалить сотрудника безвозвратно?')">
+
+            <i class="bi bi-trash"></i>
+
+            Удалить
+
+        </a>
 
     </div>
 
-    <div class="card-body">
-
-        <% stores.forEach(store => { %>
-
-            <span class="badge bg-success me-2">
-
-                <%= store.name %>
-
-            </span>
-
-        <% }) %>
-
-    </div>
-
 </div>
-<div class="mt-3">
-
-    <a
-        href="/users/edit/<%= user_st.id %>"
-        class="btn btn-primary">
-
-        ✏️ Редактировать
-
-    </a>
-
-    <a
-        href="/users/stores/<%= user_st.id %>"
-        class="btn btn-info">
-
-        🏪 Магазины
-
-    </a>
-    <% if(user_st.status === 'active'){%>
-    <a
-        href="/users/block/<%= user_st.id %>"
-        class="btn btn-warning" onclick="return confirm('Заблокировать сотрудника?')">
-        <i class="bi bi-lock"></i>
-        Заблокировать
-    </a>
-    <% }else if(user_st.status === 'blocked'){%>
-    <a
-        href="/users/unblock/<%= user_st.id %>"
-        class="btn btn-success" onclick="return confirm('Разблокировать сотрудника?')">
-
-        <i class="bi bi-unlock"></i>
-
-        Разблокировать
-
-    </a>
-    <% } %>
-    <a
-        href="/users/delete/<%= user_st.id %>"
-        class="btn btn-danger"
-        onclick="return confirm('Удалить сотрудника безвозвратно?')">
-
-        <i class="bi bi-trash"></i>
-
-        Удалить
-
-    </a>
-
-</div>
-
-        </div>
-      </div>
-    </div>
-    <%- include('blocks/footer') -%>
-  </body>
-</html>
+<%- include('blocks/footer') -%>

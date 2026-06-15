@@ -21,7 +21,8 @@
 		"user_new": "title.user_new",
 		"products_import": "title.products_import",
 		"product-view": "title.product-view",
-		"product-edit": "title.product-edit"
+		"product-edit": "title.product-edit",
+		"addProducts": "title.addProducts"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",

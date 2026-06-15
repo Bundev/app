@@ -718,6 +718,7 @@ app.post(
 
             const saleId =
                 req.params.id;
+            
 
             const [[sale]] =
                 await db.query(
@@ -791,17 +792,19 @@ app.post(
                         sale_id,
                         return_number,
                         user_id,
-                        total
+                        total,
+                        company_id
                     )
                     VALUES
                     (
-                        ?, ?, ?, 0
+                        ?, ?, ?, 0, ?
                     )
                     `,
                     [
                         saleId,
                         returnNumber,
-                        req.session.user.id
+                        req.session.user.id,
+                        req.session.user.company_id
                     ]
                 );
 
@@ -1495,6 +1498,104 @@ app.get('/products', auth, async (req, res) => {
         ]
     });
 
+});
+
+app.get('/products/add', auth, async (req, res) => {
+     const categories = await db.query(
+            'SELECT * FROM categories'
+        );
+
+    const stores = await db.query(
+        'SELECT * FROM stores'
+    );
+
+    res.render('add-product', {
+        titleKey: 'title.addProducts',
+        activeMenu: 'products',
+        categories,
+        stores,
+        script: [
+            {
+                src: 'add-products.js'
+            }
+        ],
+        style: [
+            {
+                href: 'add-products.css'
+            }
+        ],
+        breadcrumbs: [
+            {
+                title: req.__('title.dashboard'),
+                url: '/'
+            },
+            {
+                title: req.__('title.products'),
+                url: '/products'
+            },
+            {
+                title: req.__('title.addProducts'),
+                
+            }
+        ]
+    });
+
+});
+
+app.post('/products/add', upload.single('image'), async (req, res) => {
+
+    const {
+        category_id,
+        store_id,
+        name,
+        sku,
+        barcode,
+        eur_purchase_price,
+        usd_purchase_price,
+        purchase_price,
+        sale_price,
+        quantity,
+        description
+    } = req.body;
+
+    const image = req.file
+        ? '/uploads/' + req.file.filename
+        : null;
+
+    await db.query(
+        `INSERT INTO products
+        (
+            category_id,
+            store_id,
+            name,
+            sku,
+            barcode,
+            eur_purchase_price,
+            usd_purchase_price,
+            purchase_price,
+            sale_price,
+            quantity,
+            image,
+            description
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            category_id,
+            store_id,
+            name,
+            sku,
+            barcode,
+            eur_purchase_price,
+            usd_purchase_price,
+            purchase_price,
+            sale_price,
+            quantity,
+            image,
+            description
+        ]
+    );
+
+    res.redirect('/products');
 });
 
 app.get(

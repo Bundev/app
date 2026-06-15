@@ -137,3 +137,141 @@ document.addEventListener(
     }
 );
 
+
+
+
+
+
+
+       
+// Обновлени штрихкода
+
+document
+    .querySelectorAll('.barcode-cell')
+    .forEach(cell => {
+
+        cell.addEventListener(
+            'dblclick',
+            () => {
+
+                currentProductId =
+                    cell.dataset.id;
+
+                document
+                    .getElementById(
+                        'scannerModal'
+                    )
+                    .style.display =
+                    'flex';
+
+                startBarcodeScanner();
+
+            }
+        );
+
+    });
+
+let currentProductId = null;
+let scanner = null;
+
+function startBarcodeScanner() {
+
+    scanner =
+        new Html5Qrcode(
+            'reader'
+        );
+
+    scanner.start(
+        {
+            facingMode:
+                'environment'
+        },
+        {
+            fps: 10,
+            qrbox: 250
+        },
+        async (barcode) => {
+
+            await saveBarcode(
+                currentProductId,
+                barcode
+            );
+
+        }
+    );
+
+}
+async function saveBarcode(
+    productId,
+    barcode
+) {
+
+    const response =
+        await fetch(
+            `/products/barcode/${productId}`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    barcode
+                })
+            }
+        );
+
+    const result =
+        await response.json();
+
+    if (result.success) {
+
+        const cell =
+            document.querySelector(
+                `.barcode-cell[data-id="${productId}"]`
+            );
+
+        cell.innerHTML =
+            '<code>'+barcode+'</code>';
+
+        await scanner.stop();
+
+        document
+            .getElementById(
+                'scannerModal'
+            )
+            .style.display =
+            'none';
+
+    }
+
+}
+document
+    .getElementById(
+        'closeScanner'
+    )
+    .addEventListener(
+        'click',
+        async () => {
+
+            if (scanner) {
+
+                try {
+
+                    await scanner.stop();
+
+                } catch (e) {}
+
+            }
+
+            document
+                .getElementById(
+                    'scannerModal'
+                )
+                .style.display =
+                'none';
+
+        }
+    );

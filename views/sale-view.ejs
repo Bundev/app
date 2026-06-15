@@ -1,378 +1,361 @@
-<!doctype html>
-<html lang="ru">
-
-<head>
-    <%- include('blocks/head') -%>
-</head>
-
-<body>
-
+<%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
-
-<div class="container-fluid">
-
-    <div class="row">
-
-        <%- include('blocks/menu') -%>
-
-        <div class="col content">
-
-            <div class="card shadow-sm border-0">
-
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between mb-4">
-
-                        <h2>
-                            🧾 Чек <%= sale.invoice_number %>
-                           <% if (returnTotal >= sale.total) { %>
-
-                            <span class="badge bg-danger">
-                                Полный возврат
-                            </span>
-
-                            <% } else if (returnTotal > 0) { %> 
-                                <%
-                                  const returnPercent =
-                                        sale.total > 0
-                                            ? Math.min(
-                                                100,
-                                                Math.round(
-                                                    Number(returnTotal) /
-                                                    Number(sale.total) * 100
-                                                )
-                                            )
-                                            : 0;
-                                    %>
-
-                                <span class="badge bg-warning text-dark">
-                                    Частичный возврат (<%= returnPercent %>%)
-                                </span>
-
-                            <% } %>
-                        </h2>
-
-                        <div class="btn-group sale-actions">
-                            <a
-                                href="/sales/print/<%= sale.id %>"
-                                class="btn btn-outline-success btn-lg" title="Печать">
-                                <i class="bi bi-printer"></i>
-                            </a>
-
-                            <a
-                                href="/sales/pdf/<%= sale.id %>"
-                                class="btn btn-outline-primary btn-lg" title="PDF">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                            <% if (sale.status !== 'cancelled') { %>
-                                <a
-                                    href="/sale/<%= sale.id %>/return"
-                                    class="btn btn-outline-warning btn-lg" title="Возврат">
-                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                </a>
-
-                            <% } %>
-
-                        </div>
-
-                    </div>
-
-                    <div class="row g-3 mb-4">
-
-                        <div class="col-md-3">
-
-                            <div class="card bg-light border-0">
-
-                                <div class="card-body">
-
-                                    <small class="text-muted">
-                                        Дата продажи
-                                    </small>
-
-                                    <div class="fw-bold">
-
-                                        <%= new Date(sale.created_at)
-                                            .toLocaleString('ru-RU') %>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <div class="card bg-light border-0">
-
-                                <div class="card-body">
-
-                                    <small class="text-muted">
-                                        Клиент
-                                    </small>
-
-                                    <div class="fw-bold">
-
-                                        <%= sale.customer_name || 'Основной покупатель' %>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <div class="card bg-light border-0">
-
-                                <div class="card-body">
-
-                                    <small class="text-muted">
-                                        Магазин
-                                    </small>
-
-                                    <div class="fw-bold">
-
-                                        <%= sale.store_name %>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-3">
-
-                            <div class="card bg-light border-0">
-
-                                <div class="card-body">
-
-                                    <small class="text-muted">
-                                        Оплата
-                                    </small>
-
-                                    <div class="fw-bold">
-
-                                        <% if(sale.payment_method === 'cash') { %>
-                                            💵 Наличные
-                                        <% } else if(sale.payment_method === 'card'){%>
-                                            💳 Карта
-                                        <%} else if(sale.payment_method === 'transfer'){%>
-                                            🏦 Перевод
-                                        <%}%>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="table-responsive">
-
-                        <table class="table table-hover align-middle">
-
-                            <thead class="table-light">
-
-                                <tr>
-
-                                    <th>№</th>
-                                    <th>Артикул</th>
-                                    <th>Товар</th>
-                                    <th>Кол-во</th>
-                                    <th>Цена</th>
-                                    <th>Сумма</th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                            <% items.forEach((item,index) => { %>
-
-                                <tr>
-
-                                    <td>
-                                        <%= index + 1 %>
-                                    </td>
-
-                                    <td>
-                                        <%= item.sku || '-' %>
-                                    </td>
-
-                                    <td class="product-name-copy" data-name="<%= item.name %>" title="Двойной клик для копирования">
-                                        <%= item.name %>
-                                    </td>
-
-                                    <td>
-                                        <span class="badge bg-secondary">
-                                            <%= item.quantity %>
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <%= Number(item.price).toFixed(2) %> ₴
-                                    </td>
-
-                                    <td class="fw-bold">
-
-                                        <%= Number(item.subtotal).toFixed(2) %> ₴
-
-                                    </td>
-
-                                </tr>
-
-                            <% }) %>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-                    <% if (returns.length) { %>
-
-                    <div class="card mt-4">
-
-                        <div class="card-header d-flex justify-content-between"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#returnsHistory"
-                            style="cursor:pointer"> 
-
-                            <span >
-                                ↩ История возвратов
-                            </span>
-
-                            <span class="badge bg-warning text-dark">
-
-                                <%= returns.length %> возврат(ов)
-
-                            </span>
-
-                        </div>
-
-                        <div class="card-body" id="returnsHistory"
-                            class="collapse show">
-
-                    <table class="table table-sm align-middle mb-0">
-
-                        <thead>
-
-                            <tr>
-                                <th>№</th>
-                                <th>Дата</th>
-                                <th>Сумма</th>
-                                <th>Кассир</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                        <% returns.forEach((item,index) => { %>
-
-                            <tr>
-
-                                <td>
-                                    #<%= index + 1 %>
-                                </td>
-
-                                <td>
-                                    <%= new Date(item.created_at)
-                        .toLocaleString('ru-RU') %>
-                                </td>
-
-                                <td class="text-danger fw-bold">
-                                    -<%= Number(item.total).toFixed(2) %> ₴
-                                </td>
-
-                                <td>
-                                    <%= item.user_name %>
-                                </td>
-
-                            </tr>
-
-                        <% }) %>
-
-                        </tbody>
-
-                    </table>
-
-                        </div>
-
-                    </div>
+<%- include('blocks/menu') -%>
+
+<div class="col content">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between mb-4">
+
+                <h2>
+                    🧾 Чек <%= sale.invoice_number %>
+                   <% if (returnTotal >= sale.total) { %>
+
+                    <span class="badge bg-danger">
+                        Полный возврат
+                    </span>
+
+                    <% } else if (returnTotal > 0) { %> 
+                        <%
+                          const returnPercent =
+                                sale.total > 0
+                                    ? Math.min(
+                                        100,
+                                        Math.round(
+                                            Number(returnTotal) /
+                                            Number(sale.total) * 100
+                                        )
+                                    )
+                                    : 0;
+                            %>
+
+                        <span class="badge bg-warning text-dark">
+                            Частичный возврат (<%= returnPercent %>%)
+                        </span>
 
                     <% } %>
-                    <div class="row mt-4">
+                </h2>
 
-                        <div class="col-md-4 ms-auto">
+                <div class="btn-group sale-actions">
+                    <a
+                        href="/sales/print/<%= sale.id %>"
+                        class="btn btn-outline-success btn-lg" title="Печать">
+                        <i class="bi bi-printer"></i>
+                    </a>
 
-                            <div class="receipt-total-card">
+                    <a
+                        href="/sales/pdf/<%= sale.id %>"
+                        class="btn btn-outline-primary btn-lg" title="PDF">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </a>
+                    <% if (sale.status !== 'cancelled') { %>
+                        <a
+                            href="/sale/<%= sale.id %>/return"
+                            class="btn btn-outline-warning btn-lg" title="Возврат">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
 
-                                <div class="receipt-row">
-                                    <span>Позиции</span>
-                                    <strong><%= items.length %></strong>
-                                </div>
+                    <% } %>
 
-                                <div class="receipt-row">
-                                    <span>Подытог</span>
-                                    <strong><%= subtotal.toFixed(2) %> ₴</strong>
-                                </div>
+                </div>
 
-                                <% if (sale.discount_percent > 0) { %>
-                                    <div class="receipt-row discount">
-                                        <span>
-                                            Скидка <%= sale.discount_percent %>%
-                                        </span>
+            </div>
 
-                                        <strong>
-                                            -<%= Number(sale.discount_amount).toFixed(2) %> ₴
-                                        </strong>
-                                    </div>
-                                <% } %>
+            <div class="row g-3 mb-4">
 
-                                <% if (returnTotal > 0) { %>
-                                    <div class="receipt-row returns">
-                                        <span>
-                                            Возвраты (<%= sale.return_percent %>%)
-                                        </span>
+                <div class="col-md-3">
 
-                                        <strong>
-                                            -<%= Number(returnTotal).toFixed(2) %> ₴
-                                        </strong>
-                                    </div>
-                                <% } %>
+                    <div class="card bg-light border-0">
 
-                                <hr>
+                        <div class="card-body">
 
-                                <div class="receipt-total">
+                            <small class="text-muted">
+                                Дата продажи
+                            </small>
 
-                                    <% if (returnTotal > 0) { %>
+                            <div class="fw-bold">
 
-                                        <div class="small text-muted mb-2">
-                                            Осталось после возвратов
-                                        </div>
-
-                                    <% } %>
-
-                                    <span>
-                                        <%= (
-                                            Number(sale.total) -
-                                            Number(returnTotal)
-                                        ).toFixed(2) %> ₴
-                                    </span>
-
-                                </div>
+                                <%= new Date(sale.created_at)
+                                    .toLocaleString('ru-RU') %>
 
                             </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="card bg-light border-0">
+
+                        <div class="card-body">
+
+                            <small class="text-muted">
+                                Клиент
+                            </small>
+
+                            <div class="fw-bold">
+
+                                <%= sale.customer_name || 'Основной покупатель' %>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="card bg-light border-0">
+
+                        <div class="card-body">
+
+                            <small class="text-muted">
+                                Магазин
+                            </small>
+
+                            <div class="fw-bold">
+
+                                <%= sale.store_name %>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="card bg-light border-0">
+
+                        <div class="card-body">
+
+                            <small class="text-muted">
+                                Оплата
+                            </small>
+
+                            <div class="fw-bold">
+
+                                <% if(sale.payment_method === 'cash') { %>
+                                    💵 Наличные
+                                <% } else if(sale.payment_method === 'card'){%>
+                                    💳 Карта
+                                <%} else if(sale.payment_method === 'transfer'){%>
+                                    🏦 Перевод
+                                <%}%>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>№</th>
+                            <th>Артикул</th>
+                            <th>Товар</th>
+                            <th>Кол-во</th>
+                            <th>Цена</th>
+                            <th>Сумма</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <% items.forEach((item,index) => { %>
+
+                        <tr>
+
+                            <td>
+                                <%= index + 1 %>
+                            </td>
+
+                            <td>
+                                <%= item.sku || '-' %>
+                            </td>
+
+                            <td class="product-name-copy" data-name="<%= item.name %>" title="Двойной клик для копирования">
+                                <%= item.name %>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    <%= item.quantity %>
+                                </span>
+                            </td>
+
+                            <td>
+                                <%= Number(item.price).toFixed(2) %> ₴
+                            </td>
+
+                            <td class="fw-bold">
+
+                                <%= Number(item.subtotal).toFixed(2) %> ₴
+
+                            </td>
+
+                        </tr>
+
+                    <% }) %>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+            <% if (returns.length) { %>
+
+            <div class="card mt-4">
+
+                <div class="card-header d-flex justify-content-between"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#returnsHistory"
+                    style="cursor:pointer"> 
+
+                    <span >
+                        ↩ История возвратов
+                    </span>
+
+                    <span class="badge bg-warning text-dark">
+
+                        <%= returns.length %> возврат(ов)
+
+                    </span>
+
+                </div>
+
+                <div class="card-body" id="returnsHistory"
+                    class="collapse show">
+
+            <table class="table table-sm align-middle mb-0">
+
+                <thead>
+
+                    <tr>
+                        <th>№</th>
+                        <th>Дата</th>
+                        <th>Сумма</th>
+                        <th>Кассир</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                <% returns.forEach((item,index) => { %>
+
+                    <tr>
+
+                        <td>
+                            #<%= index + 1 %>
+                        </td>
+
+                        <td>
+                            <%= new Date(item.created_at)
+                .toLocaleString('ru-RU') %>
+                        </td>
+
+                        <td class="text-danger fw-bold">
+                            -<%= Number(item.total).toFixed(2) %> ₴
+                        </td>
+
+                        <td>
+                            <%= item.user_name %>
+                        </td>
+
+                    </tr>
+
+                <% }) %>
+
+                </tbody>
+
+            </table>
+
+                </div>
+
+            </div>
+
+            <% } %>
+            <div class="row mt-4">
+
+                <div class="col-md-4 ms-auto">
+
+                    <div class="receipt-total-card">
+
+                        <div class="receipt-row">
+                            <span>Позиции</span>
+                            <strong><%= items.length %></strong>
+                        </div>
+
+                        <div class="receipt-row">
+                            <span>Подытог</span>
+                            <strong><%= subtotal.toFixed(2) %> ₴</strong>
+                        </div>
+
+                        <% if (sale.discount_percent > 0) { %>
+                            <div class="receipt-row discount">
+                                <span>
+                                    Скидка <%= sale.discount_percent %>%
+                                </span>
+
+                                <strong>
+                                    -<%= Number(sale.discount_amount).toFixed(2) %> ₴
+                                </strong>
+                            </div>
+                        <% } %>
+
+                        <% if (returnTotal > 0) { %>
+                            <div class="receipt-row returns">
+                                <span>
+                                    Возвраты (<%= sale.return_percent %>%)
+                                </span>
+
+                                <strong>
+                                    -<%= Number(returnTotal).toFixed(2) %> ₴
+                                </strong>
+                            </div>
+                        <% } %>
+
+                        <hr>
+
+                        <div class="receipt-total">
+
+                            <% if (returnTotal > 0) { %>
+
+                                <div class="small text-muted mb-2">
+                                    Осталось после возвратов
+                                </div>
+
+                            <% } %>
+
+                            <span>
+                                <%= (
+                                    Number(sale.total) -
+                                    Number(returnTotal)
+                                ).toFixed(2) %> ₴
+                            </span>
 
                         </div>
 
@@ -387,8 +370,4 @@
     </div>
 
 </div>
-
 <%- include('blocks/footer') -%>
-
-</body>
-</html>

@@ -1,98 +1,90 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <%- include('blocks/head') -%>
-  </head>
-  <body>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
-        <%- include('blocks/menu') -%>
-        <div class="col content">
 
-<h2>
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
 
-    Возврат по чеку
-    <%= sale.invoice_number %>
+    <h2>
 
-</h2>
+        Возврат по чеку
+        <%= sale.invoice_number %>
 
-<form
-    method="post"
-    action="/sale/<%= sale.id %>/return">
-<table class="table">
+    </h2>
 
-<thead>
+    <form
+        method="post"
+        action="/sale/<%= sale.id %>/return">
+    <table class="table">
 
-<tr>
+    <thead>
 
-    <th>Товар</th>
+    <tr>
 
-    <th>Продано</th>
+        <th>Товар</th>
 
-    <th>Возвращено</th>
+        <th>Продано</th>
 
-    <th>Доступно</th>
+        <th>Возвращено</th>
 
-    <th>Вернуть</th>
+        <th>Доступно</th>
 
-</tr>
+        <th>Вернуть</th>
 
-</thead>
+    </tr>
 
-<tbody>
+    </thead>
 
-<% items.forEach(item => { %>
+    <tbody>
 
-<tr>
+    <% items.forEach(item => { %>
 
-    <td>
-        <%= item.name %>
-    </td>
+    <tr>
 
-    <td>
-        <%= item.quantity %>
-    </td>
+        <td>
+            <%= item.name %>
+        </td>
 
-    <td>
-        <%= item.returned_qty %>
-    </td>
+        <td>
+            <%= item.quantity %>
+        </td>
 
-    <td>
-        <%= item.quantity - item.returned_qty %>
-    </td>
+        <td>
+            <%= item.returned_qty %>
+        </td>
 
-    <td>
+        <td>
+            <%= item.quantity - item.returned_qty %>
+        </td>
 
-        <input
-            type="number"
-            min="0"
-            max="<%= item.quantity - item.returned_qty %>"
-            value="0"
-            class="form-control"
-            name="return_<%= item.id %>">
+        <td>
 
-    </td>
+            <input
+                type="number"
+                min="0"
+                max="<%= item.quantity - item.returned_qty %>"
+                value="0"
+                class="form-control"
+                name="return_<%= item.id %>">
 
-</tr>
+        </td>
 
-<% }) %>
+    </tr>
 
-</tbody>
+    <% }) %>
 
-</table>
-<button
-    class="btn btn-danger">
+    </tbody>
 
-    Оформить возврат
+    </table>
+    <button
+        class="btn btn-danger">
 
-</button>
+        Оформить возврат
 
-</form>
-        </div>
-      </div>
-    </div>
-    <%- include('blocks/footer') -%>
-  </body>
-</html>
+    </button>
+
+    </form>
+</div>
+
+
+
+<%- include('blocks/footer') -%>

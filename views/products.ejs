@@ -1,9 +1,6 @@
-<!doctype html>
-<html lang="en">
-  <head>
-   <%- include('blocks/head') -%>
-  </head>
-  <body>
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
 <% if (importSuccess) { %>
 
 <div
@@ -106,397 +103,244 @@
     </div>
 
 </div>
+<div class="col content">
 
-</div>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
-        <%- include('blocks/menu') -%>
-        <div class="col content">
+    <div class="d-flex products-header justify-content-between align-items-center mb-4">
 
-        <div class="d-flex products-header justify-content-between align-items-center mb-4">
+        <h2 class="products-title">
+            📦 Товары
+        </h2>
+        
+        <div class="d-flex gap-2 products-actions">
 
-            <h2 class="products-title">
-                📦 Товары
-            </h2>
-            
-            <div class="d-flex gap-2 products-actions">
+            <a
+                href="/products/add"
+                class="btn btn-primary" title="Добавить товар">
 
-                <a
-                    href="/products/new"
-                    class="btn btn-primary" title="Добавить товар">
-
-                    <i class="bi bi-plus-lg"></i>
-                    
-
-                </a>
-
-                <a
-                    href="/products/import"
-                    class="btn btn-success" title="Импортировать Exlx">
-
-                    <i class="bi bi-file-earmark-excel"></i>
-                    
-
-                </a>
-
-            </div>
-
-        </div>
-
-
-<div class="card shadow-sm border-0">
-
-    <div class="card-body">
-
-        <div class="d-flex justify-content-between mb-3">
-
-            <input
-    type="text"
-    class="form-control"
-    id="search-product"
-    placeholder="🔍 Поиск по названию, артикулу, штрихкоду..."
-    oninput="filterProducts()">
-
-            <span
-                id="products-count"
-                class="badge bg-primary align-self-center">
-
-                <%= products.length %>
-
-            </span>
-
-        </div>
-
-        <div class="table-responsive products-table-wrapper">
-
-            <table class="table table-hover align-middle">
-<thead class="table-light">
-
-<tr>
-
-    <th width="120">
-        Артикул
-    </th>
-    <th width="120">
-        Штрихкод
-    </th>
-
-    <th>
-        Товар
-    </th>
-
-    <th width="120">
-        Цена
-    </th>
-
-    <th width="100">
-        Остаток
-    </th>
-
-    <th width="120">
-        Действия
-    </th>
-
-</tr>
-
-</thead>
+                <i class="bi bi-plus-lg"></i>
                 
-<tbody id="products-table">
 
-<% products.forEach(product => { %>
+            </a>
 
-<tr
-    data-name="<%= product.name %>"
-    data-sku="<%= product.sku || '' %>"
-    data-barcode="<%= product.barcode || '' %>"
-    data-category="<%= product.category_name || '' %>">
+            <a
+                href="/products/import"
+                class="btn btn-success" title="Импортировать Exlx">
 
-    <td >
+                <i class="bi bi-file-earmark-excel"></i>
+                
 
-        <code>
-            <%= product.sku || '-' %>
-        </code>
+            </a>
 
-    </td>
-    <td class="barcode-cell text-center"
-    data-id="<%= product.id %>">
+        </div>
 
-        <code>
-           <% if (product.barcode) { %>
+    </div>
 
-                <%= product.barcode %>
+    <div class="card shadow-sm border-0">
 
-            <% } else { %>
+        <div class="card-body">
 
-                <i class="bi bi-upc-scan barcode-icon"></i>
+            <div class="d-flex justify-content-between mb-3">
 
-            <% } %>
-        </code>
+                <input
+        type="text"
+        class="form-control"
+        id="search-product"
+        placeholder="🔍 Поиск по названию, артикулу, штрихкоду..."
+        oninput="filterProducts()">
 
-    </td>
+                <span
+                    id="products-count"
+                    class="badge bg-primary align-self-center">
 
-    <td>
-
-        <div class="d-flex flex-column">
-
-            <span class="fw-semibold product-name">
-
-                <%= product.name %>
-
-            </span>
-
-            <div class="mt-1">
-
-                <span class="badge bg-light text-dark border">
-
-                    <%= product.category_name || 'Без категории' %>
+                    <%= products.length %>
 
                 </span>
 
             </div>
 
-        </div>
+            <div class="table-responsive products-table-wrapper">
 
-    </td>
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
 
-    <td>
+                    <tr>
 
-        <div class="fw-bold text-success">
+                        <th width="120">
+                            Артикул
+                        </th>
+                        <th width="120">
+                            Штрихкод
+                        </th>
 
-            <%= product.sale_price %> ₴
+                        <th>
+                            Товар
+                        </th>
 
-        </div>
+                        <th width="120">
+                            Цена
+                        </th>
 
-        <small class="text-muted">
+                        <th width="100">
+                            Остаток
+                        </th>
 
-            Закупка:
-            <%= product.purchase_price %> ₴
+                        <th width="120">
+                            Действия
+                        </th>
 
-        </small>
+                    </tr>
 
-    </td>
+                    </thead>
+                                    
+                    <tbody id="products-table">
 
-    <td>
+                    <% products.forEach(product => { %>
 
-        <% if (product.quantity <= 0) { %>
+                    <tr
+                        data-name="<%= product.name %>"
+                        data-sku="<%= product.sku || '' %>"
+                        data-barcode="<%= product.barcode || '' %>"
+                        data-category="<%= product.category_name || '' %>">
 
-            <span class="badge bg-danger">
+                        <td >
 
-                Нет
+                            <code>
+                                <%= product.sku || '-' %>
+                            </code>
 
-            </span>
+                        </td>
+                        <td class="barcode-cell text-center"
+                        data-id="<%= product.id %>">
 
-        <% } else if (product.quantity < 5) { %>
+                            <code>
+                               <% if (product.barcode) { %>
 
-            <span class="badge bg-warning text-dark">
+                                    <%= product.barcode %>
 
-                <%= product.quantity %>
+                                <% } else { %>
 
-            </span>
+                                    <i class="bi bi-upc-scan barcode-icon"></i>
 
-        <% } else { %>
+                                <% } %>
+                            </code>
 
-            <span class="badge bg-success">
+                        </td>
 
-                <%= product.quantity %>
+                        <td>
 
-            </span>
+                            <div class="d-flex flex-column">
 
-        <% } %>
+                                <span class="fw-semibold product-name">
 
-    </td>
+                                    <%= product.name %>
 
-    <td>
+                                </span>
 
-        <div class="btn-group">
+                                <div class="mt-1">
 
-            <a
-                href="/products/view/<%= product.id %>"
-                class="btn btn-outline-primary">
+                                    <span class="badge bg-light text-dark border">
 
-                👁
+                                        <%= product.category_name || 'Без категории' %>
 
-            </a>
+                                    </span>
 
-            <a
-                href="/products/edit/<%= product.id %>"
-                class="btn btn-outline-secondary">
+                                </div>
 
-                ✏️
+                            </div>
 
-            </a>
-            <a
-                href="/products/label/<%= product.id %>"
-                target="_blank" title="Ценник"
-                class="btn btn-sm btn-outline-secondary">
+                        </td>
 
-                🏷 
+                        <td>
 
-            </a>
+                            <div class="fw-bold text-success">
 
-        </div>
+                                <%= product.sale_price %> ₴
 
-    </td>
+                            </div>
 
-</tr>
+                            <small class="text-muted">
 
-<% }) %>
+                                Закупка:
+                                <%= product.purchase_price %> ₴
 
-</tbody>
+                            </small>
 
-            </table>
+                        </td>
+
+                        <td>
+
+                            <% if (product.quantity <= 0) { %>
+
+                                <span class="badge bg-danger">
+
+                                    Нет
+
+                                </span>
+
+                            <% } else if (product.quantity < 5) { %>
+
+                                <span class="badge bg-warning text-dark">
+
+                                    <%= product.quantity %>
+
+                                </span>
+
+                            <% } else { %>
+
+                                <span class="badge bg-success">
+
+                                    <%= product.quantity %>
+
+                                </span>
+
+                            <% } %>
+
+                        </td>
+
+                        <td>
+
+                            <div class="btn-group">
+
+                                <a
+                                    href="/products/view/<%= product.id %>"
+                                    class="btn btn-outline-primary">
+
+                                    👁
+
+                                </a>
+
+                                <a
+                                    href="/products/edit/<%= product.id %>"
+                                    class="btn btn-outline-secondary">
+
+                                    ✏️
+
+                                </a>
+                                <a
+                                    href="/products/label/<%= product.id %>"
+                                    target="_blank" title="Ценник"
+                                    class="btn btn-sm btn-outline-secondary">
+
+                                    🏷 
+
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    <% }) %>
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
     </div>
-
 </div>
-
-
-
-        
-
-
-
-        </div>
-      </div>
-    </div>
-    <%- include('blocks/footer') -%>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script>
-        // Обновлени штрихкода
-
-document
-    .querySelectorAll('.barcode-cell')
-    .forEach(cell => {
-
-        cell.addEventListener(
-            'dblclick',
-            () => {
-
-                currentProductId =
-                    cell.dataset.id;
-
-                document
-                    .getElementById(
-                        'scannerModal'
-                    )
-                    .style.display =
-                    'flex';
-
-                startBarcodeScanner();
-
-            }
-        );
-
-    });
-
-let currentProductId = null;
-let scanner = null;
-
-function startBarcodeScanner() {
-
-    scanner =
-        new Html5Qrcode(
-            'reader'
-        );
-
-    scanner.start(
-        {
-            facingMode:
-                'environment'
-        },
-        {
-            fps: 10,
-            qrbox: 250
-        },
-        async (barcode) => {
-
-            await saveBarcode(
-                currentProductId,
-                barcode
-            );
-
-        }
-    );
-
-}
-async function saveBarcode(
-    productId,
-    barcode
-) {
-
-    const response =
-        await fetch(
-            `/products/barcode/${productId}`,
-            {
-                method: 'POST',
-
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
-
-                body: JSON.stringify({
-                    barcode
-                })
-            }
-        );
-
-    const result =
-        await response.json();
-
-    if (result.success) {
-
-        const cell =
-            document.querySelector(
-                `.barcode-cell[data-id="${productId}"]`
-            );
-
-        cell.innerHTML =
-            '<code>'+barcode+'</code>';
-
-        await scanner.stop();
-
-        document
-            .getElementById(
-                'scannerModal'
-            )
-            .style.display =
-            'none';
-
-    }
-
-}
-document
-    .getElementById(
-        'closeScanner'
-    )
-    .addEventListener(
-        'click',
-        async () => {
-
-            if (scanner) {
-
-                try {
-
-                    await scanner.stop();
-
-                } catch (e) {}
-
-            }
-
-            document
-                .getElementById(
-                    'scannerModal'
-                )
-                .style.display =
-                'none';
-
-        }
-    );
-    </script>
-  </body>
-</html>
+<%- include('blocks/footer') -%>

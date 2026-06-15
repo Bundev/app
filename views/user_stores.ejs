@@ -1,66 +1,54 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <%- include('blocks/head') -%>
-  </head>
-  <body>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
-        <%- include('blocks/menu') -%>
-        <div class="col content">
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
 
-<form
-    method="POST"
-    action="/users/stores/<%= user_st.id %>">
+    <form
+        method="POST"
+        action="/users/stores/<%= user_st.id %>">
 
-    <div class="card shadow-sm">
+        <div class="card shadow-sm">
 
-        <div class="card-header">
+            <div class="card-header">
 
-            🏪 Магазины сотрудника
+                🏪 Магазины сотрудника
 
-        </div>
+            </div>
 
-        <div class="card-body">
+            <div class="card-body">
 
-        <% stores.forEach(store => { %>
+            <% stores.forEach(store => { %>
 
-        <label>
+            <label>
 
-            <input
-                type="checkbox"
-                name="stores"
-                value="<%= store.id %>"
-                <%= selectedStores.includes(store.id) ? 'checked' : '' %>
-            >
+                <input
+                    type="checkbox"
+                    name="stores"
+                    value="<%= store.id %>"
+                    <%= selectedStores.includes(store.id) ? 'checked' : '' %>
+                >
 
-            <%= store.name %>
+                <%= store.name %>
 
-        </label>
-        <br>
-        <% }) %>
+            </label>
+            <br>
+            <% }) %>
 
-        </div>
+            </div>
 
-        <div class="card-footer">
+            <div class="card-footer">
 
-            <button
-                class="btn btn-success">
+                <button
+                    class="btn btn-success">
 
-                Сохранить
+                    Сохранить
 
-            </button>
+                </button>
+
+            </div>
 
         </div>
 
-    </div>
-
-</form>
-        </div>
-      </div>
-    </div>
-    <%- include('blocks/footer') -%>
-  </body>
-</html>
+    </form>
+</div>
+<%- include('blocks/footer') -%>

@@ -709,3 +709,131 @@ async function saveInvoice() {
     }
 
 }
+
+
+        
+let scanner = null;
+
+document
+    .getElementById('scanBtn')
+    .addEventListener(
+        'click',
+        async () => {
+
+            document
+                .getElementById(
+                    'scannerModal'
+                )
+                .style.display =
+                'flex';
+
+            const reader =
+                document.getElementById(
+                    'reader'
+                );
+
+            reader.innerHTML = '';
+
+            scanner =
+                new Html5Qrcode(
+                    'reader'
+                );
+
+            await scanner.start(
+                {
+                    facingMode:
+                        'environment'
+                },
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                async decodedText => {
+
+                    document
+                        .getElementById(
+                            'product-search'
+                        )
+                        .value =
+                        decodedText;
+
+                    await scanner.stop();
+
+                    document
+                        .getElementById(
+                            'scannerModal'
+                        )
+                        .style.display =
+                        'none';
+
+                    // если есть функция поиска
+                    const response =
+                        await fetch(
+                            `/api/products/search?q=${encodeURIComponent(decodedText)}`
+                        );
+
+                    const products =
+                        await response.json();
+
+                    if (products.length) {
+
+                        addProductToInvoice(
+                            products[0]
+                        );
+                        const searchInput =
+                            document.getElementById(
+                                'product-search'
+                            );
+
+                        searchInput.value = '';
+
+                        document
+                            .getElementById(
+                                'search-results'
+                            )
+                            .style.display =
+                            'none';
+
+                        // searchInput.focus();
+
+                    } else {
+
+                        alert(
+                            'Товар не найден!'
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+document
+    .getElementById(
+        'closeScanner'
+    )
+    .addEventListener(
+        'click',
+        async () => {
+
+            if (scanner) {
+
+                try {
+
+                    await scanner.stop();
+
+                } catch (e) {}
+
+            }
+
+            document
+                .getElementById(
+                    'scannerModal'
+                )
+                .style.display =
+                'none';
+
+        }
+    );

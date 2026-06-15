@@ -1,98 +1,84 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <%- include('blocks/head') -%>
-  </head>
-  <body>
-    <div id="overlay"></div>
-    <%- include('blocks/header') -%>
-    <div class="container-fluid" id="cont">
-      <div class="row">
-        <%- include('blocks/menu') -%>
-        <div class="col content">
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
+    <div class="container-fluid">
 
-
-<div class="container-fluid">
-
-    <div class="d-flex align-items-center mb-4">
-        <span class="fs-2 me-3">🏪</span>
-        <div>
-            <h2 class="mb-0">Добавить магазин</h2>
-            <small class="text-muted">
-                Создание новой торговой точки
-            </small>
+        <div class="d-flex align-items-center mb-4">
+            <span class="fs-2 me-3">🏪</span>
+            <div>
+                <h2 class="mb-0">Добавить магазин</h2>
+                <small class="text-muted">
+                    Создание новой торговой точки
+                </small>
+            </div>
         </div>
-    </div>
 
-    <div class="card store-card">
+        <div class="card store-card">
 
-        <div class="card-body p-4">
+            <div class="card-body p-4">
 
-            <form method="POST" action="/stores/add">
+                <form method="POST" action="/stores/add">
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">
-                        Название магазина
-                    </label>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Название магазина
+                        </label>
 
-                    <input
-                        type="text"
-                        name="name"
-                        class="form-control form-control-lg"
-                        placeholder="Например: Южный"
-                        required>
-                </div>
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control form-control-lg"
+                            placeholder="Например: Южный"
+                            required>
+                    </div>
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">
-                        Адрес
-                    </label>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Адрес
+                        </label>
 
-                    <input
-                        type="text"
-                        name="address"
-                        class="form-control form-control-lg"
-                        placeholder="Введите адрес магазина">
-                </div>
+                        <input
+                            type="text"
+                            name="address"
+                            class="form-control form-control-lg"
+                            placeholder="Введите адрес магазина">
+                    </div>
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">
-                        Телефон
-                    </label>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Телефон
+                        </label>
 
-                    <input
-                        type="text"
-                        name="phone"
-                        class="form-control form-control-lg"
-                        placeholder="+380...">
-                </div>
+                        <input
+                            type="text"
+                            name="phone"
+                            class="form-control form-control-lg"
+                            placeholder="+380...">
+                    </div>
 
-                <div class="d-flex gap-2">
+                    <div class="d-flex gap-2">
 
-                    <button
-                        type="submit"
-                        class="btn btn-success btn-lg px-4">
-                        💾 Сохранить
-                    </button>
+                        <button
+                            type="submit"
+                            class="btn btn-success btn-lg px-4">
+                            💾 Сохранить
+                        </button>
 
-                    <a
-                        href="/stores"
-                        class="btn btn-light btn-lg">
-                        Отмена
-                    </a>
+                        <a
+                            href="/stores"
+                            class="btn btn-light btn-lg">
+                            Отмена
+                        </a>
 
-                </div>
+                    </div>
 
-            </form>
+                </form>
+
+            </div>
 
         </div>
 
-    </div>
-
-</div>            
-        </div>
-      </div>
-    </div>
-    <%- include('blocks/footer') -%>
-  </body>
-</html>
+    </div>            
+</div>
+<%- include('blocks/footer') -%>
