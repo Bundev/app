@@ -144,7 +144,7 @@
             
             <div class="card-footer bg-white">
 
-                <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-stretch align-items-md-center">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-stretch align-items-md-center ">
 
                     <div>
 
@@ -184,22 +184,14 @@
 
                     </select>
 
-                    <div class="input-group" style="width:110px">
-
-                        <input
+                    <input
                             type="number"
                             id="discount"
                             class="form-control"
                             value=""
-                            min="0">
+                            min="0" placeholder="Скидка %">
 
-                        <span class="input-group-text">
-
-                            %
-
-                        </span>
-
-                    </div>
+                    
 
                     <div>
                         <div class="text-muted">
@@ -340,7 +332,7 @@ document
                             .style.display =
                             'none';
 
-                        searchInput.focus();
+                        // searchInput.focus();
 
                     } else {
 

@@ -194,7 +194,9 @@
     width: 100px;
 }
 
-
+#discount {
+    width: 120px;
+}
 
 @media (max-width: 768px) {
 
@@ -224,6 +226,16 @@
     #change {
         font-size: 22px;
     }
+
+     #discount{
+        width:100% !important;
+    }
+
+    #discount {
+        width: 100%;
+    }
+
+     
 
 }
 
