@@ -194,8 +194,52 @@ document.addEventListener('click', function(e) {
 
 
 
+// Создает новую категорию
 
+document
+.getElementById('saveCategoryBtn')
+.addEventListener('click', async () => {
 
+    const name =
+        document.getElementById('newCategoryName').value;
+
+    const response = await fetch(
+        '/categories/ajax-create',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        }
+    );
+
+    const result = await response.json();
+
+    if(result.success){
+
+        categories.push({
+            id: result.id,
+            name: result.name
+        });
+
+        document.getElementById('category_name').value =
+            result.name;
+
+        document.getElementById('category_id').value =
+            result.id;
+
+        bootstrap.Modal
+            .getInstance(
+                document.getElementById('categoryModal')
+            )
+            .hide();
+
+        document.getElementById('newCategoryName').value = '';
+
+    }
+
+});
 
 
 //Автопересчет цены
@@ -288,7 +332,5 @@ document.addEventListener('DOMContentLoaded', () => {
         'input',
         calculateMargin
     );
-
-    calculateMargin();
 
 });

@@ -12,7 +12,8 @@
 		"settings": "Налаштування",
 		"new": "Новий чек",
 		"invoices": "Чеки",
-		"finance": "Фінанси"
+		"finance": "Фінанси",
+		"addProducts": "title.addProducts"
 	},
 	"dashboard": {
 		"salesToday": "Продажі сьогодні",

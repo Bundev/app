@@ -160,6 +160,10 @@ module.exports = async (
 
     }
 
+
+
+
+
 let createdCount = 0;
 let updatedCount = 0;
 
@@ -168,13 +172,9 @@ const connection =
 
 try {
 
-    
+    await connection.beginTransaction();
 
     for (const product of products) {
-
-        
-
-        // Поиск дублей
 
         let exists = [];
 
@@ -186,12 +186,10 @@ try {
                     SELECT id
                     FROM products
                     WHERE sku = ?
-                    AND store_id = ?
-                    ORDER BY id
+                    LIMIT 1
                     `,
                     [
-                        product.sku,
-                        storeId
+                        product.sku
                     ]
                 );
 
@@ -203,38 +201,12 @@ try {
                     SELECT id
                     FROM products
                     WHERE name = ?
-                    AND store_id = ?
-                    ORDER BY id
+                    LIMIT 1
                     `,
                     [
-                        product.name,
-                        storeId
+                        product.name
                     ]
                 );
-
-        }
-
-        if (exists.length > 1) {
-
-            const keepId =
-                exists[0].id;
-
-            const duplicateIds =
-                exists
-                    .slice(1)
-                    .map(item => item.id);
-
-            await connection.execute(
-                `
-                DELETE FROM products
-                WHERE id IN (${duplicateIds.map(() => '?').join(',')})
-                `,
-                duplicateIds
-            );
-
-            console.log(
-                `Удалены дубли товара: ${product.name}`
-            );
 
         }
 
@@ -243,8 +215,12 @@ try {
                 product.category
             ) || null;
 
-        
+        let productId;
+
         if (exists.length) {
+
+            productId =
+                exists[0].id;
 
             await connection.execute(
                 `
@@ -253,8 +229,7 @@ try {
                     category_id = ?,
                     name = ?,
                     purchase_price = ?,
-                    sale_price = ?,
-                    quantity = ?
+                    sale_price = ?
                 WHERE id = ?
                 `,
                 [
@@ -262,8 +237,7 @@ try {
                     product.name,
                     product.purchase_price,
                     product.sale_price,
-                    product.quantity,
-                    exists[0].id
+                    productId
                 ]
             );
 
@@ -271,47 +245,108 @@ try {
 
         } else {
 
-            await connection.execute(
-                `
-                INSERT INTO products
-                (
-                    category_id,
-                    store_id,
-                    sku,
-                    name,
-                    purchase_price,
-                    sale_price,
-                    quantity,
-                    image
-                )
-                VALUES
-                (
-                    ?, ?, ?, ?, ?, ?, ?, ?
-                )
-                `,
-                [
-                    categoryId,
-                    storeId,
-                    product.sku,
-                    product.name,
-                    product.purchase_price,
-                    product.sale_price,
-                    product.quantity,
-                    '/img/no-image.png'
-                ]
-            );
+            const [result] =
+                await connection.execute(
+                    `
+                    INSERT INTO products
+                    (
+                        category_id,
+                        store_id,
+                        sku,
+                        name,
+                        purchase_price,
+                        sale_price,
+                        quantity,
+                        image
+                    )
+                    VALUES
+                    (
+                        ?, ?, ?, ?, ?, ?, ?, ?
+                    )
+                    `,
+                    [
+                        categoryId,
+                        storeId,
+                        product.sku,
+                        product.name,
+                        product.purchase_price,
+                        product.sale_price,
+                        0,
+                        '/img/no-image.png'
+                    ]
+                );
+
+            productId =
+                result.insertId;
 
             createdCount++;
 
         }
 
+        await connection.execute(
+            `
+            INSERT INTO product_stores
+            (
+                product_id,
+                store_id,
+                quantity
+            )
+            VALUES
+            (
+                ?, ?, ?
+            )
+
+            ON DUPLICATE KEY UPDATE
+            quantity = VALUES(quantity)
+            `,
+            [
+                productId,
+                storeId,
+                product.quantity
+            ]
+        );
+
+        await connection.execute(
+            `
+            UPDATE products p
+
+            SET quantity =
+            (
+                SELECT
+                    COALESCE(
+                        SUM(ps.quantity),
+                        0
+                    )
+                FROM product_stores ps
+                WHERE ps.product_id = p.id
+            )
+
+            WHERE p.id = ?
+            `,
+            [
+                productId
+            ]
+        );
+
     }
+
+    await connection.commit();
+
+} catch (error) {
+
+    await connection.rollback();
+
+    throw error;
 
 } finally {
 
     connection.release();
 
 }
+
+
+
+
 
     return {
 

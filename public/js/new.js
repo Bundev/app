@@ -80,8 +80,7 @@ searchInput.addEventListener(
 
                         <small>
 
-                            Остаток:
-                            ${product.quantity}
+                            ${product.stock_info || 'Нет остатков'}
 
                         </small>
 

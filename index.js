@@ -14,6 +14,7 @@ const uploadImport = require('./config/upload-import');
 const bwipjs = require('bwip-js');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
+const axios = require('axios');
 const port = 3000;
 
 
@@ -166,7 +167,39 @@ const uploadProduct =
         storage
     });
 
+let exchangeRates = {
+    USD: 41.7,
+    EUR: 48.7
+};
 
+async function updateRates() {
+
+    try {
+
+        const { data } = await axios.get(
+            'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11'
+        );
+
+        exchangeRates.USD =
+            parseFloat(
+                data.find(x => x.ccy === 'USD').sale
+            );
+
+        exchangeRates.EUR =
+            parseFloat(
+                data.find(x => x.ccy === 'EUR').sale
+            );
+
+    } catch (err) {
+
+        console.error('Ошибка получения курса:', err.message);
+
+    }
+
+}
+
+updateRates();
+setInterval(updateRates, 60 * 60 * 1000);
 
 // Проверка подключения
 (async () => {
@@ -190,36 +223,7 @@ function auth(req, res, next) {
     next();
 
 }
-// Сохранение чека
-function getNextInvoiceNumber() {
 
-    const dir = path.join(__dirname, 'data', 'invoices');
-
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
-
-    const files = fs.readdirSync(dir);
-
-    let max = 0;
-
-    files.forEach(file => {
-
-        if (file.endsWith('.json')) {
-
-            const num = parseInt(
-                file.replace('.json', '')
-            );
-
-            if (!isNaN(num) && num > max) {
-                max = num;
-            }
-        }
-
-    });
-
-    return String(max + 1).padStart(6, '0');
-}
 async function renderDashboard(req, res) {
   
     const [[salesTodayRow]] =
@@ -886,14 +890,21 @@ app.post(
 
                 await db.query(
                     `
-                    UPDATE products
-                    SET quantity =
-                        quantity + ?
-                    WHERE id = ?
+                    INSERT INTO product_stores
+                    (
+                        product_id,
+                        store_id,
+                        quantity
+                    )
+                    VALUES (?, ?, ?)
+
+                    ON DUPLICATE KEY UPDATE
+                    quantity = quantity + VALUES(quantity)
                     `,
                     [
-                        qty,
-                        item.product_id
+                        item.product_id,
+                        sale.store_id,
+                        qty
                     ]
                 );
 
@@ -1121,7 +1132,12 @@ app.get(
 //Роут Сохранение чека
 app.post('/sales/save', auth, async (req, res) => {
 
+    const connection =
+        await db.getConnection();
+
     try {
+
+        await connection.beginTransaction();
 
         const {
             customer_id,
@@ -1136,7 +1152,7 @@ app.post('/sales/save', auth, async (req, res) => {
             req.session.user.company_id;
 
         const [[userStore]] =
-            await db.query(
+            await connection.query(
                 `
                 SELECT store_id
                 FROM user_stores
@@ -1155,7 +1171,7 @@ app.post('/sales/save', auth, async (req, res) => {
             new Date().getFullYear();
 
         const [[lastSale]] =
-            await db.query(
+            await connection.query(
                 `
                 SELECT invoice_number
                 FROM sales
@@ -1201,7 +1217,7 @@ app.post('/sales/save', auth, async (req, res) => {
                 );
 
         const [saleResult] =
-            await db.execute(
+            await connection.execute(
                 `
                 INSERT INTO sales
                 (
@@ -1244,11 +1260,36 @@ app.post('/sales/save', auth, async (req, res) => {
 
         for (const item of items) {
 
+            const [[stock]] =
+                await connection.query(
+                    `
+                    SELECT quantity
+                    FROM product_stores
+                    WHERE product_id = ?
+                    AND store_id = ?
+                    `,
+                    [
+                        item.product_id,
+                        store_id
+                    ]
+                );
+
+            if (
+                !stock ||
+                stock.quantity < item.quantity
+            ) {
+
+                throw new Error(
+                    `Недостаточно остатка: ${item.name}`
+                );
+
+            }
+
             const subtotal =
                 Number(item.quantity) *
                 Number(item.price);
 
-            await db.execute(
+            await connection.execute(
                 `
                 INSERT INTO sale_items
                 (
@@ -1272,20 +1313,24 @@ app.post('/sales/save', auth, async (req, res) => {
                 ]
             );
 
-            await db.execute(
+            await connection.execute(
                 `
-                UPDATE products
+                UPDATE product_stores
                 SET quantity =
                     quantity - ?
-                WHERE id = ?
+                WHERE product_id = ?
+                AND store_id = ?
                 `,
                 [
                     item.quantity,
-                    item.product_id
+                    item.product_id,
+                    store_id
                 ]
             );
 
         }
+
+        await connection.commit();
 
         res.json({
             success: true,
@@ -1295,6 +1340,8 @@ app.post('/sales/save', auth, async (req, res) => {
 
     } catch (error) {
 
+        await connection.rollback();
+
         console.error(error);
 
         res.status(500).json({
@@ -1302,10 +1349,14 @@ app.post('/sales/save', auth, async (req, res) => {
             error: error.message
         });
 
+    } finally {
+
+        connection.release();
+
     }
 
 });
-
+//Роут страницы нового чека
 app.get('/new', auth, async (req, res) => {
 
     const year =
@@ -1383,57 +1434,8 @@ app.get('/new', auth, async (req, res) => {
     });
 
 });
-app.get('/invoices/:id', auth, (req, res) => {
 
-    const id = req.params.id;
 
-    const filePath = path.join(
-        __dirname,
-        'data',
-        'invoices',
-        `${id}.json`
-    );
-
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send('Чек не найден');
-    }
-
-    const invoice = JSON.parse(
-        fs.readFileSync(filePath, 'utf8')
-    );
-
-    res.render('invoices', {
-        titleKey: req.__('title.invoices'),
-        invoice,
-        invoiceId: id,
-        activeMenu: 'sales',
-        statuses,
-        script: [
-            {
-                src: 'invoices.js',
-            }
-        ],
-        style: [
-            {
-                href: 'invoices.css',
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.sales'),
-                url: '/sales'
-            },
-            {
-                title: req.__('title.invoices'),
-            }
-        ]
-    });
-
-});
 // Роутер товаров
 app.get('/products', auth, async (req, res) => {
 
@@ -1442,32 +1444,55 @@ app.get('/products', auth, async (req, res) => {
 
     const productSuccess =
         req.session.productSuccess;
+        
 
     req.session.importSuccess =
         null;
 
     req.session.productSuccess =
         null;
-
+    
     const [products] =
         await db.execute(
             `
             SELECT
                 p.*,
                 c.name AS category_name,
-                s.name AS store_name
+
+                SUM(
+                    COALESCE(ps.quantity, 0)
+                ) AS quantity,
+
+                GROUP_CONCAT(
+                    CONCAT(
+                        s.name,
+                        ': ',
+                        ps.quantity
+                    )
+                    ORDER BY s.name
+                    SEPARATOR ' | '
+                ) AS stock_info
+
             FROM products p
+
             LEFT JOIN categories c
                 ON c.id = p.category_id
-            INNER JOIN user_stores us
-                ON us.store_id = p.store_id
-            INNER JOIN stores s
-                ON s.id = p.store_id
-            WHERE us.user_id = ?
+
+            LEFT JOIN product_stores ps
+                ON ps.product_id = p.id
+
+            LEFT JOIN stores s
+                ON s.id = ps.store_id
+
+            WHERE s.company_id = ?
+            AND p.archived = 0
+
+            GROUP BY p.id
+
             ORDER BY p.name
             `,
             [
-                req.session.user.id
+                req.session.user.company_id
             ]
         );
 
@@ -1477,6 +1502,7 @@ app.get('/products', auth, async (req, res) => {
         products,
         importSuccess,
         productSuccess,
+        
         script: [
             {
                 src: 'products.js'
@@ -1499,14 +1525,22 @@ app.get('/products', auth, async (req, res) => {
     });
 
 });
-
+// Роут страныцы добавлени товара
 app.get('/products/add', auth, async (req, res) => {
-     const categories = await db.query(
-            'SELECT * FROM categories'
-        );
+     const [categories] = await db.query(
+        `SELECT *
+         FROM categories
+         WHERE company_id = ?
+         ORDER BY name`,
+        [req.session.user.company_id]
+    );
 
-    const stores = await db.query(
-        'SELECT * FROM stores'
+    const [stores] = await db.query(
+        `SELECT *
+         FROM stores
+         WHERE company_id = ?
+         ORDER BY name`,
+        [req.session.user.company_id]
     );
 
     res.render('add-product', {
@@ -1514,6 +1548,8 @@ app.get('/products/add', auth, async (req, res) => {
         activeMenu: 'products',
         categories,
         stores,
+        usdRate: exchangeRates.USD,
+        eurRate: exchangeRates.EUR,
         script: [
             {
                 src: 'add-products.js'
@@ -1541,61 +1577,137 @@ app.get('/products/add', auth, async (req, res) => {
     });
 
 });
+// Роут создает новый тавар
+app.post(
+    '/products/add',
+    uploadProduct.single('image'),
+    async (req, res) => {
 
-app.post('/products/add', upload.single('image'), async (req, res) => {
+        try {
 
-    const {
-        category_id,
-        store_id,
-        name,
-        sku,
-        barcode,
-        eur_purchase_price,
-        usd_purchase_price,
-        purchase_price,
-        sale_price,
-        quantity,
-        description
-    } = req.body;
+            const {
+                category_id,
+                name,
+                sku,
+                barcode,
+                purchase_price,
+                sale_price,
+                description
+            } = req.body;
 
-    const image = req.file
-        ? '/uploads/' + req.file.filename
-        : null;
+            const image = req.file
+                ? '/uploads/products/' + req.file.filename
+                : '/img/no-image.png';
 
-    await db.query(
-        `INSERT INTO products
-        (
-            category_id,
-            store_id,
-            name,
-            sku,
-            barcode,
-            eur_purchase_price,
-            usd_purchase_price,
-            purchase_price,
-            sale_price,
-            quantity,
-            image,
-            description
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            const [result] = await db.query(
+                `
+                INSERT INTO products
+                (
+                    category_id,
+                    name,
+                    sku,
+                    barcode,
+                    purchase_price,
+                    sale_price,
+                    image,
+                    description
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `,
+                [
+                    category_id,
+                    name,
+                    sku,
+                    barcode,
+                    purchase_price,
+                    sale_price,
+                    image,
+                    description
+                ]
+            );
+
+            const productId = result.insertId;
+
+            const [stores] = await db.query(
+                `
+                SELECT id
+                FROM stores
+                WHERE company_id = ?
+                `,
+                [
+                    req.session.user.company_id
+                ]
+            );
+
+            for (const store of stores) {
+
+                const quantity =
+                    Number(
+                        req.body[
+                            `quantity_${store.id}`
+                        ]
+                    ) || 0;
+
+                if (quantity <= 0) {
+                    continue;
+                }
+
+                await db.query(
+                    `
+                    INSERT INTO product_stores
+                    (
+                        product_id,
+                        store_id,
+                        quantity
+                    )
+                    VALUES (?, ?, ?)
+                    `,
+                    [
+                        productId,
+                        store.id,
+                        quantity
+                    ]
+                );
+            }
+
+            req.session.productSuccess =
+                'Товар успешно добавлен';
+
+            res.redirect('/products');
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                error.message
+            );
+
+        }
+
+    }
+);
+// Роут создает новую ктегорию
+app.post('/categories/ajax-create', async (req, res) => {
+
+    const { name } = req.body;
+
+    const [result] = await db.query(
+        `INSERT INTO categories
+        (name, company_id)
+        VALUES (?, ?)`,
         [
-            category_id,
-            store_id,
             name,
-            sku,
-            barcode,
-            eur_purchase_price,
-            usd_purchase_price,
-            purchase_price,
-            sale_price,
-            quantity,
-            image,
-            description
+            req.session.user.company_id
         ]
     );
 
-    res.redirect('/products');
+    res.json({
+        success: true,
+        id: result.insertId,
+        name
+    });
+
 });
 
 app.get(
@@ -1686,27 +1798,6 @@ app.get(
     async (req, res) => {
 
         try {
-
-            const [[product]] =
-                await db.query(
-                    `
-                    SELECT *
-                    FROM products
-                    WHERE id = ?
-                    `,
-                    [
-                        req.params.id
-                    ]
-                );
-
-            if (!product) {
-
-                return res.redirect(
-                    '/products'
-                );
-
-            }
-
             const [categories] =
                 await db.query(
                     `
@@ -1720,11 +1811,61 @@ app.get(
                     ]
                 );
 
+            const [rows] = await db.query(`
+                SELECT
+                    p.*,
+                    c.name AS category_name,
+                    s.name AS store_name
+                FROM products p
+
+                LEFT JOIN categories c
+                    ON c.id = p.category_id
+
+                LEFT JOIN stores s
+                    ON s.id = p.store_id
+
+                WHERE p.id = ?
+            `, [req.params.id]);
+
+            const product = rows[0];
+
+            const [stores] = await db.query(`
+                SELECT *
+                FROM stores
+                WHERE company_id = ?
+                ORDER BY name
+            `, [
+                req.session.user.company_id
+            ]);
+
+            const [storeStocks] = await db.query(`
+                SELECT
+                    s.id,
+                    s.name,
+                    COALESCE(ps.quantity, 0) AS quantity
+                FROM stores s
+
+                LEFT JOIN product_stores ps
+                    ON ps.store_id = s.id
+                    AND ps.product_id = ?
+
+                WHERE s.company_id = ?
+
+                ORDER BY s.name
+            `, [
+                req.params.id,
+                req.session.user.company_id
+            ]);
+
             res.render(
                 'product-edit',
                 {
+                    stores,
+                    storeStocks,
                     product,
                     categories,
+                    usdRate: exchangeRates.USD,
+                    eurRate: exchangeRates.EUR,
                     activeMenu: 'products',
                     script: [
                         {
@@ -1781,7 +1922,6 @@ app.post(
                 category_id,
                 purchase_price,
                 sale_price,
-                quantity,
                 description
             } = req.body;
 
@@ -1794,7 +1934,6 @@ app.post(
                     category_id = ?,
                     purchase_price = ?,
                     sale_price = ?,
-                    quantity = ?,
                     description = ?
             `;
 
@@ -1805,7 +1944,6 @@ app.post(
                 category_id,
                 purchase_price,
                 sale_price,
-                quantity,
                 description
             ];
 
@@ -1835,12 +1973,80 @@ app.post(
                 params
             );
 
-            req.session.productSuccess =
-    'Товар успешно обновлён';
+            const [stores] = await db.query(`
+                SELECT id
+                FROM stores
+                WHERE company_id = ?
+            `, [
+                req.session.user.company_id
+            ]);
+
+            for (const store of stores) {
+
+                const quantity =
+                    Number(
+                        req.body[`quantity_${store.id}`]
+                    ) || 0;
+
+                await db.query(`
+                    INSERT INTO product_stores
+                    (
+                        product_id,
+                        store_id,
+                        quantity
+                    )
+                    VALUES (?, ?, ?)
+
+                    ON DUPLICATE KEY UPDATE
+                    quantity = VALUES(quantity)
+                `, [
+                    req.params.id,
+                    store.id,
+                    quantity
+                ]);
+
+            }
+
+            req.session.productSuccess = 'Товар успешно обновлён';
 
             res.redirect(
                 '/products'
             );
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                error.message
+            );
+
+        }
+
+    }
+);
+
+// Архевирует 
+
+app.get(
+    '/products/archive/:id',
+    auth,
+    async (req, res) => {
+
+        try {
+
+            await db.query(`
+                UPDATE products
+                SET archived = 1
+                WHERE id = ?
+            `, [
+                req.params.id
+            ]);
+
+            req.session.productSuccess =
+                'Товар перемещён в архив';
+
+            res.redirect('/products');
 
         } catch (error) {
 
@@ -1860,15 +2066,13 @@ app.get('/products/import',auth,requireAdmin,async (req, res) => {
         const [stores] =
             await db.execute(
                 `
-                SELECT s.*
-                FROM stores s
-                INNER JOIN user_stores us
-                    ON us.store_id = s.id
-                WHERE us.user_id = ?
-                ORDER BY s.name
+                SELECT *
+                FROM stores
+                WHERE company_id = ?
+                ORDER BY name
                 `,
                 [
-                    req.session.user.id
+                    req.session.user.company_id
                 ]
             );
 
@@ -2044,7 +2248,7 @@ app.get('/api/products/search', auth, async (req, res) => {
         const q =
             req.query.q?.trim() || '';
 
-         if (q.length < 2) {
+        if (q.length < 2) {
 
             return res.json([]);
 
@@ -2068,21 +2272,41 @@ app.get('/api/products/search', auth, async (req, res) => {
                         p.sku,
                         p.barcode,
                         p.sale_price,
-                        p.quantity,
-                        s.name AS store_name
+
+                        SUM(
+                            COALESCE(ps.quantity, 0)
+                        ) AS quantity,
+
+                        GROUP_CONCAT(
+                            CONCAT(
+                                s.name,
+                                ': ',
+                                ps.quantity
+                            )
+                            ORDER BY s.name
+                            SEPARATOR ' | '
+                        ) AS stock_info
+
                     FROM products p
 
-                    JOIN stores s
-                        ON s.id = p.store_id
+                    LEFT JOIN product_stores ps
+                        ON ps.product_id = p.id
+
+                    LEFT JOIN stores s
+                        ON s.id = ps.store_id
 
                     WHERE s.company_id = ?
+                    AND p.archived = 0
                     AND (
                         p.name LIKE ?
                         OR p.sku LIKE ?
                         OR p.barcode LIKE ?
                     )
 
+                    GROUP BY p.id
+
                     ORDER BY p.name
+
                     LIMIT 30
                     `,
                     [
@@ -2107,24 +2331,44 @@ app.get('/api/products/search', auth, async (req, res) => {
                     p.sku,
                     p.barcode,
                     p.sale_price,
-                    p.quantity,
-                    s.name AS store_name
+
+                    SUM(
+                        COALESCE(ps.quantity, 0)
+                    ) AS quantity,
+
+                    GROUP_CONCAT(
+                        CONCAT(
+                            s.name,
+                            ': ',
+                            ps.quantity
+                        )
+                        ORDER BY s.name
+                        SEPARATOR ' | '
+                    ) AS stock_info
+
                 FROM products p
 
-                JOIN user_stores us
-                    ON us.store_id = p.store_id
+                INNER JOIN product_stores ps
+                    ON ps.product_id = p.id
 
-                JOIN stores s
-                    ON s.id = p.store_id
+                INNER JOIN user_stores us
+                    ON us.store_id = ps.store_id
+
+                INNER JOIN stores s
+                    ON s.id = ps.store_id
 
                 WHERE us.user_id = ?
+                AND p.archived = 0
                 AND (
                     p.name LIKE ?
                     OR p.sku LIKE ?
                     OR p.barcode LIKE ?
                 )
 
+                GROUP BY p.id
+
                 ORDER BY p.name
+
                 LIMIT 30
                 `,
                 [
