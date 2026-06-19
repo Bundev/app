@@ -1129,6 +1129,31 @@ app.get(
     }
 );
 
+// Роут автообновлени чеков
+app.get('/sales/latest', auth, async (req, res) => {
+
+    const [sales] =
+        await db.query(`
+            SELECT
+                s.id,
+                s.invoice_number,
+                s.total,
+                s.status,
+                s.created_at,
+                c.name AS customer_name
+            FROM sales s
+
+            LEFT JOIN customers c
+                ON c.id = s.customer_id
+
+            ORDER BY s.id DESC
+            LIMIT 10
+        `);
+
+    res.json(sales);
+
+});
+
 //Роут Сохранение чека
 app.post('/sales/save', auth, async (req, res) => {
 

@@ -107,16 +107,17 @@
 
                         </thead>
 
-                        <tbody id="salesTable">
+                        <tbody id="salesTable" data-last-id="<%= sales[0]?.id || 0 %>">
 
                         <% sales.forEach(sale => { %>
 
                             <tr class="invoice-row" data-url="/sale/<%= sale.id %>"
-                             data-invoice="<%= sale.invoice_number %>"
+                            data-invoice="<%= sale.invoice_number %>"
                             data-customer="<%= sale.customer_name || '' %>"
                             data-total="<%= sale.total %>"
                             data-status="<%= sale.status %>"
-                            data-date="<%= new Date(sale.created_at).toISOString().split('T')[0] %>">
+                            data-date="<%= new Date(sale.created_at).toISOString().split('T')[0] %>" 
+                            >
 
                                 <td>
 
@@ -199,7 +200,7 @@
                                         <a
                                             href="/sales/print/<%= sale.id %>"
                                             class="btn btn-outline-success btn-sm"
-                                            title="Печать">
+                                            title="Печать" target="_blank">
 
                                             <i class="bi bi-printer"></i>
 
