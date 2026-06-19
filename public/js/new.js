@@ -325,7 +325,7 @@ function addProductToInvoice(product) {
             <td
                 class="product-name"
                 data-id="${product.id}"
-                title='${product.name}'>
+                title='${product.name}' data-name='${product.name}'>
                 ${product.name}
 
             </td>
@@ -439,35 +439,6 @@ document
     );
 
 
-
-
-
-
-// const cashInput = document.getElementById('cash');
-
-// cashInput.addEventListener('input', calculateChange);
-
-// function calculateChange() {
-
-//     const cashInput = document.getElementById('cash');
-
-//     if (!cashInput.value) {
-
-//         document.getElementById('change').textContent = '0.00 ₴';
-
-//         return;
-//     }
-
-//     const total = Number(
-//         document.getElementById('total-sum').textContent
-//     );
-
-//     const cash = Number(cashInput.value);
-
-    
-//     document.getElementById('change').textContent =
-//     Math.max(cash - total, 0).toFixed(2)+ ' ₴';
-// }
 
 document.addEventListener('click', e => {
 
@@ -836,3 +807,53 @@ document
 
         }
     );
+
+// Копирует название товара
+document.addEventListener(
+    'click',
+    async e => {
+
+        const cell =
+            e.target.closest(
+                '.product-name'
+            );
+
+        if (!cell) {
+            return;
+        }
+
+        try {
+
+            let name =
+                (cell.dataset.name ||
+                 cell.textContent)
+                .trim();
+
+            name = name.replace(
+                /,\s*(шт|м|кг|уп|л)\s*$/i,
+                ''
+            );
+
+            await navigator.clipboard
+                .writeText(name);
+
+            cell.classList.add(
+                'copied'
+            );
+
+            setTimeout(() => {
+
+                cell.classList.remove(
+                    'copied'
+                );
+
+            }, 1000);
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
+);

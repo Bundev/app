@@ -2330,15 +2330,39 @@ app.get('/api/products/search', auth, async (req, res) => {
 
                     GROUP BY p.id
 
-                    ORDER BY p.name
+                    ORDER BY
+
+                        CASE
+
+                            WHEN p.barcode = ?
+                                THEN 0
+
+                            WHEN p.sku = ?
+                                THEN 1
+
+                            WHEN p.name LIKE ?
+                                THEN 2
+
+                            ELSE 3
+
+                        END,
+
+                        p.sale_price ASC,
+
+                        p.name ASC
 
                     LIMIT 30
                     `,
                     [
                         companyId,
+
                         `%${q}%`,
                         `%${q}%`,
-                        `%${q}%`
+                        `%${q}%`,
+
+                        q,
+                        q,
+                        `${q}%`
                     ]
                 );
 
@@ -2392,15 +2416,39 @@ app.get('/api/products/search', auth, async (req, res) => {
 
                 GROUP BY p.id
 
-                ORDER BY p.name
+                ORDER BY
+
+                    CASE
+
+                        WHEN p.barcode = ?
+                            THEN 0
+
+                        WHEN p.sku = ?
+                            THEN 1
+
+                        WHEN p.name LIKE ?
+                            THEN 2
+
+                        ELSE 3
+
+                    END,
+
+                    p.sale_price ASC,
+
+                    p.name ASC
 
                 LIMIT 30
                 `,
                 [
                     req.session.user.id,
+
                     `%${q}%`,
                     `%${q}%`,
-                    `%${q}%`
+                    `%${q}%`,
+
+                    q,
+                    q,
+                    `${q}%`
                 ]
             );
 

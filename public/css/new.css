@@ -276,9 +276,11 @@
 
 }
 
+.product-name {
+    cursor: pointer;
+}
 
-
-
-/*Заглловок*/
-
-
+.product-name.copied{
+    background:#d1e7dd;
+    transition:.3s;
+}
