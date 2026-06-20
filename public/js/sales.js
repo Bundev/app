@@ -258,6 +258,7 @@ async function loadLatestSales() {
                                 ${new Date(sale.created_at).toLocaleTimeString(
                                     'ru-RU',
                                     {
+                                        timeZone: 'Europe/Kyiv',
                                         hour: '2-digit',
                                         minute: '2-digit'
                                     }
