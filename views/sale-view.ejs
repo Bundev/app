@@ -79,7 +79,12 @@
                             <div class="fw-bold">
 
                                 <%= new Date(sale.created_at)
-                                    .toLocaleString('ru-RU') %>
+                                    .toLocaleString('ru-RU',
+                                    {
+                                        timeZone: 'Europe/Kyiv',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    }) %>
 
                             </div>
 
