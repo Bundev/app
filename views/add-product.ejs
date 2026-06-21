@@ -2,319 +2,477 @@
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
 <div class="col content">
-    <div class="card shadow-sm border-0">
-        <div class="card-header">
+
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-white">
+
+        <div class="d-flex justify-content-between align-items-center">
 
             <h4 class="mb-0">
-                Добавление товара
+
+                <i class="bi bi-box-seam text-primary"></i>
+                Новый товар
+
             </h4>
 
-        </div>
-
-        <div class="card-body">
-
-            <form
-                method="POST"
-                action="/products/add"
-                enctype="multipart/form-data">
-
-                <div class="row">
-                    <div class="text-center mb-3">
-
-                        <img
-                                id="preview"
-                                src="/img/no-image.png"
-                                class="img-thumbnail"
-                                style="max-height:250px">
-
-                    </div>
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-
-                            Фото товара
-
-                        </label>
-
-                        <input
-                            type="file"
-                            name="image"
-                            class="form-control"
-                            accept="image/*">
-
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Категория</label>
-                        <div class="input-group">
-                            <div class="position-relative">
-
-                                <input
-                                    type="hidden"
-                                    id="category_id"
-                                    name="category_id">
-
-                                <input
-                                    type="text"
-                                    id="category_name"
-                                    class="form-control"
-                                    autocomplete="off"
-                                    placeholder="Категория" required>
-
-                                <div
-                                    id="categoryList"
-                                    class="list-group position-absolute w-100 d-none">
-                                </div>
-
-                            </div>
-                            <script>
-                            const categories = <%- JSON.stringify(categories) %>;
-                            </script>
-
-                            <button
-                                type="button"
-                                class="btn btn-outline-primary"
-                                data-bs-toggle="modal"
-                                data-bs-target="#categoryModal">
-                                +
-                            </button>
-
-                        </div>
-                    </div>
-                    <div class="col-md-8 mb-3">
-
-                        <label class="form-label">
-
-                            Название товара
-
-                        </label>
-
-                        <input
-                            type="text"
-                            name="name"
-                            class="form-control"
-                            value=""
-                            required>
-
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Артикул
-
-                        </label>
-
-                        <input
-                            type="text"
-                            name="sku"
-                            class="form-control"
-                            value="">
-
-                    </div>
-                    
-
-                    
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Штрихкод
-
-                        </label>
-
-                        <div class="input-group">
-                            <button
-                                    type="button"
-                                    id="scanBtn"
-                                    class="btn btn-outline-primary d-md-none" title="Сканер штрихкод">
-
-                                    <i class="bi bi-upc-scan"></i>
-
-                                </button>
-                            <input
-                                type="text"
-                                id="barcode"
-                                name="barcode"
-                                class="form-control"
-                                value="">
-
-                            <button
-                                type="button"
-                                class="btn btn-outline-primary"
-                                onclick="generateBarcode()" title="Генратор штрихкод">
-
-                                <i class="bi bi-upc"></i>
-
-                            </button>
-
-                        </div>
-                        <div id="scannerModal">
-
-                                <div class="scanner-content">
-
-                                    <div class="scanner-header">
-
-                                        <span>
-                                            📷 Сканирование товара
-                                        </span>
-
-                                        <button
-                                            id="closeScanner"
-                                            type="button">
-
-                                            ✕
-                                        </button>
-
-                                    </div>
-
-                                    <div id="reader"></div>
-
-                                    <div class="scanner-footer">
-
-                                        Наведите камеру на штрихкод
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                    </div>
-
-
-
-
-
-
-                    
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Закупочная цена
-
-                        </label>
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="purchase_price"
-                            id="purchase_price"
-                            class="form-control"
-                            value="" required>
-
-                    </div>
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-
-                            Цена продажи
-
-                        </label>
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="sale_price"
-                            id="sale_price"
-                            class="form-control"
-                            value="" required>
-
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Наценка (%)</label>
-                        <input
-                            type="text"
-                            id="markup_percent"
-                            class="form-control"
-                            readonly>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Прибыль (грн) <small id="profitStatus"></small></label>
-                        <input
-                            type="text"
-                            id="profit_amount"
-                            class="form-control"
-                            readonly>
-                    </div>
-                    
-<div class="col-md-4 mb-3">
-
-<table class="table">
-
-<tr>
-    <th>Магазин</th>
-    <th>Остаток</th>
-</tr>
-
-<% stores.forEach(store => { %>
-
-<tr>
-
-    <td><%= store.name %></td>
-
-    <td>
-
-        <input
-            type="number"
-            name="quantity_<%= store.id %>"
-            class="form-control">
-
-    </td>
-
-</tr>
-
-<% }) %>
-
-</table>
-</div>
-
-                    <div class="col-12 mb-3">
-
-                        <label class="form-label">
-
-                            Описание
-
-                        </label>
-
-                        <textarea
-                            name="description"
-                            rows="5"
-                            class="form-control"></textarea>
-
-                    </div>
-
-                </div>
-
-                <div class="d-flex gap-2">
-
-                    <button
-                        type="submit"
-                        class="btn btn-success">
-
-                        💾 Сохранить
-
-                    </button>
-
-                    <a
-                        href="/products"
-                        class="btn btn-secondary">
-
-                        Отмена
-
-                    </a>
-
-                </div>
-
-            </form>
+        
 
         </div>
 
     </div>
+    <form
+        method="POST"
+        action="/products/add"
+        enctype="multipart/form-data">
+        <div class="card-body">
+
+            <div class="row g-4">
+
+                <!-- Фото -->
+
+                <div class="col-lg-4">
+
+                    <div class="card shadow-sm border-0">
+
+                        <div class="card-body text-center">
+
+                            <img
+                                id="preview"
+                                src="/img/no-image.png"
+                                class="img-fluid rounded border"
+                                style="
+                                    width:100%;
+                                    max-height:320px;
+                                    object-fit:contain;
+                                ">
+
+                            <div class="mt-3">
+
+                                <input
+                                    type="file"
+                                    name="image"
+                                    accept="image/*"
+                                    capture="environment"
+                                    class="form-control">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Основная информация -->
+
+                <div class="col-lg-8">
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+
+                            <label class="form-label">
+
+                                Название товара
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="name"
+                                class="form-control form-control-lg"
+                                value=""
+                                required>
+
+                        </div>
+
+                        <div class="col-md-8">
+
+                            <label class="form-label">
+
+                                Категория
+
+                            </label>
+
+                            <div class="input-group ">
+                                <div class="position-relative flex-grow-1">
+                                    <input
+                                        type="hidden"
+                                        id="category_id"
+                                        name="category_id"
+                                        value="">
+
+                                    <input
+                                        type="text"
+                                        id="category_name"
+                                        class="form-control"
+                                        autocomplete="off"
+                                        value=""
+                                        required>
+
+                                    
+
+                                
+                                    <script>
+                                        const categories = <%- JSON.stringify(categories) %>;
+                                    </script>
+                                    <div
+                                        id="categoryList"
+                                        class="list-group position-absolute w-100 d-none">
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#categoryModal">
+
+                                    <i class="bi bi-plus-lg"></i>
+
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <label class="form-label">
+
+                                Артикул
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="sku"
+                                class="form-control"
+                                value="">
+
+                        </div>
+
+                        <div class="col-md-8">
+
+                            <label class="form-label">
+
+                                Штрихкод
+
+                            </label>
+
+                            <div class="input-group">
+
+                                <input
+                                    type="text"
+                                    id="barcode"
+                                    name="barcode"
+                                    class="form-control"
+                                    value="">
+
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-primary"
+                                    onclick="generateBarcode()">
+
+                                    <i class="bi bi-upc"></i>
+
+                                </button>
+
+                                <button
+                                    type="button"
+                                    id="scanBtn"
+                                    class="btn btn-outline-success">
+
+                                    <i class="bi bi-upc-scan"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                       <%#  <div class="col-md-4">
+
+                            <label class="form-label">
+
+                                Место на складе
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="location"
+                                class="form-control"
+                                placeholder="Стеллаж A-3" value="">
+
+                        </div> %>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Финансы -->
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">
+
+                💰 Финансовые показатели
+
+            </h5>
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+
+                        Закупочная цена
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+
+                            ₴
+
+                        </span>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="purchase_price"
+                            name="purchase_price"
+                            class="form-control"
+                            value="">
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+
+                        Цена продажи
+
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+
+                            ₴
+
+                        </span>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="sale_price"
+                            name="sale_price"
+                            class="form-control"
+                            value="">
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="card border-warning h-100">
+
+                        <div class="card-body text-center">
+
+                            <small class="text-muted">
+
+                                Наценка
+
+                            </small>
+
+                            <h4
+                                id="markup_percent"
+                                class="text-warning">
+
+                                0%
+
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="card border-success h-100">
+
+                        <div class="card-body text-center">
+
+                            <small class="text-muted">
+
+                                Прибыль 
+
+                            </small>
+
+                            <h4
+                                id="profit_amount"
+                                class="text-success">
+
+                                0 ₴
+
+                            </h4>
+
+                            <div id="profitStatus"></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Остатки -->
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">
+
+                📦 Остатки по магазинам
+
+            </h5>
+
+            <div class="row g-3">
+
+                <% stores.forEach(store => { %>
+
+                <div class="col-md-4">
+
+                    <div class="card shadow-sm border-0">
+                    <div class="card-body">
+
+                        <div class="fw-bold mb-2">
+                            <%= store.name %>
+                        </div>
+
+                        <label class="form-label">
+                            Остаток
+                        </label>
+
+                        <input
+                            type="number"
+                            min="0"
+                            class="form-control"
+                            name="quantity_<%= store.id %>"
+                            value="<%= store.quantity %>">
+
+                        <label class="form-label mt-2">
+                            Место хранения
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="location_<%= store.id %>"
+                            value="<%= store.location || '' %>"
+                            placeholder="Стеллаж A-2">
+
+                    </div>
+
+                    </div>
+
+                </div>
+
+                <% }) %>
+
+            </div>
+
+
+            <hr class="my-4">
+
+            <h5 class="mb-3">
+                📝 Описание товара
+            </h5>
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <textarea
+                        name="description"
+                        class="form-control"
+                        rows="6"
+                        placeholder="Например:
+                                    Материал: латунь
+                                    Диаметр: 32 мм
+                                    Резьба: внутренняя/наружная
+                                    Производитель: KOER
+                                    Страна: Чехия">
+                                
+                    </textarea>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-footer bg-white text-end">
+
+            <button
+                type="submit"
+                class="btn btn-success btn-lg">
+
+                <i class="bi bi-save"></i>
+
+                Сохранить товар
+
+            </button>
+
+        </div>
+    </form>
 </div>
+
+
+
+
+
+
+
+
+<div id="scannerModal">
+
+    <div class="scanner-content">
+
+        <div class="scanner-header">
+
+            <span>
+                📷 Сканирование товара
+            </span>
+
+            <button
+                id="closeScanner"
+                type="button">
+
+                ✕
+            </button>
+
+        </div>
+
+        <div id="reader"></div>
+
+        <div class="scanner-footer">
+
+            Наведите камеру на штрихкод
+
+        </div>
+
+    </div>
+
+</div>
+
 <div class="modal fade" id="categoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">

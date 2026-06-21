@@ -1568,6 +1568,8 @@ app.get('/products/add', auth, async (req, res) => {
         [req.session.user.company_id]
     );
 
+
+
     res.render('add-product', {
         titleKey: 'title.addProducts',
         activeMenu: 'products',
@@ -1617,7 +1619,8 @@ app.post(
                 barcode,
                 purchase_price,
                 sale_price,
-                description
+                description,
+                location,
             } = req.body;
 
             const image = req.file
@@ -1673,7 +1676,15 @@ app.post(
                         ]
                     ) || 0;
 
-                if (quantity <= 0) {
+                const location =
+                    req.body[
+                        `location_${store.id}`
+                    ] || '';
+
+                if (
+                    quantity <= 0 &&
+                    !location.trim()
+                ) {
                     continue;
                 }
 
@@ -1683,16 +1694,19 @@ app.post(
                     (
                         product_id,
                         store_id,
-                        quantity
+                        quantity,
+                        location
                     )
-                    VALUES (?, ?, ?)
+                    VALUES (?, ?, ?, ?)
                     `,
                     [
                         productId,
                         store.id,
-                        quantity
+                        quantity,
+                        location
                     ]
                 );
+
             }
 
             req.session.productSuccess =
@@ -1742,47 +1756,61 @@ app.get(
 
         try {
 
-            const [rows] =
-                await db.execute(
-                    `
+            const [[product]] =
+                await db.query(`
                     SELECT
                         p.*,
-                        c.name AS category_name,
-                        s.name AS store_name
+                        c.name AS category_name
                     FROM products p
 
                     LEFT JOIN categories c
                         ON c.id = p.category_id
 
-                    LEFT JOIN stores s
-                        ON s.id = p.store_id
-
                     WHERE p.id = ?
-                    LIMIT 1
-                    `,
-                    [
-                        req.params.id
-                    ]
+                `, [
+                    req.params.id
+                ]);
+
+            if (!product) {
+
+                return res.status(404).send(
+                    'Товар не найден'
                 );
-
-            if (!rows.length) {
-
-                return res
-                    .status(404)
-                    .send(
-                        'Товар не найден'
-                    );
 
             }
 
-            res.render('product-view',{
-                    product: rows[0],
+            const [storeStocks] =
+                await db.query(`
+                    SELECT
+                        s.name,
+                        ps.quantity,
+                        ps.location
+                    FROM product_stores ps
+
+                    INNER JOIN stores s
+                        ON s.id = ps.store_id
+
+                    WHERE ps.product_id = ?
+
+                    ORDER BY s.name
+                `, [
+                    req.params.id
+                ]);
+
+            res.render(
+                'product-view',
+                {
+                    product,
+                    storeStocks,
+
                     activeMenu: 'products',
+
                     script: [
                         {
                             src: 'product-view.js'
                         }
                     ],
+
                     style: [
                         {
                             href: 'product-view.css'
@@ -1798,10 +1826,10 @@ app.get(
                             url: '/products'
                         },
                         {
-                            title: req.__('title.product-view'),
+                            title: req.__('title.product-edit'),
                             
                         }
-                    ]                  
+                    ]
                 }
             );
 
@@ -1867,7 +1895,8 @@ app.get(
                 SELECT
                     s.id,
                     s.name,
-                    COALESCE(ps.quantity, 0) AS quantity
+                    COALESCE(ps.quantity, 0) AS quantity,
+                    COALESCE(ps.location, '') AS location
                 FROM stores s
 
                 LEFT JOIN product_stores ps
@@ -1939,7 +1968,7 @@ app.post(
     async (req, res) => {
 
         try {
-
+            const productId = req.params.id;
             const {
                 name,
                 sku,
@@ -1947,7 +1976,8 @@ app.post(
                 category_id,
                 purchase_price,
                 sale_price,
-                description
+                description,
+                location,
             } = req.body;
 
             let sql = `
@@ -2010,25 +2040,45 @@ app.post(
 
                 const quantity =
                     Number(
-                        req.body[`quantity_${store.id}`]
+                        req.body[
+                            `quantity_${store.id}`
+                        ]
                     ) || 0;
 
-                await db.query(`
+                const location =
+                    req.body[
+                        `location_${store.id}`
+                    ] || '';
+
+                await db.query(
+                    `
                     INSERT INTO product_stores
                     (
                         product_id,
                         store_id,
-                        quantity
+                        quantity,
+                        location
                     )
-                    VALUES (?, ?, ?)
+                    VALUES
+                    (
+                        ?, ?, ?, ?
+                    )
 
                     ON DUPLICATE KEY UPDATE
-                    quantity = VALUES(quantity)
-                `, [
-                    req.params.id,
-                    store.id,
-                    quantity
-                ]);
+
+                        quantity =
+                            VALUES(quantity),
+
+                        location =
+                            VALUES(location)
+                    `,
+                    [
+                        req.params.id,
+                        store.id,
+                        quantity,
+                        location
+                    ]
+                );
 
             }
 
@@ -2297,6 +2347,7 @@ app.get('/api/products/search', auth, async (req, res) => {
                         p.sku,
                         p.barcode,
                         p.sale_price,
+                        p.image,
 
                         SUM(
                             COALESCE(ps.quantity, 0)
@@ -2305,7 +2356,9 @@ app.get('/api/products/search', auth, async (req, res) => {
                         GROUP_CONCAT(
                             CONCAT(
                                 s.name,
-                                ': ',
+                                ' (',
+                                COALESCE(ps.location, '-'),
+                                ') : ',
                                 ps.quantity
                             )
                             ORDER BY s.name
@@ -2380,6 +2433,7 @@ app.get('/api/products/search', auth, async (req, res) => {
                     p.sku,
                     p.barcode,
                     p.sale_price,
+                    p.image,
 
                     SUM(
                         COALESCE(ps.quantity, 0)
@@ -2388,7 +2442,9 @@ app.get('/api/products/search', auth, async (req, res) => {
                     GROUP_CONCAT(
                         CONCAT(
                             s.name,
-                            ': ',
+                            ' (',
+                            COALESCE(ps.location, '-'),
+                            ') : ',
                             ps.quantity
                         )
                         ORDER BY s.name
@@ -2465,6 +2521,58 @@ app.get('/api/products/search', auth, async (req, res) => {
     }
 
 });
+
+app.get(
+    '/api/barcode/generate',
+    auth,
+    async (req, res) => {
+
+        try {
+
+            let barcode;
+
+            while (true) {
+
+                barcode =
+                    Math.floor(
+                        1000000000000 +
+                        Math.random() *
+                        9000000000000
+                    ).toString();
+
+                const [[exists]] =
+                    await db.query(
+                        `
+                        SELECT id
+                        FROM products
+                        WHERE barcode = ?
+                        LIMIT 1
+                        `,
+                        [barcode]
+                    );
+
+                if (!exists) {
+                    break;
+                }
+
+            }
+
+            res.json({
+                barcode
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).json({
+                success: false
+            });
+
+        }
+
+    }
+);
 
 app.post(
     '/products/barcode/:id',

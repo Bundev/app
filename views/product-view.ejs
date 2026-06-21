@@ -17,9 +17,23 @@
 
                 </div>
 
-                
+                <div class="mt-3">
+
+                    <a
+                        href="/products/edit/<%= product.id %>"
+                        class="btn btn-primary">
+
+                        <i class="bi bi-pencil"></i>
+                        Редактировать
+
+                    </a>
+
+                    
+
+                </div>                
 
             </div>
+
 
             <div class="row">
 
@@ -85,17 +99,7 @@
 
                                 </div>
 
-                                <div class="col-md-6 mb-3">
-
-                                    <small class="text-muted">
-                                        Магазин
-                                    </small>
-
-                                    <div class="fw-bold">
-                                        <%= product.store_name || '-' %>
-                                    </div>
-
-                                </div>
+                                
 
                                 <div class="col-md-6 mb-3">
 
@@ -121,37 +125,46 @@
 
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+<div class="col-md-6 mb-3">
 
-                                    <small class="text-muted">
-                                        Остаток
-                                    </small>
+    <small class="text-muted">
+        Прибыль
+    </small>
 
-                                    <div>
+    <div class="fw-bold text-success">
 
-                                        <% if(product.quantity > 10){ %>
+        <%= (
+            Number(product.sale_price) -
+            Number(product.purchase_price)
+        ).toFixed(2) %> ₴
 
-                                            <span class="badge bg-success">
-                                                <%= product.quantity %> шт
-                                            </span>
+    </div>
 
-                                        <% } else if(product.quantity > 0){ %>
+</div>
 
-                                            <span class="badge bg-warning text-dark">
-                                                <%= product.quantity %> шт
-                                            </span>
+<div class="col-md-6 mb-3">
 
-                                        <% } else { %>
+    <small class="text-muted">
+        Наценка
+    </small>
 
-                                            <span class="badge bg-danger">
-                                                Нет на складе
-                                            </span>
+    <div class="fw-bold text-warning">
 
-                                        <% } %>
+        <%= Number(product.purchase_price) > 0
+            ? (
+                (
+                    Number(product.sale_price) -
+                    Number(product.purchase_price)
+                ) /
+                Number(product.purchase_price) *
+                100
+            ).toFixed(1)
+            : 0
+        %> %
 
-                                    </div>
+    </div>
 
-                                </div>
+</div>
 
                                 <div class="col-md-6 mb-3">
 
@@ -170,7 +183,91 @@
                         </div>
 
                     </div>
+                    <div class="card shadow-sm border-0 mt-4 mb-4">
 
+                        <div class="card-header bg-white">
+
+                            <h5 class="mb-0">
+
+                                📦 Остатки по магазинам
+
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body p-0">
+
+                            <table class="table table-hover mb-0">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>Магазин</th>
+                                        <th>Остаток</th>
+                                        <th>Место хранения</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    <% storeStocks.forEach(store => { %>
+
+                                        <tr>
+
+                                            <td>
+                                                <%= store.name %>
+                                            </td>
+
+                                            <td>
+
+                                                <% if(store.quantity > 10){ %>
+
+                                                    <span class="badge bg-success">
+
+                                                        <%= store.quantity %>
+
+                                                    </span>
+
+                                                <% } else if(store.quantity > 0){ %>
+
+                                                    <span class="badge bg-warning text-dark">
+
+                                                        <%= store.quantity %>
+
+                                                    </span>
+
+                                                <% } else { %>
+
+                                                    <span class="badge bg-danger">
+
+                                                        0
+
+                                                    </span>
+
+                                                <% } %>
+
+                                            </td>
+
+                                            <td>
+
+                                                <%= store.location || '-' %>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <% }) %>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
                     <div class="card shadow-sm border-0">
 
                         <div class="card-header bg-white">

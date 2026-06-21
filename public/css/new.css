@@ -3,11 +3,41 @@
     border-radius: 0 6px 6px 0;
 }
 
+#imagePreview{
+    position:fixed;
+    width:400px;
+    height:400px;
+    background:#fff;
+    border-radius:12px;
+    border:1px solid #ddd;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+    display:none;
+    z-index:99999;
+}
+
+.product-image{
+    width:80px;
+    height:80px;
+    object-fit:contain;
+    cursor:zoom-in;
+}
+
 @media (max-width: 768px) {
-#product-search{
-    border-radius: 0;
+    #product-search{
+        border-radius: 0;
+    }
+
+    .search-product-photo{
+        width:70px;
+        height:70px;
+        object-fit:cover;
+        border-radius:8px;
+    }
 }
-}
+
 /* Таблица в новом счете */
 .table-sales {
     background: #fff;

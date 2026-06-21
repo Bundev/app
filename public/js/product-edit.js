@@ -1,11 +1,17 @@
-function generateBarcode() {
+async function generateBarcode() {
 
-    document
-        .getElementById(
-            'barcode'
-        )
-        .value =
-        Date.now();
+    const response =
+        await fetch(
+            '/api/barcode/generate'
+        );
+
+    const data =
+        await response.json();
+
+    document.getElementById(
+        'barcode'
+    ).value =
+        data.barcode;
 
 }
 
@@ -200,95 +206,149 @@ document.addEventListener('click', function(e) {
 
 //Автопересчет цены
 
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
 
-document.addEventListener('DOMContentLoaded', () => {
+        const purchaseInput =
+            document.getElementById(
+                'purchase_price'
+            );
 
-    const purchaseInput =
-        document.getElementById('purchase_price');
+        const saleInput =
+            document.getElementById(
+                'sale_price'
+            );
 
-    const saleInput =
-        document.getElementById('sale_price');
+        const markupElement =
+            document.getElementById(
+                'markup_percent'
+            );
 
-    const markupInput =
-        document.getElementById('markup_percent');
+        const profitElement =
+            document.getElementById(
+                'profit_amount'
+            );
 
-    const profitInput =
-        document.getElementById('profit_amount');
+        const profitStatus =
+            document.getElementById(
+                'profitStatus'
+            );
 
-    const profitStatus =
-    document.getElementById('profitStatus');
+        function calculateMargin() {
 
-    function calculateMargin() {
+            const purchase =
+                parseFloat(
+                    purchaseInput.value
+                ) || 0;
 
-        const purchase =
-            parseFloat(purchaseInput.value) || 0;
+            const sale =
+                parseFloat(
+                    saleInput.value
+                ) || 0;
 
-        const sale =
-            parseFloat(saleInput.value) || 0;
+            const profit =
+                sale - purchase;
 
-        const profit = sale - purchase;
+            let markup = 0;
 
-        let markup = 0;
+            if (purchase > 0) {
 
-        if (purchase > 0) {
+                markup =
+                    (
+                        profit /
+                        purchase
+                    ) * 100;
 
-            markup =
-                ((sale - purchase) / purchase) * 100;
+            }
+
+            // Наценка
+            markupElement.textContent =
+                markup.toFixed(1) + '%';
+
+            markupElement.classList.remove(
+                'text-success',
+                'text-warning',
+                'text-danger'
+            );
+
+            if (markup >= 30) {
+
+                markupElement.classList.add(
+                    'text-success'
+                );
+
+            }
+            else if (markup >= 10) {
+
+                markupElement.classList.add(
+                    'text-warning'
+                );
+
+            }
+            else {
+
+                markupElement.classList.add(
+                    'text-danger'
+                );
+
+            }
+
+            // Прибыль
+            profitElement.textContent =
+                profit.toFixed(2) +
+                ' ₴';
+
+            profitElement.classList.remove(
+                'text-success',
+                'text-danger',
+                'text-secondary'
+            );
+
+            if (profit > 0) {
+
+                profitElement.classList.add(
+                    'text-success'
+                );
+
+                profitStatus.innerHTML =
+                    '🟢 Прибыльный товар';
+
+            }
+            else if (profit < 0) {
+
+                profitElement.classList.add(
+                    'text-danger'
+                );
+
+                profitStatus.innerHTML =
+                    '🔴 Продажа ниже закупки';
+
+            }
+            else {
+
+                profitElement.classList.add(
+                    'text-secondary'
+                );
+
+                profitStatus.innerHTML =
+                    '⚪ Без прибыли';
+
+            }
 
         }
 
-        markupInput.value =
-            markup.toFixed(2);
-
-        profitInput.value =
-            profit.toFixed(2);
-        profitInput.classList.remove(
-            'text-success',
-            'text-danger'
+        purchaseInput.addEventListener(
+            'input',
+            calculateMargin
         );
-        if (profit > 0) {
-            profitInput.classList.add('text-success');
-        }
 
-        if (profit < 0) {
-            profitInput.classList.add('text-danger');
-        }
+        saleInput.addEventListener(
+            'input',
+            calculateMargin
+        );
 
-        if (profit > 0) {
-
-            profitInput.classList.add('text-success');
-
-            profitStatus.innerHTML =
-                '🟢 Прибыльный товар';
-
-        }
-        else if (profit < 0) {
-
-            profitInput.classList.add('text-danger');
-
-            profitStatus.innerHTML =
-                '🔴 Продажа ниже закупки';
-
-        }
-        else {
-
-            profitStatus.innerHTML =
-                '⚪ Без прибыли';
-
-        }
+        calculateMargin();
 
     }
-
-    purchaseInput.addEventListener(
-        'input',
-        calculateMargin
-    );
-
-    saleInput.addEventListener(
-        'input',
-        calculateMargin
-    );
-
-    calculateMargin();
-
-});
+);

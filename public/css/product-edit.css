@@ -1,19 +1,18 @@
-#categoryList {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+#categoryList{
+    position:absolute;
+    top:100%;
+    left:0;
+    width:100%;
 
-    z-index: 1050;
+    max-height:220px;
+    overflow-y:auto;
 
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-top: none;
+    background:#fff;
+    border:1px solid #dee2e6;
 
-    max-height: 220px;
-    overflow-y: auto;
+    z-index:1000;
 
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+    box-shadow:0 5px 15px rgba(0,0,0,.15);
 }
 
 #categoryList .list-group-item {
@@ -25,9 +24,7 @@
     background: #f8f9fa;
 }
 
-.input-group .position-relative {
-    flex: 1;
-}
+
 
 #category_name {
     border-radius: 6px 0 0 6px;

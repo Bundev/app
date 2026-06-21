@@ -1,6 +1,7 @@
 const productSearchResult = document.getElementById('searchresults');
 const searchInput = document.getElementById('product-search');
 const searchResults = document.getElementById('search-results');
+const imagePreview = document.getElementById('imagePreview');
 
 searchInput.addEventListener(
     'input',
@@ -37,57 +38,83 @@ searchInput.addEventListener(
                     'button'
                 );
 
-            item.type =
-                'button';
+            const qty = Number(product.quantity);
+
+            const stockColor =
+                qty > 10
+                    ? 'success'
+                    : qty > 0
+                    ? 'warning'
+                    : 'danger';
+
+            item.type = 'button';
 
             item.className =
-                'list-group-item list-group-item-action';
+                'list-group-item list-group-item-action py-3';
 
             item.innerHTML =
-                `
-                <div class="d-flex justify-content-between">
+            `
+            <div class="d-flex align-items-center">
 
-                    <div>
+                <img
+                    src="${product.image || '/img/no-photo.png'}"
+                    alt="${product.name}"
+                    class="product-image"
+                    style="
+                        width:80px;
+                        height:80px;
+                        object-fit:contain;
+                        background:#fff;
+                        border:1px solid #dee2e6;
+                        border-radius:8px;
+                        padding:4px;
+                    ">
 
-                        <strong>
-                            ${product.name}
-                        </strong>
+                <div class="flex-grow-1 px-3">
 
-                        <br>
+                    <div class="fw-bold mb-1">
 
-                        <small class="text-muted">
-
-                            Арт:
-                            ${product.sku || '-'}
-
-                            |
-                            ШК:
-                            ${product.barcode || '-'}
-
-                        </small>
+                        ${product.name}
 
                     </div>
 
-                    <div class="text-end">
+                    <div class="small text-muted">
 
-                        <strong>
+                        Арт:
+                        ${product.sku || '-'}
 
-                            ${product.sale_price} ₴
+                        |
+                        ШК:
+                        ${product.barcode || '-'}
 
-                        </strong>
+                    </div>
 
-                        <br>
+                    <div class="small text-primary mt-1">
 
-                        <small>
-
-                            ${product.stock_info || 'Нет остатков'}
-
-                        </small>
+                        📍 ${product.stock_info || 'Нет остатков'}
 
                     </div>
 
                 </div>
-                `;
+
+                <div class="text-end">
+
+                    <div class="fw-bold fs-5">
+
+                        ${Number(product.sale_price).toFixed(2)} ₴
+
+                    </div>
+
+                    <span class="badge bg-${stockColor} mt-2">
+
+                        ${qty} шт
+
+                    </span>
+
+                </div>
+
+            </div>
+            `;
 
             item.addEventListener(
                 'click',
@@ -103,6 +130,7 @@ searchInput.addEventListener(
 
                     searchResults.style.display =
                         'none';
+                    imagePreview.style.display = 'none';
                     searchInput.focus();
 
                 }
@@ -111,6 +139,49 @@ searchInput.addEventListener(
             searchResults.appendChild(
                 item
             );
+
+
+const img =
+    item.querySelector('.product-image');
+
+if (img) {
+
+    img.addEventListener('mouseenter', () => {
+
+        const preview =
+            document.getElementById(
+                'imagePreview'
+            );
+
+        preview.style.backgroundImage =
+            `url('${img.src}')`;
+
+        preview.style.display =
+            'block';
+
+    });
+
+    img.addEventListener('mousemove', e => {
+
+        const preview =
+            document.getElementById(
+                'imagePreview'
+            );
+
+        preview.style.left = '850px';
+        preview.style.top = '200px';
+
+    });
+
+    img.addEventListener('mouseleave', () => {
+
+        document.getElementById(
+            'imagePreview'
+        ).style.display = 'none';
+
+    });
+
+}
 
         });
 
@@ -174,6 +245,21 @@ searchInput.addEventListener(
                 first.click();
 
             }
+
+        }
+
+    }
+);
+
+document.addEventListener(
+    'keydown',
+    e => {
+
+        if (e.key === 'F2') {
+
+            document
+                .getElementById('product-search')
+                .focus();
 
         }
 
