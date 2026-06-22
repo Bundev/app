@@ -56,20 +56,14 @@
                 !isNaN(row[13])
             ) {
 
-                const skuMatch =
-                    row[4].match(
-                         /\(([^)]+)\)/
-                    );
+                
 
                 products.push({
 
                     category:
                         currentCategory,
 
-                    sku:
-                        skuMatch
-                            ? skuMatch[1]
-                            : null,
+                    sku: null,
 
                     name:row[4],
 
@@ -92,7 +86,7 @@
 
         }
 
-         let createdCount = 0;
+        let createdCount = 0;
         let updatedCount = 0;
         let categoriesCreated = 0;
         const connection =
@@ -228,7 +222,7 @@
 
             products.length = 0;
             products.push(
-                ...uniqueProducts.values()
+                uniqueProducts.values()
             );
 
 
@@ -261,7 +255,7 @@
                             Number(dbProduct.purchase_price) !== product.purchase_price ||
                             Number(dbProduct.sale_price) !== product.sale_price ||
                             Number(dbProduct.category_id) !== Number(categoryId) ||
-                            dbProduct.name !== product.name
+                            dbProduct.name.trim() !== product.name.trim()
                         ) {
 
                             await connection.execute(
@@ -306,28 +300,26 @@
                             (
                                 company_id,
                                 category_id,
-                                store_id,
+                                
                                 sku,
                                 name,
                                 purchase_price,
                                 sale_price,
-                                quantity,
+                            
                                 image
                             )
                             VALUES
                             (
-                                ?, ?, ?, ?, ?, ?, ?, ?, ?
+                                ?,  ?, ?, ?, ?, ?, ?
                             )
                             `,
                             [
                                 companyId,
                                 categoryId,
-                                storeId,
                                 product.sku,
                                 product.name,
                                 product.purchase_price,
                                 product.sale_price,
-                                0,
                                 '/img/no-image.png'
                             ]
                         );

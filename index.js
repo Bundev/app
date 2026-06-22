@@ -1874,8 +1874,11 @@ app.get(
                 LEFT JOIN categories c
                     ON c.id = p.category_id
 
+                LEFT JOIN product_stores ps
+                    ON ps.product_id = p.id
+
                 LEFT JOIN stores s
-                    ON s.id = p.store_id
+                    ON s.id = ps.store_id
 
                 WHERE p.id = ?
             `, [req.params.id]);
