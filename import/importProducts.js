@@ -70,12 +70,7 @@
                     purchase_price:
                         Number(row[13]),
 
-                    sale_price:
-                        Math.round(
-                            row[13] > 100
-                                ? row[13] * 1.10
-                                : row[13] * 1.20
-                        ),
+                    
 
                     quantity:
                         Number(row[14] || 0)
@@ -220,9 +215,11 @@
                 );
             }
 
+            
             products.length = 0;
+
             products.push(
-                uniqueProducts.values()
+                ...uniqueProducts.values()
             );
 
 
@@ -249,11 +246,36 @@
                         ) || null
                         : null;
 
+
+                let salePrice;
+
+                if (
+                    [87, 88, 89, 90, 91].includes(categoryId)
+                ) {
+
+                    // Смесители
+                    salePrice = 
+                        Math.round(
+                            product.purchase_price
+                        );
+
+                } else {
+
+                    // Остальные товары
+                    salePrice =
+                        Math.round(
+                            product.purchase_price > 100
+                                ? product.purchase_price * 1.10
+                                : product.purchase_price * 1.20
+                        );
+
+                }
+
                 if (dbProduct) {
 
                         if (
                             Number(dbProduct.purchase_price) !== product.purchase_price ||
-                            Number(dbProduct.sale_price) !== product.sale_price ||
+                            Number(dbProduct.sale_price) !== salePrice ||
                             Number(dbProduct.category_id) !== Number(categoryId) ||
                             dbProduct.name.trim() !== product.name.trim()
                         ) {
@@ -272,7 +294,7 @@
                                     categoryId,
                                     product.name,
                                     product.purchase_price,
-                                    product.sale_price,
+                                    salePrice,
                                     productId
                                 ]
                             );
@@ -300,12 +322,10 @@
                             (
                                 company_id,
                                 category_id,
-                                
                                 sku,
                                 name,
                                 purchase_price,
                                 sale_price,
-                            
                                 image
                             )
                             VALUES
@@ -319,7 +339,7 @@
                                 product.sku,
                                 product.name,
                                 product.purchase_price,
-                                product.sale_price,
+                                salePrice,
                                 '/img/no-image.png'
                             ]
                         );

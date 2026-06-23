@@ -8,10 +8,7 @@
                 🧾 Новый чек
             </h1>
 
-            <span class="badge bg-primary fs-4">
-                <%= invoiceNumber %>
-            </span>
-
+           
         </div>
           <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
@@ -64,36 +61,7 @@
 
                         </div>
 
-                        <div id="scannerModal">
-
-                            <div class="scanner-content">
-
-                                <div class="scanner-header">
-
-                                    <span>
-                                        📷 Сканирование товара
-                                    </span>
-
-                                    <button
-                                        id="closeScanner"
-                                        type="button">
-
-                                        ✕
-                                    </button>
-
-                                </div>
-
-                                <div id="reader"></div>
-
-                                <div class="scanner-footer">
-
-                                    Наведите камеру на штрихкод
-
-                                </div>
-
-                            </div>
-
-                        </div>
+                        
                         <div id="imagePreview"></div>
                         <div
                             id="search-results"
@@ -240,4 +208,35 @@
                 </div>
             </div>
         </div>
+
+<div id="scannerModal">
+
+    <div class="scanner-content">
+
+        <div class="scanner-header">
+
+            <span>
+                📷 Сканирование товара
+            </span>
+
+            <button
+                id="closeScanner"
+                type="button">
+
+                ✕
+            </button>
+
+        </div>
+
+        <div id="reader"></div>
+
+        <div class="scanner-footer">
+
+            Наведите камеру на штрихкод
+
+        </div>
+
+    </div>
+
+</div>
     <%- include('blocks/footer') -%>

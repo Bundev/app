@@ -1,4 +1,4 @@
-const productSearchResult = document.getElementById('searchresults');
+
 const searchInput = document.getElementById('product-search');
 const searchResults = document.getElementById('search-results');
 const imagePreview = document.getElementById('imagePreview');
@@ -9,7 +9,7 @@ searchInput.addEventListener(
 
         const query =
             searchInput.value.trim();
-
+        
         if (query.length < 2) {
             
             searchResults.style.display =
@@ -20,6 +20,8 @@ searchInput.addEventListener(
 
         }
 
+        const currentQuery = query;
+
         const response =
             await fetch(
                 `/api/products/search?q=${encodeURIComponent(query)}`
@@ -27,7 +29,14 @@ searchInput.addEventListener(
 
         const products =
             await response.json();
+            if (
+                    currentQuery !==
+                    searchInput.value.trim()
+                ) {
 
+                    return;
+
+            }
         searchResults.innerHTML =
             '';
 
@@ -141,68 +150,69 @@ searchInput.addEventListener(
             );
 
 
-const img =
-    item.querySelector('.product-image');
+            const img =
+                item.querySelector('.product-image');
 
-if (img) {
+            if (img) {
 
-    img.addEventListener('mouseenter', () => {
+                img.addEventListener('mouseenter', () => {
 
-        const preview =
-            document.getElementById(
-                'imagePreview'
-            );
+                    const preview =
+                        document.getElementById(
+                            'imagePreview'
+                        );
 
-        preview.style.backgroundImage =
-            `url('${img.src}')`;
+                    preview.style.backgroundImage =
+                        `url('${img.src}')`;
 
-        preview.style.display =
-            'block';
+                    preview.style.display =
+                        'block';
 
-    });
+                });
 
-    img.addEventListener('mousemove', e => {
+                img.addEventListener('mousemove', e => {
 
-        const preview =
-            document.getElementById(
-                'imagePreview'
-            );
+                    const preview =
+                        document.getElementById(
+                            'imagePreview'
+                        );
 
-        preview.style.left = '850px';
-        preview.style.top = '200px';
+                    preview.style.left = '850px';
+                    preview.style.top = '200px';
 
-    });
+                });
 
-    img.addEventListener('mouseleave', () => {
+                img.addEventListener('mouseleave', () => {
 
-        document.getElementById(
-            'imagePreview'
-        ).style.display = 'none';
+                    document.getElementById(
+                        'imagePreview'
+                    ).style.display = 'none';
 
-    });
+                });
 
-}
+            }
 
         });
 
         searchResults.style.display =
-            products.length
+            products.length > 0
                 ? 'block'
                 : 'none';
 
     }
 );
 
-searchInput.addEventListener(
-    'focus',
-    () => {
+document.addEventListener(
+    'click',
+    e => {
 
         if (
-            searchInput.value.trim().length < 2
+            !searchInput.contains(e.target)
+            &&
+            !searchResults.contains(e.target)
         ) {
-
-            searchResults.innerHTML = '';
-
+            searchInput.value =
+                        '';
             searchResults.style.display =
                 'none';
 
@@ -211,21 +221,39 @@ searchInput.addEventListener(
     }
 );
 
-searchInput.addEventListener(
-    'blur',
-    () => {
+// searchInput.addEventListener(
+//     'focus',
+//     () => {
 
-        setTimeout(() => {
+//         if (
+//             searchInput.value.trim().length < 2
+//         ) {
 
-            searchResults.innerHTML = '';
+//             searchResults.innerHTML = '';
 
-            searchResults.style.display =
-                'none';
+//             searchResults.style.display =
+//                 'none';
 
-        }, 150);
+//         }
 
-    }
-);
+//     }
+// );
+
+// searchInput.addEventListener(
+//     'blur',
+//     () => {
+
+//         setTimeout(() => {
+
+//             searchResults.innerHTML = '';
+
+//             searchResults.style.display =
+//                 'none';
+
+//         }, 150);
+
+//     }
+// );
 
 searchInput.addEventListener(
     'keydown',
@@ -265,23 +293,7 @@ document.addEventListener(
 
     }
 );
-document.addEventListener(
-    'click',
-    e => {
 
-        if (
-            !searchInput.contains(e.target)
-            &&
-            !searchResults.contains(e.target)
-        ) {
-
-            searchResults.style.display =
-                'none';
-
-        }
-
-    }
-);
 
 
 function updateTotals() {

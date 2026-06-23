@@ -2325,7 +2325,7 @@ app.get('/api/products/search', auth, async (req, res) => {
 
         const q =
             req.query.q?.trim() || '';
-
+        
         if (q.length < 2) {
 
             return res.json([]);
