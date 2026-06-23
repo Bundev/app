@@ -477,7 +477,7 @@ function addProductToInvoice(product) {
                     type="button"
                     class="btn btn-outline-danger btn-sm btn-remove remove">
 
-                    <i class="bi bi-trash"></i>
+                    <i class="bi bi-x"></i>
 
                 </button>
             </td>
