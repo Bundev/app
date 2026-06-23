@@ -1974,15 +1974,15 @@ app.post(
             const productId = req.params.id;
             const {
                 name,
-                sku,
-                barcode,
                 category_id,
                 purchase_price,
                 sale_price,
                 description,
                 location,
             } = req.body;
-
+            const sku = req.body.sku?.trim() || null;
+            const barcode = req.body.barcode?.trim() || null;
+            
             let sql = `
                 UPDATE products
                 SET
@@ -1998,7 +1998,7 @@ app.post(
             const params = [
                 name,
                 sku,
-                barcode,
+                barcode ,
                 category_id,
                 purchase_price,
                 sale_price,
@@ -2325,7 +2325,7 @@ app.get('/api/products/search', auth, async (req, res) => {
 
         const q =
             req.query.q?.trim() || '';
-        
+
         if (q.length < 2) {
 
             return res.json([]);
