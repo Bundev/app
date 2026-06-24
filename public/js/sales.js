@@ -1,170 +1,223 @@
-const filterInvoice =
-    document.getElementById(
-        'filterInvoice'
-    );
+// const filterInvoice =
+//     document.getElementById(
+//         'filterInvoice'
+//     );
 
-const filterCustomer =
-    document.getElementById(
-        'filterCustomer'
-    );
+// const filterCustomer =
+//     document.getElementById(
+//         'filterCustomer'
+//     );
 
-const filterAmount =
-    document.getElementById(
-        'filterAmount'
-    );
+// const filterAmount =
+//     document.getElementById(
+//         'filterAmount'
+//     );
 
-const filterStatus =
-    document.getElementById(
-        'filterStatus'
-    );
+// const filterStatus =
+//     document.getElementById(
+//         'filterStatus'
+//     );
 
-const dateFrom =
-    document.getElementById(
-        'dateFrom'
-    );
+// const dateFrom =
+//     document.getElementById(
+//         'dateFrom'
+//     );
 
-const dateTo =
-    document.getElementById(
-        'dateTo'
-    );
+// const dateTo =
+//     document.getElementById(
+//         'dateTo'
+//     );
 
-function filterSales() {
+// function filterSales() {
 
-    const invoice =
-        filterInvoice.value
-            .toLowerCase();
+//     const invoice =
+//         filterInvoice.value
+//             .toLowerCase();
 
-    const customer =
-        filterCustomer.value
-            .toLowerCase();
+//     const customer =
+//         filterCustomer.value
+//             .toLowerCase();
 
-    const amount =
-        filterAmount.value;
+//     const amount =
+//         filterAmount.value;
 
-    const status =
-        filterStatus.value;
+//     const status =
+//         filterStatus.value;
 
-    const from =
-        dateFrom.value;
+//     const from =
+//         dateFrom.value;
 
-    const to =
-        dateTo.value;
+//     const to =
+//         dateTo.value;
 
-    document
-        .querySelectorAll(
-            '#salesTable tr'
-        )
-        .forEach(row => {
+//     document
+//         .querySelectorAll(
+//             '#salesTable tr'
+//         )
+//         .forEach(row => {
 
-            const rowInvoice =
-                row.dataset.invoice
-                    .toLowerCase();
+//             const rowInvoice =
+//                 row.dataset.invoice
+//                     .toLowerCase();
 
-            const rowCustomer =
-                row.dataset.customer
-                    .toLowerCase();
+//             const rowCustomer =
+//                 row.dataset.customer
+//                     .toLowerCase();
 
-            const rowAmount =
-                Number(
-                    row.dataset.total
-                );
+//             const rowAmount =
+//                 Number(
+//                     row.dataset.total
+//                 );
 
-            const rowStatus =
-                row.dataset.status;
+//             const rowStatus =
+//                 row.dataset.status;
 
-            const rowDate =
-                row.dataset.date;
+//             const rowDate =
+//                 row.dataset.date;
 
-            let dateMatch =
-                true;
+//             let dateMatch =
+//                 true;
 
-            if (from) {
+//             if (from) {
 
-                dateMatch =
-                    rowDate >= from;
+//                 dateMatch =
+//                     rowDate >= from;
 
+//             }
+
+//             if (to) {
+
+//                 dateMatch =
+//                     dateMatch &&
+//                     rowDate <= to;
+
+//             }
+
+//             const visible =
+
+//                 rowInvoice.includes(
+//                     invoice
+//                 )
+
+//                 &&
+
+//                 rowCustomer.includes(
+//                     customer
+//                 )
+
+//                 &&
+
+//                 (
+//                     !amount
+//                     ||
+//                     rowAmount >=
+//                     Number(amount)
+//                 )
+
+//                 &&
+
+//                 (
+//                     !status
+//                     ||
+//                     rowStatus === status
+//                 )
+
+//                 &&
+
+//                 dateMatch;
+
+//             row.style.display =
+//                 visible
+//                     ? ''
+//                     : 'none';
+
+//         });
+
+// }
+
+// filterInvoice.addEventListener(
+//     'input',
+//     filterSales
+// );
+
+// filterCustomer.addEventListener(
+//     'input',
+//     filterSales
+// );
+
+// filterAmount.addEventListener(
+//     'input',
+//     filterSales
+// );
+
+// filterStatus.addEventListener(
+//     'change',
+//     filterSales
+// );
+
+// dateFrom.addEventListener(
+//     'change',
+//     filterSales
+// );
+
+// dateTo.addEventListener(
+//     'change',
+//     filterSales
+// );
+
+document.addEventListener('DOMContentLoaded', () => {
+    const filterInvoice = document.getElementById('filterInvoice');
+    const filterCustomer = document.getElementById('filterCustomer');
+    const filterAmount = document.getElementById('filterAmount');
+    const filterStatus = document.getElementById('filterStatus');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+
+    function filterSales() {
+        const invoice = (filterInvoice.value || '').toLowerCase().trim();
+        const customer = (filterCustomer.value || '').toLowerCase().trim();
+        const amount = filterAmount.value ? Number(filterAmount.value) : null;
+        const status = filterStatus.value;
+        const from = dateFrom.value;
+        const to = dateTo.value;
+
+        // Фильтруем только строки внутри tbody, чтобы не зацепить шапку таблицы
+        document.querySelectorAll('#salesTable .invoice-row').forEach(row => {
+            // Безопасное приведение к строке через || '' на случай null в базе данных
+            const rowInvoice = (row.dataset.invoice || '').toLowerCase();
+            const rowCustomer = (row.dataset.customer || '').toLowerCase();
+            const rowAmount = Number(row.dataset.total || 0);
+            const rowStatus = row.dataset.status || '';
+            const rowDate = row.dataset.date || '';
+
+            // 1. Фильтр по датам
+            let dateMatch = true;
+            if (from) dateMatch = rowDate >= from;
+            if (to)   dateMatch = dateMatch && (rowDate <= to);
+
+            // 2. Проверка остальных условий
+            const invoiceMatch  = rowInvoice.includes(invoice);
+            const customerMatch = rowCustomer.includes(customer);
+            const amountMatch   = amount === null || rowAmount >= amount;
+            const statusMatch   = !status || rowStatus === status;
+
+            // Итоговый результат видимости строки
+            if (invoiceMatch && customerMatch && amountMatch && statusMatch && dateMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
-
-            if (to) {
-
-                dateMatch =
-                    dateMatch &&
-                    rowDate <= to;
-
-            }
-
-            const visible =
-
-                rowInvoice.includes(
-                    invoice
-                )
-
-                &&
-
-                rowCustomer.includes(
-                    customer
-                )
-
-                &&
-
-                (
-                    !amount
-                    ||
-                    rowAmount >=
-                    Number(amount)
-                )
-
-                &&
-
-                (
-                    !status
-                    ||
-                    rowStatus === status
-                )
-
-                &&
-
-                dateMatch;
-
-            row.style.display =
-                visible
-                    ? ''
-                    : 'none';
-
         });
+    }
 
-}
-
-filterInvoice.addEventListener(
-    'input',
-    filterSales
-);
-
-filterCustomer.addEventListener(
-    'input',
-    filterSales
-);
-
-filterAmount.addEventListener(
-    'input',
-    filterSales
-);
-
-filterStatus.addEventListener(
-    'change',
-    filterSales
-);
-
-dateFrom.addEventListener(
-    'change',
-    filterSales
-);
-
-dateTo.addEventListener(
-    'change',
-    filterSales
-);
-
+    // Слушатели событий
+    filterInvoice.addEventListener('input', filterSales);
+    filterCustomer.addEventListener('input', filterSales);
+    filterAmount.addEventListener('input', filterSales);
+    filterStatus.addEventListener('change', filterSales);
+    dateFrom.addEventListener('change', filterSales);
+    dateTo.addEventListener('change', filterSales);
+});
 
 
 // Автообновлеие чеков
