@@ -13,22 +13,37 @@
           <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body">
                     <div class="row g-2">
-                        
-                        <div class="col-12 col-md-5 ">
-                            
-                            <select class="form-select" id="customer">
-                            
+                        <div class="col-md-5">
+                            <label class="form-label">Покупатель / Клиент</label>
+                            <div class="input-group">
+                                <div class="position-relative flex-grow-1 d-flex align-items-center">
+                                    <input type="hidden" id="customer_id" name="customer_id" value="">
+                                    <input type="text" id="customer_name" class="form-control pe-5" autocomplete="off" value="Основной покупатель" title="Alt+C" required>
+                                    
+                                    <!-- Блок кнопок управления внутри инпута (крестик и карандаш) -->
+                                    <div class="position-absolute end-0 top-50 translate-middle-y d-flex gap-1 pe-2" style="z-index: 5;">
+                                        <!-- Кнопка редактирования (по умолчанию скрыта) -->
+                                        <button type="button" id="editCustomerBtn" class="btn p-1 text-primary border-0 bg-transparent" style="display: none;" title="Редактировать клиента">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <!-- Кнопка очистки -->
+                                        <button type="button" id="clearCustomerBtn" class="btn p-1 text-muted border-0 bg-transparent" style="display: none;">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
 
-                            <option value="" selected>
-                                Основной покупатель
-                            </option>
-
-                        </select>
-                        </div>
-                        <div class="col-12 col-md-2">
-                            <button class="btn btn-success w-100">
-                                + Клиент
-                            </button>
+                                    <div id="customerList" class="list-group position-absolute w-100 d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto; top: 100%;"></div>
+                                </div>
+                                
+                                <button 
+                                    type="button" 
+                                    class="btn btn-success" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#addCustomerModal"
+                                title="F4">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -48,7 +63,7 @@
                                 type="text"
                                 id="product-search"
                                 class="form-control"
-                                placeholder="Название, артикул или штрихкод">
+                                placeholder="Название, артикул или штрихкод" title="F2">
 
                             <button
                                 type="button"
@@ -126,7 +141,7 @@
                             style="width:120px"
                             value=""
                             min="0"
-                            placeholder="Получено">
+                            placeholder="Получено" title="F8">
 
                         <select
                             name="paymentMethod"
@@ -239,4 +254,95 @@
     </div>
 
 </div>
-    <%- include('blocks/footer') -%>
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerModalLabel">
+                    <i class="bi bi-person-plus-fill me-2"></i>Добавить нового клиента
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            
+            <form id="addCustomerForm" onsubmit="createCustomer(event)">
+                <div class="modal-body">
+                    
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label">Имя / Наименование <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="customerName" placeholder="Иван Иванов" required autocomplete="off">
+                        <div class="form-text">Обязательное поле для заполнения.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="customerPhone" class="form-label">Номер телефона</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" class="form-control" id="customerPhone" placeholder="+380983188450" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="customerEmail" class="form-label">Электронная почта (Email)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="customerEmail" placeholder="example@mail.com" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="customerDiscount" class="form-label">Персональная скидка (%)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="customerDiscount" min="0" max="100" step="0.5" placeholder="0">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Создать и выбрать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editCustomerModal" taxation="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование клиента</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCustomerForm">
+                <div class="modal-body">
+                    <!-- Скрытый ID редактируемого клиента -->
+                    <input type="hidden" id="edit_customer_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Имя / Компания *</label>
+                        <input type="text" id="edit_customer_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон</label>
+                        <input type="text" id="edit_customer_phone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="edit_customer_email" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Процент скидки (%)</label>
+                        <input type="number" id="edit_customer_discount" class="form-control" step="0.01" min="0" max="100">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<%- include('blocks/footer') -%>

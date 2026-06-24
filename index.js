@@ -1460,6 +1460,141 @@ app.get('/new', auth, async (req, res) => {
 
 });
 
+// Получение списка клиентов компании
+app.get('/api/customers', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+
+        // Запрашиваем клиентов именно этой компании (используем вашу таблицу customers)
+        const [customers] = await db.query(
+            `
+            SELECT id, name, phone, email, discount_percentage 
+            FROM customers 
+            WHERE company_id = ? 
+            ORDER BY name ASC
+            `,
+            [companyId]
+        );
+
+        return res.json({
+            success: true,
+            customers
+        });
+
+    } catch (error) {
+        console.error('Ошибка при получении клиентов:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Не удалось загрузить список клиентов'
+        });
+    }
+});
+// Роут для создания нового клиента
+app.post('/api/customers', auth, async (req, res) => {
+    try {
+        const { name, phone, email, discount_percentage, comment } = req.body;
+        const companyId = req.session.user.company_id;
+
+        // 1. Валидация обязательных полей
+        if (!name || !name.trim()) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Имя клиента обязательно для заполнения' 
+            });
+        }
+
+        // Очищаем телефон от лишних символов (пробелы, дефисы, скобки), если он передан
+        const cleanPhone = phone ? phone.replace(/\D/g, '') : null;
+
+        // 2. Проверка на дубликат (если телефон указан, проверяем внутри этой же компании)
+        if (cleanPhone) {
+            const [existingClient] = await db.query(
+                `SELECT id FROM customers WHERE phone = ? AND company_id = ? LIMIT 1`,
+                [cleanPhone, companyId]
+            );
+
+            if (existingClient.length > 0) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Клиент с таким номером телефона уже существует в вашей компании' 
+                });
+            }
+        }
+
+        // 3. Безопасное приведение типов для скидки
+        const discount = discount_percentage ? parseFloat(discount_percentage) : 0;
+
+        // 4. Вставка нового клиента в базу данных
+        const [result] = await db.query(
+            `
+            INSERT INTO customers 
+                (company_id, name, phone, email, discount_percentage, comment, created_at) 
+            VALUES 
+                (?, ?, ?, ?, ?, ?, NOW())
+            `,
+            [
+                companyId, 
+                name.trim(), 
+                cleanPhone, 
+                email?.trim() || null, 
+                discount, 
+                comment?.trim() || null
+            ]
+        );
+
+        // 5. Возвращаем созданного клиента
+        return res.status(201).json({
+            success: true,
+            message: 'Клиент успешно создан',
+            client: {
+                id: result.insertId,
+                name: name.trim(),
+                phone: cleanPhone,
+                email: email?.trim() || null,
+                discount_percentage: discount
+            }
+        });
+
+    } catch (error) {
+        console.error('Ошибка при создании клиента:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Внутренняя ошибка сервера при создании клиента'
+        });
+    }
+});
+app.put('/api/customers/:id', auth, async (req, res) => {
+    try {
+        const customerId = req.params.id;
+        const companyId = req.session.user.company_id;
+        const { name, phone, email, discount_percentage } = req.body;
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ success: false, message: 'Имя обязательно' });
+        }
+
+        const cleanPhone = phone ? phone.replace(/\D/g, '') : null;
+        const discount = discount_percentage ? parseFloat(discount_percentage) : 0;
+
+        // Обновляем только если клиент принадлежит текущей компании
+        await db.query(
+            `UPDATE customers 
+             SET name = ?, phone = ?, email = ?, discount_percentage = ?, updated_at = NOW() 
+             WHERE id = ? AND company_id = ?`,
+            [name.trim(), cleanPhone, email?.trim() || null, discount, customerId, companyId]
+        );
+
+        return res.json({
+            success: true,
+            message: 'Данные клиента обновлены',
+            client: { id: customerId, name: name.trim(), phone: cleanPhone, discount_percentage: discount }
+        });
+
+    } catch (error) {
+        console.error('Ошибка при обновлении клиента:', error);
+        return res.status(500).json({ success: false, message: 'Ошибка сервера при обновлении' });
+    }
+});
 
 // Роутер товаров
 app.get('/products', auth, async (req, res) => {
@@ -2320,209 +2455,91 @@ app.post('/products/import', auth, requireAdmin, uploadImport.single('excel'),as
     }
 );
 app.get('/api/products/search', auth, async (req, res) => {
-
     try {
-
-        const q =
-            req.query.q?.trim() || '';
-
+        const q = req.query.q?.trim() || '';
         if (q.length < 2) {
-
             return res.json([]);
-
         }
 
-        const companyId =
-            req.session.user.company_id;
+        const { id: userId, company_id: companyId, role } = req.session.user;
 
-        const role =
-            req.session.user.role;
+        // Базовая часть запроса для обеих ролей
+        let queryStr = `
+            SELECT
+                p.id,
+                p.name,
+                p.sku,
+                p.barcode,
+                p.sale_price,
+                p.image,
+                SUM(COALESCE(ps.quantity, 0)) AS quantity,
+                GROUP_CONCAT(
+                    CONCAT(s.name, ' (', COALESCE(ps.location, '-'), ') : ', COALESCE(ps.quantity, 0))
+                    ORDER BY s.name
+                    SEPARATOR ' | '
+                ) AS stock_info
+            FROM products p
+        `;
 
-        // Администратор компании
+        const queryParams = [];
+
         if (role === 'admin') {
-
-            const [products] =
-                await db.query(
-                    `
-                    SELECT
-                        p.id,
-                        p.name,
-                        p.sku,
-                        p.barcode,
-                        p.sale_price,
-                        p.image,
-
-                        SUM(
-                            COALESCE(ps.quantity, 0)
-                        ) AS quantity,
-
-                        GROUP_CONCAT(
-                            CONCAT(
-                                s.name,
-                                ' (',
-                                COALESCE(ps.location, '-'),
-                                ') : ',
-                                ps.quantity
-                            )
-                            ORDER BY s.name
-                            SEPARATOR ' | '
-                        ) AS stock_info
-
-                    FROM products p
-
-                    LEFT JOIN product_stores ps
-                        ON ps.product_id = p.id
-
-                    LEFT JOIN stores s
-                        ON s.id = ps.store_id
-
-                    WHERE s.company_id = ?
-                    AND p.archived = 0
-                    AND (
-                        p.name LIKE ?
-                        OR p.sku LIKE ?
-                        OR p.barcode LIKE ?
-                    )
-
-                    GROUP BY p.id
-
-                    ORDER BY
-
-                        CASE
-
-                            WHEN p.barcode = ?
-                                THEN 0
-
-                            WHEN p.sku = ?
-                                THEN 1
-
-                            WHEN p.name LIKE ?
-                                THEN 2
-
-                            ELSE 3
-
-                        END,
-
-                        p.sale_price ASC,
-
-                        p.name ASC
-
-                    LIMIT 30
-                    `,
-                    [
-                        companyId,
-
-                        `%${q}%`,
-                        `%${q}%`,
-                        `%${q}%`,
-
-                        q,
-                        q,
-                        `${q}%`
-                    ]
-                );
-
-            return res.json(products);
-
+            // Для админа джоиним все склады этой компании
+            queryStr += `
+                LEFT JOIN product_stores ps ON ps.product_id = p.id
+                LEFT JOIN stores s ON s.id = ps.store_id AND s.company_id = ?
+                WHERE p.company_id = ? AND p.archived = 0
+            `;
+            // Важно: s.company_id в условии JOIN, чтобы LEFT JOIN не ломался,
+            // а p.company_id в WHERE, чтобы искать товары только этой компании.
+            queryParams.push(companyId, companyId);
+        } else {
+            // Для менеджера/продавца жестко привязываемся к его доступным складам
+            queryStr += `
+                INNER JOIN product_stores ps ON ps.product_id = p.id
+                INNER JOIN user_stores us ON us.store_id = ps.store_id AND us.user_id = ?
+                INNER JOIN stores s ON s.id = ps.store_id
+                WHERE p.archived = 0
+            `;
+            queryParams.push(userId);
         }
 
-        // Менеджер / продавец
-        const [products] =
-            await db.query(
-                `
-                SELECT
-                    p.id,
-                    p.name,
-                    p.sku,
-                    p.barcode,
-                    p.sale_price,
-                    p.image,
+        // Общая часть условий поиска и сортировки
+        queryStr += `
+            AND (
+                p.name LIKE ?
+                OR p.sku LIKE ?
+                OR p.barcode LIKE ?
+            )
+            GROUP BY p.id
+            ORDER BY
+                CASE
+                    WHEN p.barcode = ? THEN 0
+                    WHEN p.sku = ? THEN 1
+                    WHEN p.name LIKE ? THEN 2
+                    ELSE 3
+                END,
+                p.sale_price ASC,
+                p.name ASC
+            LIMIT 30
+        `;
 
-                    SUM(
-                        COALESCE(ps.quantity, 0)
-                    ) AS quantity,
+        // Добавляем параметры для текстового поиска
+        queryParams.push(
+            `%${q}%`, `%${q}%`, `%${q}%`, // Для LIKE в WHERE
+            q, q, `${q}%`                  // Для CASE в ORDER BY
+        );
 
-                    GROUP_CONCAT(
-                        CONCAT(
-                            s.name,
-                            ' (',
-                            COALESCE(ps.location, '-'),
-                            ') : ',
-                            ps.quantity
-                        )
-                        ORDER BY s.name
-                        SEPARATOR ' | '
-                    ) AS stock_info
-
-                FROM products p
-
-                INNER JOIN product_stores ps
-                    ON ps.product_id = p.id
-
-                INNER JOIN user_stores us
-                    ON us.store_id = ps.store_id
-
-                INNER JOIN stores s
-                    ON s.id = ps.store_id
-
-                WHERE us.user_id = ?
-                AND p.archived = 0
-                AND (
-                    p.name LIKE ?
-                    OR p.sku LIKE ?
-                    OR p.barcode LIKE ?
-                )
-
-                GROUP BY p.id
-
-                ORDER BY
-
-                    CASE
-
-                        WHEN p.barcode = ?
-                            THEN 0
-
-                        WHEN p.sku = ?
-                            THEN 1
-
-                        WHEN p.name LIKE ?
-                            THEN 2
-
-                        ELSE 3
-
-                    END,
-
-                    p.sale_price ASC,
-
-                    p.name ASC
-
-                LIMIT 30
-                `,
-                [
-                    req.session.user.id,
-
-                    `%${q}%`,
-                    `%${q}%`,
-                    `%${q}%`,
-
-                    q,
-                    q,
-                    `${q}%`
-                ]
-            );
-
-        res.json(products);
+        const [products] = await db.query(queryStr, queryParams);
+        return res.json(products);
 
     } catch (error) {
-
-        console.error(error);
-
-        res.status(500).json({
-            success: false
+        console.error('Ошибка при поиске товаров:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Внутренняя ошибка сервера'
         });
-
     }
-
 });
 
 app.get(
@@ -3788,6 +3805,9 @@ doc
 
     }
 );
+
+
+
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });

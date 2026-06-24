@@ -38,6 +38,32 @@
     }
 }
 
+#search-results .list-group-item.active {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+#search-results .list-group-item.active .text-muted,
+#search-results .list-group-item.active .text-primary {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Красивая серая подсветка товара при выборе стрелочками */
+#search-results .list-group-item.active {
+    background-color: #f0f2f5 !important; /* Мягкий светло-серый фон */
+    border-color: #dee2e6 !important;     /* Стандартная рамка Bootstrap */
+    color: #212529 !important;            /* Темный цвет текста, чтобы всё отлично читалось */
+}
+
+/* Оставляем оригинальные цвета для подзаголовков внутри серого выделения */
+#search-results .list-group-item.active .text-muted {
+    color: #6c757d !important;
+}
+
+#search-results .list-group-item.active .text-primary {
+    color: #0d6efd !important; /* Синий акцент для локации/остатков */
+}
+
 /* Таблица в новом счете */
 .table-sales {
     background: #fff;
@@ -313,4 +339,33 @@
 .product-name.copied{
     background:#d1e7dd;
     transition:.3s;
+}
+
+/*Style customers*/
+#customer_name {
+    border-radius: 6px 0 0 6px;
+}
+/* Серый цвет для выбранного стрелочками элемента */
+#customerList .list-group-item.active {
+    background-color: #e9ecef !important; /* Светло-серый цвет (стандартный селектор Bootstrap) */
+    border-color: #dee2e6 !important;     /* Серая граница */
+    color: #212529 !important;            /* Темный цвет текста, чтобы он хорошо читался */
+}
+
+/* Дополнительно: цвет при наведении мышкой (тоже сделаем серым, чуть светлее) */
+#customerList .list-group-item:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+/* Красивая подсветка выбранной строки товара */
+tr.selected-product-row {
+    background-color: #f1f3f5 !important; /* Мягкий серый фон (Bootstrap-стиль) */
+    border-left: 4px solid #0d6efd !important; /* Тонкая синяя полоска слева для акцента */
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* Опционально: немного подсветим ячейки внутри выбранной строки */
+tr.selected-product-row td {
+    background-color: #f1f3f5 !important;
 }
