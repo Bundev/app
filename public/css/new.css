@@ -1,70 +1,61 @@
-/*Стили поисковой строки*/
-#product-search{
+/* ==========================================================================
+   1. ОБЩИЕ СТИЛИ И ФИКСЫ ИНПУТОВ
+   ========================================================================== */
+
+/* Убираем стрелочки у инпута количества */
+.qty::-webkit-outer-spin-button,
+.qty::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.qty[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Центрирование контента в кнопках */
+.qty-control .btn, .input-group .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Тонкий шрифт для артикулов */
+.fs-7 {
+    font-size: 0.78rem;
+}
+
+/* Стили поисковой строки */
+#product-search {
     border-radius: 0 6px 6px 0;
 }
 
-#imagePreview{
-    position:fixed;
-    width:400px;
-    height:400px;
-    background:#fff;
-    border-radius:12px;
-    border:1px solid #ddd;
-    box-shadow:0 10px 30px rgba(0,0,0,.2);
-    background-size:contain;
-    background-repeat:no-repeat;
-    background-position:center;
-    display:none;
-    z-index:99999;
+/* Превью изображения товара при наведении */
+#imagePreview {
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: none;
+    z-index: 99999;
 }
 
-.product-image{
-    width:80px;
-    height:80px;
-    object-fit:contain;
-    cursor:zoom-in;
+.product-image {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    cursor: zoom-in;
 }
 
-@media (max-width: 768px) {
-    #product-search{
-        border-radius: 0;
-    }
+/* ==========================================================================
+   2. ТАБЛИЦА ТОВАРОВ (ЧЕК)
+   ========================================================================== */
 
-    .search-product-photo{
-        width:70px;
-        height:70px;
-        object-fit:cover;
-        border-radius:8px;
-    }
-}
-
-#search-results .list-group-item.active {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
-    color: #ffffff !important;
-}
-#search-results .list-group-item.active .text-muted,
-#search-results .list-group-item.active .text-primary {
-    color: rgba(255, 255, 255, 0.8) !important;
-}
-
-/* Красивая серая подсветка товара при выборе стрелочками */
-#search-results .list-group-item.active {
-    background-color: #f0f2f5 !important; /* Мягкий светло-серый фон */
-    border-color: #dee2e6 !important;     /* Стандартная рамка Bootstrap */
-    color: #212529 !important;            /* Темный цвет текста, чтобы всё отлично читалось */
-}
-
-/* Оставляем оригинальные цвета для подзаголовков внутри серого выделения */
-#search-results .list-group-item.active .text-muted {
-    color: #6c757d !important;
-}
-
-#search-results .list-group-item.active .text-primary {
-    color: #0d6efd !important; /* Синий акцент для локации/остатков */
-}
-
-/* Таблица в новом счете */
 .table-sales {
     background: #fff;
     border-radius: 12px;
@@ -103,9 +94,15 @@
 .product-name {
     font-weight: 600;
     color: #212529;
+    cursor: pointer;
 }
 
-.pricepoduct {
+.product-name.copied {
+    background: #d1e7dd;
+    transition: .3s;
+}
+
+.pricepoduct { /* Сохранено оригинальное имя класса для JS */
     color: #198754;
     font-weight: 600;
 }
@@ -116,34 +113,34 @@
     color: #0d6efd;
 }
 
-.qty{
-    width: 80px !important;
-    min-width: 80px;
-    
-    font-size: 22px;
+/* ЖЕСТКИЙ ФИКС БЛОКА КОЛИЧЕСТВА (Выравнивает кнопки в один ряд) */
+.qty-control {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 4px; /* Небольшой аккуратный отступ */
+    width: 140px; /* Достаточная ширина, чтобы всё гарантированно влезло */
+}
+
+.qty-control .btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    flex-shrink: 0; /* Запрещаем кнопкам сжиматься */
+    border-radius: 6px !important;
+}
+
+.qty-control .qty {
+    width: 55px !important; /* Уменьшили фиксированную ширину, чтобы кнопки не улетали */
+    min-width: 55px !important;
+    height: 36px;
+    font-size: 18px; /* Чуть уменьшили шрифт, чтобы цифра "5" смотрелась аккуратно */
     text-align: center;
+    padding: 0;
+    font-weight: 700;
 }
 
-.qty-control{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-}
-
-.qty-control .btn{
-    width:42px;
-    height:42px;
-    padding:0;
-    flex-shrink:0;
-}
-
-.qty-control .qty{
-    width:60px;
-    height:42px;
-    text-align:center;
-}
-
+/* Кнопка удаления товара */
 .btn-remove {
     width: 36px;
     height: 36px;
@@ -174,57 +171,56 @@
     background: #f8f9fa;
 }
 
-@media (max-width: 768px) {
-
-    .products-table-wrapper {
-        overflow-x: auto;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      
-    }
-
-    .table-sales {
-        min-width: 700px;
-    }
-
-    /* скрываем № */
-    #item-products td:first-child,
-    .table thead th:first-child{
-        display:none;
-    }
-
-    
-    
-
-    .product-name{
-        min-width:180px;
-        white-space:normal;
-        word-break:break-word;
-        font-size:18px;
-        font-weight:500;
-    }
-
-    .qty-control{
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
-    }
-
-    .qty{
-        width:70px;
-        text-align:center;
-    }
-   
+/* Красивая подсветка выбранной строки товара */
+tr.selected-product-row {
+    background-color: #f1f3f5 !important;
+    border-left: 4px solid #0d6efd !important;
+    transition: background-color 0.15s ease-in-out;
 }
 
+tr.selected-product-row td {
+    background-color: #f1f3f5 !important;
+}
 
+/* ==========================================================================
+   3. СПИСКИ И ВЫБОР (ОКНА ПОИСКА)
+   ========================================================================== */
 
+/* Выбор клиентов */
+#customer_name {
+    border-radius: 6px 0 0 6px;
+}
 
+#customerList .list-group-item.active {
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
 
-/* Таблица в новом счете */
+#customerList .list-group-item:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+}
 
-/* Нижняя панел */
+/* Выбор товаров в выпадающем списке */
+#search-results .list-group-item.active {
+    background-color: #f0f2f5 !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+#search-results .list-group-item.active .text-muted {
+    color: #6c757d !important;
+}
+
+#search-results .list-group-item.active .text-primary {
+    color: #0d6efd !important;
+}
+
+/* ==========================================================================
+   4. СУММЫ И НИЖНЯЯ ПАНЕЛЬ
+   ========================================================================== */
+
 .card-footer {
     position: sticky;
     bottom: 0;
@@ -234,7 +230,7 @@
     box-shadow: 0 -2px 10px rgba(0,0,0,.05);
 }
 
-#total-sum{
+#total-sum {
     font-size: 22px;
     font-weight: 700;
     color: #0d6efd;
@@ -243,7 +239,6 @@
 #subtotal-sum {
     font-size: 22px;
     font-weight: 700;
-    
 }
 
 #discount-sum {
@@ -257,28 +252,65 @@
 }
 
 #cash {
-    text-align: center;
     font-weight: 600;
 }
 
-.discount-block input {
-    width: 100px;
-}
-
-#discount {
+.discount-block input, #discount {
     width: 110px;
 }
 
+/* ==========================================================================
+   5. АДАПТИВНОСТЬ (МОБИЛЬНАЯ ВЕРСИЯ)
+   ========================================================================== */
+
 @media (max-width: 768px) {
+    #product-search {
+        border-radius: 0;
+    }
+
+    .search-product-photo {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .products-table-wrapper {
+        overflow-x: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-sales {
+        min-width: 700px;
+    }
+
+    /* Скрываем № в мобильной версии */
+    #item-products td:first-child,
+    .table thead th:first-child {
+        display: none;
+    }
+
+    .product-name {
+        min-width: 180px;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .qty-control {
+        gap: 8px;
+    }
+
+    .qty-control .qty {
+        width: 70px !important;
+    }
 
     .card-footer {
         position: static;
-        left: 0 !important;
-        right: 0 !important;
         width: 100%;
         padding: 10px;
-        
-
     }
 
     .card-footer .d-flex {
@@ -289,33 +321,10 @@
 
     .card-footer .form-control,
     .card-footer .form-select,
-    .card-footer .btn {
+    .card-footer .btn,
+    #discount {
         width: 100% !important;
     }
-
-    #total-sum,
-    #change {
-        font-size: 22px;
-    }
-
-     #discount{
-        width:100% !important;
-    }
-
-    #discount {
-        width: 100%;
-    }
-
-     
-
-}
-
-/* Нижняя панел */
-
-
-
-/*Заглловок*/
-@media (max-width: 768px) {
 
     .new-header {
         flex-wrap: wrap;
@@ -329,43 +338,4 @@
     .new-header .badge {
         font-size: 1rem !important;
     }
-
-}
-
-.product-name {
-    cursor: pointer;
-}
-
-.product-name.copied{
-    background:#d1e7dd;
-    transition:.3s;
-}
-
-/*Style customers*/
-#customer_name {
-    border-radius: 6px 0 0 6px;
-}
-/* Серый цвет для выбранного стрелочками элемента */
-#customerList .list-group-item.active {
-    background-color: #e9ecef !important; /* Светло-серый цвет (стандартный селектор Bootstrap) */
-    border-color: #dee2e6 !important;     /* Серая граница */
-    color: #212529 !important;            /* Темный цвет текста, чтобы он хорошо читался */
-}
-
-/* Дополнительно: цвет при наведении мышкой (тоже сделаем серым, чуть светлее) */
-#customerList .list-group-item:hover {
-    background-color: #f8f9fa;
-    color: #212529;
-}
-
-/* Красивая подсветка выбранной строки товара */
-tr.selected-product-row {
-    background-color: #f1f3f5 !important; /* Мягкий серый фон (Bootstrap-стиль) */
-    border-left: 4px solid #0d6efd !important; /* Тонкая синяя полоска слева для акцента */
-    transition: background-color 0.15s ease-in-out;
-}
-
-/* Опционально: немного подсветим ячейки внутри выбранной строки */
-tr.selected-product-row td {
-    background-color: #f1f3f5 !important;
 }

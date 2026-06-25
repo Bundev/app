@@ -280,17 +280,14 @@ document.addEventListener('keydown', function(event) {
     }
 
     // 3. Комбинация Alt + C (или Cmd + C для Mac) — Поиск клиента
-    if ((event.altKey || event.metaKey) && event.code === 'KeyC') {
-        event.preventDefault(); // Отменяем стандартное действие браузера
-        const inputName = document.getElementById('customer_name');
-        if (inputName) {
-            if (inputName.value === 'Основной покупатель') {
-                inputName.value = ''; // Очищаем дефолтное значение для удобства поиска
-            }
-            inputName.focus(); // Мгновенно переводим фокус в инпут
+    if ((event.altKey && event.key.toLowerCase() === 'c') || event.key === 'F3') {
+        event.preventDefault();
+        const customerInput = document.getElementById('customer_name');
+        if (customerInput) {
+            customerInput.focus();
+            customerInput.select(); // Сразу выделяем текст, чтобы начать писать заново
         }
     }
-
     // 4. Клавиша F8 — Фокус на поле «Получено» денег от клиента
     if (event.key === 'F8') {
         event.preventDefault();
@@ -701,6 +698,8 @@ function addProductToInvoice(product) {
         </tr>
         `;
 
+
+
     document
         .getElementById(
             'item-products'
@@ -755,10 +754,13 @@ document
 
 
 document.addEventListener('click', e => {
+    // Находим кнопку с классом .remove, даже если кликнули по иконке внутри неё
+    const removeBtn = e.target.closest('.remove');
 
-    if (e.target.classList.contains('remove')) {
-
-        e.target.closest('tr').remove();
+    if (removeBtn) {
+        // Находим строку таблицы, в которой лежит эта кнопка, и удаляем её
+        removeBtn.closest('tr').remove();
+        
         updateRowNumbers();
         updateTotals();
     }
@@ -1321,62 +1323,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-editBtn.addEventListener('click', () => {
-    const currentId = inputId.value;
-    if (!currentId) return;
+    editBtn.addEventListener('click', () => {
+        const currentId = inputId.value;
+        if (!currentId) return;
 
-    // Находим данные текущего выбранного клиента из глобального массива customersData
-    const customer = customersData.find(c => c.id == currentId);
-    
-    if (customer) {
-        // Заполняем поля модалки текущими данными
-        document.getElementById('edit_customer_id').value = customer.id;
-        document.getElementById('edit_customer_name').value = customer.name;
-        document.getElementById('edit_customer_phone').value = customer.phone || '';
-        document.getElementById('edit_customer_email').value = customer.email || '';
-        document.getElementById('edit_customer_discount').value = customer.discount_percentage || 0;
+        // Находим данные текущего выбранного клиента из глобального массива customersData
+        const customer = customersData.find(c => c.id == currentId);
+        
+        if (customer) {
+            // Заполняем поля модалки текущими данными
+            document.getElementById('edit_customer_id').value = customer.id;
+            document.getElementById('edit_customer_name').value = customer.name;
+            document.getElementById('edit_customer_phone').value = customer.phone || '';
+            document.getElementById('edit_customer_email').value = customer.email || '';
+            document.getElementById('edit_customer_discount').value = customer.discount_percentage || 0;
 
-        // Показываем модалку редактирования
-        const editModal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
-        editModal.show();
-    }
-});
-
-document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const id = document.getElementById('edit_customer_id').value;
-    const name = document.getElementById('edit_customer_name').value;
-    const phone = document.getElementById('edit_customer_phone').value;
-    const email = document.getElementById('edit_customer_email').value;
-    const discount_percentage = document.getElementById('edit_customer_discount').value;
-
-    try {
-        const response = await fetch(`/api/customers/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone, email, discount_percentage })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            // Закрываем модалку
-            const modalEl = document.getElementById('editCustomerModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-
-            // Перезапрашиваем базу клиентов и обновляем инпут на странице
-            if (typeof window.refreshCustomersData === 'function') {
-                window.refreshCustomersData(result.client);
-            }
-        } else {
-            alert('Ошибка при сохранении: ' + result.message);
+            // Показываем модалку редактирования
+            const editModal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+            editModal.show();
         }
-    } catch (error) {
-        console.error('Ошибка отправки изменений:', error);
-    }
-});
+    });
+
+    document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const id = document.getElementById('edit_customer_id').value;
+        const name = document.getElementById('edit_customer_name').value;
+        const phone = document.getElementById('edit_customer_phone').value;
+        const email = document.getElementById('edit_customer_email').value;
+        const discount_percentage = document.getElementById('edit_customer_discount').value;
+
+        try {
+            const response = await fetch(`/api/customers/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, email, discount_percentage })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Закрываем модалку
+                const modalEl = document.getElementById('editCustomerModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                // Перезапрашиваем базу клиентов и обновляем инпут на странице
+                if (typeof window.refreshCustomersData === 'function') {
+                    window.refreshCustomersData(result.client);
+                }
+            } else {
+                alert('Ошибка при сохранении: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Ошибка отправки изменений:', error);
+        }
+    });
 
     // Функция для управления активным элементом (подсветка синим)
     function addActive(items) {

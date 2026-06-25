@@ -1,348 +1,268 @@
-        <%- include('blocks/head') -%>
-        <%- include('blocks/header') -%>
-        <%- include('blocks/menu') -%>
-        <div class="col content">
-          <div class="new-header d-flex justify-content-between align-items-center mb-3">
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
 
-            <h1 class="mb-0">
-                🧾 Новый чек
-            </h1>
+<div class="col content py-3">
+    <!-- Шапка страницы -->
+    <div class="new-header d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0 fw-bold">🧾 Новый чек</h1>
+    </div>
 
-           
-        </div>
-          <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="row g-2">
-                        <div class="col-md-5">
-                            <label class="form-label">Покупатель / Клиент</label>
-                            <div class="input-group">
-                                <div class="position-relative flex-grow-1 d-flex align-items-center">
-                                    <input type="hidden" id="customer_id" name="customer_id" value="">
-                                    <input type="text" id="customer_name" class="form-control pe-5" autocomplete="off" value="Основной покупатель" title="Alt+C" required>
-                                    
-                                    <!-- Блок кнопок управления внутри инпута (крестик и карандаш) -->
-                                    <div class="position-absolute end-0 top-50 translate-middle-y d-flex gap-1 pe-2" style="z-index: 5;">
-                                        <!-- Кнопка редактирования (по умолчанию скрыта) -->
-                                        <button type="button" id="editCustomerBtn" class="btn p-1 text-primary border-0 bg-transparent" style="display: none;" title="Редактировать клиента">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <!-- Кнопка очистки -->
-                                        <button type="button" id="clearCustomerBtn" class="btn p-1 text-muted border-0 bg-transparent" style="display: none;">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </div>
-
-                                    <div id="customerList" class="list-group position-absolute w-100 d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto; top: 100%;"></div>
-                                </div>
+    <!-- Главная двухкомпонентная сетка POS -->
+    <div class="row g-4">
+        
+        <!-- ЛЕВАЯ СТОРОНА: Клиент, Поиск и Товары -->
+        <div class="col-xl-8 col-lg-7">
+            
+            <!-- Блок 1: Выбор клиента -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="form-label text-muted small fw-bold text-uppercase mb-2">Покупатель / Клиент [F3]</label>
+                            
+                            <div class="input-group position-relative">
+                                <input type="hidden" id="customer_id" name="customer_id" value="">
                                 
-                                <button 
-                                    type="button" 
-                                    class="btn btn-success" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#addCustomerModal"
-                                title="F4">
-                                    <i class="bi bi-plus-lg"></i>
+                                <input type="text" id="customer_name" class="form-control form-control-lg pe-5 fw-medium" autocomplete="off" value="Основной покупатель" title="F3" required style="border-radius: 6px 0 0 6px !important;">
+                                
+                                <div class="position-absolute d-flex gap-1 pe-2" style="z-index: 5; right: 60px; top: 50%; transform: translateY(-50%);">
+                                    <button type="button" id="editCustomerBtn" class="btn p-1 text-primary border-0 bg-transparent" style="display: none;" title="Редактировать клиента">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button type="button" id="clearCustomerBtn" class="btn p-1 text-muted border-0 bg-transparent" style="display: none;">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+
+                                <div id="customerList" class="list-group position-absolute w-100 d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto; top: 100%; left: 0;"></div>
+                                
+                                <button type="button" class="btn btn-success px-3" data-bs-toggle="modal" data-bs-target="#addCustomerModal" title="Добавить клиента [F4]" style="border-radius: 0 6px 6px 0 !important;">
+                                    <i class="bi bi-plus-lg fs-5"></i>
                                 </button>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
             </div>
             <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
+                <div class="card-body p-3">
+                    <div class="row">
+                        dsd
+                    </div>
+                </div>
+            </div>
+            <!-- Блок 2: Поиск товара -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-3">
                     <div class="position-relative">
-                        <div class="input-group">
-
-                            <span class="input-group-text">
-
-                                🔍
-
+                        <label class="form-label text-muted small fw-bold text-uppercase mb-2">Поиск или сканирование [F2]</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-search"></i>
                             </span>
-
-                            <input
-                                type="text"
-                                id="product-search"
-                                class="form-control"
-                                placeholder="Название, артикул или штрихкод" title="F2">
-
-                            <button
-                                type="button"
-                                id="scanBtn"
-                                class="btn btn-outline-primary d-md-none">
-
+                            <input type="text" id="product-search" class="form-control border-start-0 ps-0" placeholder="Название, артикул или штрихкод..." title="F2">
+                            <button type="button" id="scanBtn" class="btn btn-outline-primary d-md-none">
                                 <i class="bi bi-upc-scan"></i>
-
                             </button>
-
                         </div>
-
                         
                         <div id="imagePreview"></div>
-                        <div
-                            id="search-results"
-                            class="list-group position-absolute w-100 shadow"
-                            style="
-                                display:none;
-                                z-index:9999;
-                                max-height:300px;
-                                overflow-y:auto;
-                            ">
-                        </div>
-
+                        <div id="search-results" class="list-group position-absolute w-100 shadow" style="display:none; z-index:9999; max-height:300px; overflow-y:auto; top: 100%;"></div>
                     </div>
                 </div>
             </div>  
+
+            <!-- Блок 3: Таблица товаров -->
             <div class="card shadow-sm border-0">
-                <div class="card-body border-0 p-0">
-
-                    <div class="products-table-wrapper border-0" >
-
-                        <table class="table table-sales align-middle">
-
-                            <thead>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 50vh; overflow-y: auto;">
+                        <table class="table table-sales align-middle mb-0">
+                            <thead class="table-light sticky-top">
                                 <tr>
-                                    <th width="60">№</th>
+                                    <th width="60" class="ps-3">№</th>
                                     <th>Товар</th>
-                                    <th width="120">Кол-во</th>
-                                    <th width="120">Цена</th>
-                                    <th width="70">Действия</th>
+                                    <th width="140">Кол-во</th>
+                                    <th width="140">Цена</th>
+                                    <th width="80" class="text-center pe-3">Действия</th>
                                 </tr>
                             </thead>
-
                             <tbody id="item-products">
+                                <!-- Сюда JS будет рендерить строки динамически -->
                             </tbody>
-
                         </table>
-
-                    </div>
-
-                </div>
-                
-                <div class="card-footer bg-white">
-
-                    <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-stretch align-items-md-center ">
-
-                        <div>
-
-                            <div class="text-muted">
-                                Сдача
-                            </div>
-
-                            <strong id="change">
-                                0.00 ₴
-                            </strong>
-
-                        </div>
-
-                        <input
-                            type="number"
-                            id="cash"
-                            class="form-control"
-                            style="width:120px"
-                            value=""
-                            min="0"
-                            placeholder="Получено" title="F8">
-
-                        <select
-                            name="paymentMethod"
-                            class="form-select"
-                            style="width:180px">
-
-                            <option value="cash">
-                                💵 Наличные
-                            </option>
-
-                            <option value="card">
-                                💳 Карта
-                            </option>
-
-                            <option value="transfer">
-                                🏦 Перевод
-                            </option>
-
-                        </select>
-
-                        <input
-                                type="number"
-                                id="discount"
-                                class="form-control"
-                                value=""
-                                min="0" placeholder="Скидка %">
-
-                        
-
-                        <div>
-                            <div class="text-muted">
-                                Подытог
-                            </div>
-
-                            <strong id="subtotal-sum">
-                                0.00 ₴
-                            </strong>
-                        </div>
-
-                        <div>
-                            <div class="text-muted">
-                                Скидка (<span id="discount-label">0</span>%)
-                            </div>
-
-                            <strong
-                                id="discount-sum"
-                                class="text-danger">
-
-                                0.00₴
-
-                            </strong>
-                        </div>
-
-                        <div>
-                            <div class="text-muted">
-                                К оплате
-                            </div>
-
-                            <strong
-                                id="total-sum"
-                                class="text-primary">
-
-                                0.00 ₴
-
-                            </strong>
-                        </div>
-
-                        <button
-                            id="saveInvoice"
-                            class="btn btn-success btn-lg"
-                            onclick="saveInvoice()">
-
-                            <i class="bi bi-save"></i>
-
-                            Сохранить чек
-
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-<div id="scannerModal">
+        <!-- ПРАВАЯ СТОРОНА: Расчетный финансовый блок (Сайдбар чека) -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px; z-index: 1020;">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h3 class="h5 fw-bold mb-0 text-muted text-uppercase small tracking-wider">Параметры оплаты</h3>
+                </div>
+                
+                <div class="card-body px-4 pt-2 pb-4">
+                    <!-- Выбор метода оплаты -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Способ расчета</label>
+                        <select name="paymentMethod" class="form-select form-select-lg fw-medium">
+                            <option value="cash">💵 Наличные</option>
+                            <option value="card">💳 Карта</option>
+                            <option value="transfer">🏦 Перевод</option>
+                        </select>
+                    </div>
 
-    <div class="scanner-content">
+                    <!-- Ввод сумм и скидок -->
+                    <div class="row g-2 mb-4">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-muted">Получено [F8]</label>
+                            <div class="input-group input-group-lg">
+                                <input type="number" id="cash" class="form-control " min="0" placeholder="0.00" title="F8">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-muted">Скидка в % [Ctrl+D]</label>
+                            <div class="input-group input-group-lg">
+                                <input type="number" id="discount" class="form-control" min="0" max="100" placeholder="0.00">
+                                
+                            </div>
+                        </div>
+                    </div>
 
-        <div class="scanner-header">
+                    <hr class="text-muted opacity-25 my-4">
 
-            <span>
-                📷 Сканирование товара
-            </span>
+                    <!-- Финансовые итоги -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Подытог:</span>
+                        <span class="fw-semibold" id="subtotal-sum">0.00 ₴</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Скидка (<span id="discount-label">0</span>%):</span>
+                        <span class="text-danger fw-semibold" id="discount-sum">0.00 ₴</span>
+                    </div>
 
-            <button
-                id="closeScanner"
-                type="button">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Сдача:</span>
+                        <span class="text-success fw-bold fs-5" id="change">0.00 ₴</span>
+                    </div>
 
-                ✕
-            </button>
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-4">
+                        <span class="fw-bold text-secondary text-uppercase small">К оплате:</span>
+                        <span class="text-primary fw-bolder fs-3" id="total-sum">0.00 ₴</span>
+                    </div>
 
-        </div>
-
-        <div id="reader"></div>
-
-        <div class="scanner-footer">
-
-            Наведите камеру на штрихкод
-
+                    <!-- Главная кнопка действия -->
+                    <button id="saveInvoice" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" onclick="saveInvoice()">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        Провести чек
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>
-
 </div>
+
+<!-- ================= МОДАЛЬНЫЕ ОКНА И СКАНЕР ================= -->
+
+<!-- Модалка Сканера -->
+<div id="scannerModal">
+    <div class="scanner-content">
+        <div class="scanner-header">
+            <span>📷 Сканирование товара</span>
+            <button id="closeScanner" type="button">✕</button>
+        </div>
+        <div id="reader"></div>
+        <div class="scanner-footer">Наведите камеру на штрихкод</div>
+    </div>
+</div>
+
+<!-- Модалка: Добавление клиента -->
 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addCustomerModalLabel">
-                    <i class="bi bi-person-plus-fill me-2"></i>Добавить нового клиента
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="addCustomerModalLabel">
+                    <i class="bi bi-person-plus-fill me-2 text-success"></i>Добавить клиента
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            
             <form id="addCustomerForm" onsubmit="createCustomer(event)">
-                <div class="modal-body">
-                    
+                <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label for="customerName" class="form-label">Имя / Наименование <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="customerName" placeholder="Иван Иванов" required autocomplete="off">
-                        <div class="form-text">Обязательное поле для заполнения.</div>
+                        <label for="customerName" class="form-label small fw-semibold">Имя / Наименование <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" id="customerName" placeholder="Иван Ivanov" required autocomplete="off">
                     </div>
-
                     <div class="mb-3">
-                        <label for="customerPhone" class="form-label">Номер телефона</label>
+                        <label for="customerPhone" class="form-label small fw-semibold">Номер телефона</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-telephone"></i></span>
                             <input type="tel" class="form-control" id="customerPhone" placeholder="+380983188450" autocomplete="off">
                         </div>
                     </div>
-
                     <div class="mb-3">
-                        <label for="customerEmail" class="form-label">Электронная почта (Email)</label>
+                        <label for="customerEmail" class="form-label small fw-semibold">Электронная почта</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                             <input type="email" class="form-control" id="customerEmail" placeholder="example@mail.com" autocomplete="off">
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="customerDiscount" class="form-label">Персональная скидка (%)</label>
+                    <div class="mb-0">
+                        <label for="customerDiscount" class="form-label small fw-semibold">Персональная скидка (%)</label>
                         <div class="input-group">
                             <input type="number" class="form-control" id="customerDiscount" min="0" max="100" step="0.5" placeholder="0">
                             <span class="input-group-text">%</span>
                         </div>
                     </div>
-
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>Создать и выбрать
-                    </button>
+                    <button type="submit" class="btn btn-success px-4">Создать и выбрать</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="editCustomerModal" taxation="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Редактирование клиента</h5>
+
+<!-- Модалка: Редактирование клиента -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold">Редактирование клиента</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editCustomerForm">
-                <div class="modal-body">
-                    <!-- Скрытый ID редактируемого клиента -->
+                <div class="modal-body p-4">
                     <input type="hidden" id="edit_customer_id">
-                    
                     <div class="mb-3">
-                        <label class="form-label">Имя / Компания *</label>
-                        <input type="text" id="edit_customer_name" class="form-control" required>
+                        <label class="form-label small fw-semibold">Имя / Компания *</label>
+                        <input type="text" id="edit_customer_name" class="form-control form-control-lg" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Телефон</label>
+                        <label class="form-label small fw-semibold">Телефон</label>
                         <input type="text" id="edit_customer_phone" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
+                        <label class="form-label small fw-semibold">Email</label>
                         <input type="email" id="edit_customer_email" class="form-control">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Процент скидки (%)</label>
+                    <div class="mb-0">
+                        <label class="form-label small fw-semibold">Процент скидки (%)</label>
                         <input type="number" id="edit_customer_discount" class="form-control" step="0.01" min="0" max="100">
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light border-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <button type="submit" class="btn btn-primary px-4">Сохранить изменения</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
 <%- include('blocks/footer') -%>
