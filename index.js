@@ -1357,10 +1357,15 @@ app.post('/sales/save', auth, async (req, res) => {
 
         await connection.commit();
 
+        // Рассчитываем номер для СЛЕДУЮЩЕГО чека, который откроется после сохранения текущего
+        const futureNumber = nextNumber + 1;
+        const nextInvoiceNumber = `SALE-${year}-${String(futureNumber).padStart(6, '0')}`;
+
         res.json({
             success: true,
             sale_id: saleId,
-            invoice_number: invoiceNumber
+            invoice_number: invoiceNumber,     // Номер сохраненного чека
+            next_num: nextInvoiceNumber        // Номер для новой/обновленной вкладки
         });
 
     } catch (error) {

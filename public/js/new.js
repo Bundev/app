@@ -379,15 +379,24 @@ document.addEventListener('keydown', function(event) {
             }
         }
 
+        // Внутри вашего обработчика клавиатурных событий (например, event)
+
         // 3. СТРЕЛКА ВПРАВО — Увеличение количества товара (+1)
         if (event.key === 'ArrowRight') {
             if (qtyInput) {
                 event.preventDefault();
                 let currentVal = parseInt(qtyInput.value) || 1;
-                qtyInput.value = currentVal + 1;
+                let newVal = currentVal + 1;
+                qtyInput.value = newVal; // Обновляем цифру в самом поле
                 
-                // Вызываем твою функцию для пересчета строки и чека!
-                updateQuantity(qtyInput); 
+                // Находим ID товара из этой же строки таблицы
+                const row = qtyInput.closest('tr');
+                const itemId = row?.querySelector('.product-name')?.getAttribute('data-id');
+                
+                if (itemId) {
+                    // Вызываем вашу рабочую функцию! Она сама обновит массив, строку и правый блок
+                    window.updateItemQty(itemId, newVal); 
+                }
             }
         }
 
@@ -396,11 +405,18 @@ document.addEventListener('keydown', function(event) {
             if (qtyInput) {
                 event.preventDefault();
                 let currentVal = parseInt(qtyInput.value) || 1;
-                if (currentVal > 1) { // Защита, чтобы не уйти в ноль
-                    qtyInput.value = currentVal - 1;
+                if (currentVal > 1) { // Защита от нуля и минуса
+                    let newVal = currentVal - 1;
+                    qtyInput.value = newVal; // Обновляем цифру в самом поле
                     
-                    // Вызываем твою функцию для пересчета строки и чека!
-                    updateQuantity(qtyInput);
+                    // Находим ID товара из этой же строки таблицы
+                    const row = qtyInput.closest('tr');
+                    const itemId = row?.querySelector('.product-name')?.getAttribute('data-id');
+                    
+                    if (itemId) {
+                        // Вызываем вашу рабочую функцию!
+                        window.updateItemQty(itemId, newVal);
+                    }
                 }
             }
         }
@@ -429,6 +445,8 @@ document.addEventListener('keydown', function(event) {
             selectedRow.classList.remove('selected-product-row');
             document.getElementById('product-search')?.focus();
         }
+
+
     }
 
 
@@ -461,6 +479,79 @@ document.addEventListener('keydown', function(event) {
         const closeScannerBtn = document.getElementById('closeScanner');
         if (closeScannerBtn) {
             closeScannerBtn.click();
+        }
+    }
+    // Alt + N — Создать новый чек (вкладку)
+    if (event.altKey && event.code === 'KeyN') {
+        event.preventDefault(); // Отменяем стандартное поведение браузера
+        
+        if (typeof createNewReceipt === 'function') {
+            createNewReceipt();
+            
+            // Сразу переводим фокус на поиск товара в новом чеке
+            setTimeout(() => {
+                document.getElementById('product-search')?.focus();
+            }, 50);
+        }
+    }
+    // Alt + Стрелка Вправо — Переключить на СЛЕДУЮЩУЮ вкладку
+    if (event.altKey && event.code === 'ArrowRight') {
+        event.preventDefault();
+        if (typeof receipts !== 'undefined' && receipts.length > 1) {
+            const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+            const nextIndex = (currentIndex + 1) % receipts.length; // Зацикливаем переключение
+            activeReceiptId = receipts[nextIndex].id;
+            
+            if (typeof loadReceiptToUI === 'function') loadReceiptToUI(activeReceiptId);
+            if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
+        }
+    }
+
+    // Alt + Стрелка Влево — Переключить на ПРЕДЫДУЩУЮ вкладку
+    if (event.altKey && event.code === 'ArrowLeft') {
+        event.preventDefault();
+        if (typeof receipts !== 'undefined' && receipts.length > 1) {
+            const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+            const prevIndex = (currentIndex - 1 + receipts.length) % receipts.length; // Зацикливаем в обратную сторону
+            activeReceiptId = receipts[prevIndex].id;
+            
+            if (typeof loadReceiptToUI === 'function') loadReceiptToUI(activeReceiptId);
+            if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
+        }
+    }
+
+    //  Alt + Q — Закрыть ТЕКУЩУЮ вкладку (удалить чек без сохранения)
+    if (event.altKey && event.code === 'KeyQ') {
+        event.preventDefault();
+        
+        if (typeof receipts !== 'undefined' && activeReceiptId) {
+            // Подтверждение закрытия, если в чеке уже есть товары (защита от случайного нажатия)
+            const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+            if (currentReceipt && currentReceipt.items.length > 0) {
+                if (!confirm('В чеке есть товары. Вы уверены, что хотите закрыть его без сохранения?')) {
+                    return;
+                }
+            }
+
+            const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+            
+            // Удаляем чек из массива
+            receipts = receipts.filter(r => r.id !== activeReceiptId);
+
+            if (receipts.length > 0) {
+                // Если остались другие вкладки, переходим на соседнюю
+                const nextActiveIndex = currentIndex < receipts.length ? currentIndex : receipts.length - 1;
+                activeReceiptId = receipts[nextActiveIndex].id;
+                if (typeof loadReceiptToUI === 'function') loadReceiptToUI(activeReceiptId);
+            } else {
+                // Если закрыли единственную вкладку, создаем новую пустую
+                activeReceiptId = null;
+                if (typeof createNewReceipt === 'function') createNewReceipt();
+            }
+
+            // Перерисовываем интерфейс
+            if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
+            if (typeof updateTotals === 'function') updateTotals();
         }
     }
 });
@@ -510,54 +601,68 @@ document.addEventListener('click', function(event) {
 });
 
 function updateTotals() {
-
     let subtotal = 0;
 
-    document
-        .querySelectorAll('.line-sum')
-        .forEach(cell => {
-
-            subtotal += Number(
-                cell.textContent
-            );
-
+    // Сначала пробуем посчитать сумму на основе массива товаров активного чека (это надёжнее всего)
+    if (typeof receipts !== 'undefined' && activeReceiptId) {
+        const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+        if (currentReceipt && currentReceipt.items && currentReceipt.items.length > 0) {
+            currentReceipt.items.forEach(item => {
+                subtotal += Number(item.qty) * Number(item.price);
+            });
+        } else {
+            // Если массив пустой, но в DOM физически есть строки (например, при добавлении напрямую через HTML)
+            document.querySelectorAll('.line-sum').forEach(cell => {
+                subtotal += Number(cell.textContent) || 0;
+            });
+        }
+    } else {
+        // Запасной вариант (ваш старый метод), если мультичеки ещё не инициализировались
+        document.querySelectorAll('.line-sum').forEach(cell => {
+            subtotal += Number(cell.textContent) || 0;
         });
+    }
 
-    const discountPercent =
-        Number(
-            document.getElementById(
-                'discount'
-            ).value
-        ) || 0;
+    // Получаем процент скидки
+    const discountInput = document.getElementById('discount');
+    const discountPercent = discountInput ? (Number(discountInput.value) || 0) : 0;
 
-        document.getElementById(
-    'discount-label'
-).textContent =
-    discountPercent;
+    const discountLabel = document.getElementById('discount-label');
+    if (discountLabel) discountLabel.textContent = discountPercent;
 
-    const discountAmount =
-        subtotal *
-        discountPercent / 100;
+    // Считаем итоги
+    const discountAmount = (subtotal * discountPercent) / 100;
+    const total = subtotal - discountAmount;
 
-    const total =
-        subtotal -
-        discountAmount;
+    // Выводим результаты в интерфейс с проверкой на существование элементов
+    const discountSumEl = document.getElementById('discount-sum');
+    if (discountSumEl) discountSumEl.textContent = discountAmount.toFixed(2) + ' ₴';
 
-    document.getElementById(
-        'discount-sum'
-    ).textContent =
-        discountAmount.toFixed(2) + ' ₴';
+    const totalSumEl = document.getElementById('total-sum');
+    if (totalSumEl) totalSumEl.textContent = total.toFixed(2) + ' ₴';
 
-    document.getElementById(
-        'total-sum'
-    ).textContent =
-        total.toFixed(2) + ' ₴';
-    document.getElementById(
-        'subtotal-sum'
-    ).textContent =
-        subtotal.toFixed(2) + ' ₴';
-        updateChange();
+    const subtotalSumEl = document.getElementById('subtotal-sum');
+    if (subtotalSumEl) subtotalSumEl.textContent = subtotal.toFixed(2) + ' ₴';
+
+    // РАССЧИТЫВАЕМ СДАЧУ ПРЯМО ТУТ (чтобы не было рассинхронизации)
+    const cashInput = document.getElementById('cash');
+    const cashReceived = cashInput ? (parseFloat(cashInput.value) || 0) : 0;
+    
+    const changeEl = document.getElementById('change');
+    if (changeEl) {
+        if (cashReceived > total) {
+            changeEl.textContent = (cashReceived - total).toFixed(2) + ' ₴';
+        } else {
+            changeEl.textContent = '0.00 ₴';
+        }
+    }
+
+    // Сохраняем актуальное состояние в массив мультичеков, чтобы данные не терялись при переключении
+    if (typeof saveCurrentUIToState === 'function') {
+        saveCurrentUIToState();
+    }
 }
+document.getElementById('cash')?.addEventListener('input', updateTotals);
 // скрипт скидки
 document
     .getElementById('discount')
@@ -576,144 +681,182 @@ document
 
     });
 }
+
+
 function addProductToInvoice(product) {
-
-    const rows =
-        document.querySelectorAll(
-            '#item-products tr'
-        );
-
-    for (const row of rows) {
-
-        const productName =
-            row.querySelector(
-                '.product-name'
-            ).textContent.trim();
-
-        if (
-            productName ===
-            product.name.trim()
-        ) {
-
-            const qtyInput =
-                row.querySelector(
-                    '.qty'
-                );
-
-            qtyInput.value =
-                Number(qtyInput.value) + 1;
-
-            updateQuantity(
-                qtyInput
-            );
-
-            return;
-
-        }
-
+    // 1. Ищем активный чек в глобальном массиве состояний
+    const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+    if (!currentReceipt) {
+        console.error("Активный чек не найден!");
+        return;
     }
 
-    const rowNumber =
-        document.querySelectorAll(
-            '#item-products tr'
-        ).length + 1;
+    // 2. Чистим заглушку "Чек пуст", если она есть в таблице
+    const emptyRow = document.querySelector('#item-products tr td[colspan]');
+    if (emptyRow) {
+        emptyRow.parentElement.remove();
+    }
 
-    const price =
-        Number(
-            product.sale_price || 0
-        );
+    // 3. Проверяем, есть ли уже этот товар в МАССИВЕ активного чека
+    const existingItem = currentReceipt.items.find(i => String(i.id) === String(product.id));
 
+    if (existingItem) {
+        // Если товар есть, увеличиваем его количество в массиве
+        existingItem.qty += 1;
+        
+        // Находим строку этого товара в DOM, чтобы визуально обновить инпут
+        const rows = document.querySelectorAll('#item-products tr');
+        for (const row of rows) {
+            const nameEl = row.querySelector('.product-name');
+            if (nameEl && nameEl.getAttribute('data-id') === String(product.id)) {
+                const qtyInput = row.querySelector('.qty');
+                if (qtyInput) {
+                    qtyInput.value = existingItem.qty;
+                    
+                    // Обновляем визуальную сумму строки (line-sum)
+                    const lineSumEl = row.querySelector('.line-sum');
+                    if (lineSumEl) {
+                        lineSumEl.textContent = (existingItem.qty * existingItem.price).toFixed(2);
+                    }
+                }
+                break;
+            }
+        }
+    } else {
+        // 4. Если товара нет в чеке, добавляем его в МАССИВ состояний
+        const price = Number(product.sale_price || 0);
+        const newItem = {
+            id: String(product.id),
+            name: product.name,
+            qty: 1,
+            price: price
+        };
+        currentReceipt.items.push(newItem);
 
-
-    const html =
-        `
-        <tr>
-
-            <td>
-                ${rowNumber}
-            </td>
-
-            <td
-                class="product-name"
-                data-id="${product.id}"
-                title='${product.name}' data-name='${product.name}'>
-                ${product.name}
-
-            </td>
-
-            <td>
-                <div class="qty-control">
-                    <button
-                        type="button"
-                        class="btn btn-outline-secondary minus">-
+        // Генерируем новую строку в таблицу
+        const rowNumber = currentReceipt.items.length;
+        const html = `
+            <tr>
+                <td class="ps-3 text-muted">${rowNumber}</td>
+                <td class="product-name" data-id="${newItem.id}" title="${newItem.name}" data-name="${newItem.name}">
+                    ${newItem.name}
+                </td>
+                <td>
+                    <div class="qty-control d-flex align-items-center gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary minus" onclick="changeQtyFromBtn('${newItem.id}', -1)">-</button>
+                        <input type="number" class="form-control form-control-sm qty text-center" value="1" min="1" style="width: 60px;" oninput="updateItemQtyDirectly('${newItem.id}', this.value)">
+                        <button type="button" class="btn btn-sm btn-outline-secondary plus" onclick="changeQtyFromBtn('${newItem.id}', 1)">+</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="pricepoduct fw-semibold" data-price="${price}">
+                        ${price.toFixed(2)} ₴
+                    </div>
+                    <small class="text-muted">
+                        Сумма:<br>
+                        <span class="line-sum fw-bold text-primary">${price.toFixed(2)}</span> ₴
+                    </small>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove remove" onclick="removeItemDirectly('${newItem.id}')">
+                        <i class="bi bi-x-lg"></i>
                     </button>
-                    <input
-                        type="number"
-                        class="form-control qty"
-                        value="1"
-                        min="1">
-                    <button
-                        type="button"
-                        class="btn btn-outline-secondary plus">
-
-                        +
-
-                    </button>
-                </div>
-
-            </td>
-
-
-            <td >
-
-                <div class="pricepoduct" data-price="${price}">
-                    ${price.toFixed(2)} ₴
-                </div>
-
-                <small class="text-muted">
-
-                    Сумма:<br>
-                    <span class="line-sum">
-
-                        ${price.toFixed(2)}
-
-                    </span> ₴
-
-                </small>
-
-            </td>
-
-            
-
-            <td>
-               <button
-                    type="button"
-                    class="btn btn-outline-danger btn-sm btn-remove remove">
-
-                    <i class="bi bi-x"></i>
-
-                </button>
-            </td>
-
-        </tr>
+                </td>
+            </tr>
         `;
 
+        const tbody = document.getElementById('item-products');
+        if (tbody) {
+            tbody.insertAdjacentHTML('beforeend', html);
+        }
+    }
 
-
-    document
-        .getElementById(
-            'item-products'
-        )
-        .insertAdjacentHTML(
-            'beforeend',
-            html
-        );
-
+    // 5. Пересчитываем глобальные итоги (теперь массив не пустой, и обнуления не будет!)
     updateTotals();
-
-    updateRowNumbers();
-
+    if (typeof updateRowNumbers === 'function') updateRowNumbers();
 }
+
+// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: Изменение количества из инпута
+function updateItemQtyDirectly(itemId, value) {
+    const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+    if (!currentReceipt) return;
+    
+    const item = currentReceipt.items.find(i => String(i.id) === String(itemId));
+    if (item) {
+        item.qty = Math.max(1, parseFloat(value) || 1);
+        
+        // Обновляем line-sum в DOM
+        const rows = document.querySelectorAll('#item-products tr');
+        for (const row of rows) {
+            const nameEl = row.querySelector('.product-name');
+            if (nameEl && nameEl.getAttribute('data-id') === String(itemId)) {
+                const lineSumEl = row.querySelector('.line-sum');
+                if (lineSumEl) lineSumEl.textContent = (item.qty * item.price).toFixed(2);
+                break;
+            }
+        }
+    }
+    updateTotals();
+}
+
+// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: Кнопки + и -
+function changeQtyFromBtn(itemId, direction) {
+    const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+    if (!currentReceipt) return;
+    
+    const item = currentReceipt.items.find(i => String(i.id) === String(itemId));
+    if (item) {
+        item.qty = Math.max(1, item.qty + direction);
+        
+        // Обновляем инпут и сумму в DOM
+        const rows = document.querySelectorAll('#item-products tr');
+        for (const row of rows) {
+            const nameEl = row.querySelector('.product-name');
+            if (nameEl && nameEl.getAttribute('data-id') === String(itemId)) {
+                const qtyInput = row.querySelector('.qty');
+                const lineSumEl = row.querySelector('.line-sum');
+                if (qtyInput) qtyInput.value = item.qty;
+                if (lineSumEl) lineSumEl.textContent = (item.qty * item.price).toFixed(2);
+                break;
+            }
+        }
+    }
+    updateTotals();
+}
+
+// НАДЁЖНАЯ ФУНКЦИЯ УДАЛЕНИЯ ТОВАРА
+function removeItemDirectly(itemId) {
+    const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+    if (!currentReceipt) return;
+    
+    // 1. Удаляем товар из глобального массива активного чека
+    currentReceipt.items = currentReceipt.items.filter(i => String(i.id) !== String(itemId));
+    
+    // 2. Находим строку этого товара в DOM по data-id и удаляем её
+    const row = document.querySelector(`.product-name[data-id="${itemId}"]`)?.closest('tr');
+    if (row) {
+        row.remove();
+    }
+    
+    // 3. Проверяем, остались ли ещё товары в таблице
+    const tbody = document.getElementById('item-products');
+    if (tbody) {
+        const remainingRows = tbody.querySelectorAll('tr');
+        
+        // Если товаров больше нет — выводим нормальную красивую заглушку
+        if (remainingRows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
+        } else {
+            // Если товары остались, просто пересчитываем их номера № (1, 2, 3...)
+            updateRowNumbers();
+        }
+    }
+    
+    // 4. Пересчитываем общую сумму чека справа
+    updateTotals();
+}
+
+
 
 
 function updateChange() {
@@ -753,18 +896,47 @@ document
 
 
 
-document.addEventListener('click', e => {
-    // Находим кнопку с классом .remove, даже если кликнули по иконке внутри неё
-    const removeBtn = e.target.closest('.remove');
+// document.addEventListener('click', e => {
+//     const removeBtn = e.target.closest('.remove');
 
-    if (removeBtn) {
-        // Находим строку таблицы, в которой лежит эта кнопка, и удаляем её
-        removeBtn.closest('tr').remove();
+//     if (removeBtn) {
+//         const tbody = document.getElementById('item-products');
+//         const row = removeBtn.closest('tr');
         
-        updateRowNumbers();
-        updateTotals();
-    }
-});
+//         // 1. Сначала удаляем саму строчку товара
+//         if (row) {
+//             row.remove();
+//         }
+        
+//         // 2. Проверяем, остались ли ещё товары в таблице
+//         if (tbody) {
+//             const remainingRows = tbody.querySelectorAll('tr');
+            
+//             // Если строк больше нет — выводим нормальную заглушку во всю ширину (colspan="5")
+//             if (remainingRows.length === 0) {
+//                 tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
+//             } else {
+//                 // Если товары остались, просто пересчитываем их номера № (1, 2, 3...)
+//                 updateRowNumbers();
+//             }
+//         }
+
+//         // 3. Синхронизируем состояние с глобальным массивом receipts (чтобы при переключении табов товар не вернулся)
+//         if (typeof receipts !== 'undefined' && activeReceiptId) {
+//             const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+//             if (currentReceipt) {
+//                 // Находим ID удаленного товара из data-id ячейки .product-name, если строка еще доступна, 
+//                 // или просто пересобираем массив на основе оставшихся в DOM строк
+//                 const currentDomIds = Array.from(tbody.querySelectorAll('.product-name')).map(el => String(el.getAttribute('data-id')));
+//                 currentReceipt.items = currentReceipt.items.filter(item => currentDomIds.includes(String(item.id)));
+//             }
+//         }
+        
+//         // 4. Пересчитываем общую сумму чека
+//         updateTotals();
+//     }
+// });
+
 
 function updateQuantity(input) {
 
@@ -853,147 +1025,147 @@ async function saveInvoice() {
     document
         .querySelectorAll('.line-sum')
         .forEach(cell => {
-
-            subtotal += Number(
-                cell.textContent
-            );
-
-    });
+            subtotal += Number(cell.textContent);
+        });
 
     try {
-
         const items = [];
 
         document
-            .querySelectorAll(
-                '#item-products tr'
-            )
+            .querySelectorAll('#item-products tr')
             .forEach(row => {
+                if (row.querySelector('td[colspan]')) return; // Пропускаем заглушку
 
                 items.push({
-
-                    product_id:
-                        Number(
-                            row.querySelector(
-                                '.product-name'
-                            ).dataset.id
-                        ),
-
-                    quantity:
-                        Number(
-                            row.querySelector(
-                                '.qty'
-                            ).value
-                        ),
-
-                    price:
-                        Number(
-                            row.querySelector(
-                                '.pricepoduct'
-                            ).dataset.price
-                        )
-
+                    product_id: Number(
+                        row.querySelector('.product-name').dataset.id
+                    ),
+                    quantity: Number(
+                        row.querySelector('.qty').value
+                    ),
+                    price: Number(
+                        row.querySelector('.pricepoduct').dataset.price
+                    )
                 });
-
             });
 
         if (!items.length) {
-
-            alert(
-                'Добавьте товары в чек'
-            );
-
+            alert('Добавьте товары в чек');
             return;
-
         }
 
-        const total =
-            Number(
-                document
-                    .getElementById(
-                        'total-sum'
-                    )
-                    .textContent
-                    .replace('₴', '')
-                    .trim()
-            );
-
-        const discountPercent =
-            Number(
-                document.getElementById(
-                    'discount'
-                ).value
-            ) || 0;
-
-        const discountAmount =
-            subtotal *
-            discountPercent / 100;
-
-        const response =
-            await fetch(
-                '/sales/save',
-                {
-
-                    method: 'POST',
-
-                    headers: {
-                        'Content-Type':
-                            'application/json'
-                    },
-
-                    body: JSON.stringify({
-
-                        customer_id:
-                            document.querySelector(
-                                '#customer_id'
-                            )?.value || null,
-
-                        payment_method:
-                            document.querySelector(
-                                '[name="paymentMethod"]'
-                            ).value,
-
-                        total,
-                        discount_percent:
-                            discountPercent,
-
-                        discount_amount:
-                            discountAmount,
-
-                        items
-
-                    })
-
-                }
-            );
-
-        const result =
-            await response.json();
-
-        if (!result.success) {
-
-            alert(
-                result.error ||
-                'Ошибка сохранения'
-            );
-
-            return;
-
-        }
-
-        window.location =
-            `/new`;
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            'Ошибка соединения с сервером'
+        const total = Number(
+            document
+                .getElementById('total-sum')
+                .textContent
+                .replace('₴', '')
+                .trim()
         );
 
-    }
+        const discountPercent = Number(
+            document.getElementById('discount').value
+        ) || 0;
 
+        const discountAmount = subtotal * discountPercent / 100;
+
+        const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
+        if (saveBtn) saveBtn.disabled = true;
+
+        const response = await fetch(
+            '/sales/save',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customer_id: document.querySelector('#customer_id')?.value || null,
+                    payment_method: document.querySelector('[name="paymentMethod"]').value || null,
+                    total,
+                    discount_percent: discountPercent,
+                    discount_amount: discountAmount,
+                    items
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!result.success) {
+            alert(result.error || 'Ошибка сохранения');
+            if (saveBtn) saveBtn.disabled = false;
+            return;
+        }
+
+        // --- ЛОГИКА УСПЕШНОГО ЗАКРЫТИЯ ИЛИ ОБНОВЛЕНИЯ ЕДИНСТВЕННОГО ЧЕКА ---
+        alert('Чек успешно сохранен!');
+
+        // Глобально обновляем номер для генерации будущих вкладок
+        if (result.next_num) {
+            currentReceiptNum = result.next_num;
+        }
+
+        if (typeof receipts !== 'undefined' && activeReceiptId) {
+            
+            if (receipts.length > 1) {
+                // ВАРИАНТ А: Вкладок несколько -> Полностью закрываем сохраненную
+                const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+                receipts = receipts.filter(r => r.id !== activeReceiptId);
+
+                // Переключаемся на соседний открытый чек
+                const nextActiveIndex = currentIndex < receipts.length ? currentIndex : receipts.length - 1;
+                activeReceiptId = receipts[nextActiveIndex].id;
+                
+                if (typeof loadReceiptToUI === 'function') {
+                    loadReceiptToUI(activeReceiptId);
+                }
+                
+            } else {
+                // ВАРИАНТ Б: Вкладка ВСЕГО ОДНА -> Обновляем её номер без закрытия
+                const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+                if (currentReceipt) {
+                    currentReceipt.items = []; 
+                    currentReceipt.cashReceived = ''; 
+                    currentReceipt.discountPercent = 0; 
+                    currentReceipt.customer = { id: '', name: 'Основной покупатель' }; 
+                    
+                    // Обновляем номер вкладки
+                    if (result.next_num) {
+                        currentReceipt.num = result.next_num;
+                    }
+                }
+                
+                // Сбрасываем интерфейс таблицы товаров
+                const tbody = document.getElementById('item-products');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
+                }
+
+                // Сбрасываем поля ввода
+                if (document.getElementById('cash')) document.getElementById('cash').value = '';
+                if (document.getElementById('discount')) document.getElementById('discount').value = '0';
+                if (document.getElementById('customer_id')) document.getElementById('customer_id').value = '';
+                if (document.getElementById('customer_name')) document.getElementById('customer_name').value = 'Основной покупатель';
+            }
+        }
+
+        // Перерисовываем вкладки на экране — теперь номер точно обновится!
+        if (typeof renderReceiptTabs === 'function') {
+            renderReceiptTabs();
+        }
+
+        // Пересчитываем итоги (все обнулится)
+        updateTotals();
+
+        if (saveBtn) saveBtn.disabled = false;
+        document.getElementById('product-search')?.focus();
+
+    } catch (error) {
+        console.error(error);
+        alert('Ошибка соединения с сервером');
+        const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
+        if (saveBtn) saveBtn.disabled = false;
+    }
 }
 
 
@@ -1487,3 +1659,320 @@ document.addEventListener('DOMContentLoaded', () => {
         selectCustomer(client.id, fullName, parseFloat(client.discount_percentage) || 0);
     }
 });
+
+
+let receipts = []; 
+let activeReceiptId = null; 
+
+function createNewReceipt() {
+    let receiptSaleNum;
+
+    if (receipts.length === 0) {
+        // Первый чек берет номер напрямую из бэкенда
+        receiptSaleNum = currentReceiptNum;
+    } else {
+        // Для последующих инкрементируем числовую часть
+        const parts = currentReceiptNum.split('-'); 
+        const prefix = parts[0];
+        const year = parts[1];
+        // Вычисляем следующий номер на основе длины массива receipts
+        let nextId = parseInt(parts[2], 10) + receipts.length; 
+        
+        const formattedNumber = String(nextId).padStart(6, '0'); 
+        receiptSaleNum = `${prefix}-${year}-${formattedNumber}`;
+    }
+
+    const newReceipt = {
+        id: 'receipt_' + Date.now() + '_' + receipts.length, 
+        num: receiptSaleNum,
+        customer: { id: '', name: 'Основной покупатель' }, 
+        items: [],
+        paymentMethod: 'cash', 
+        cashReceived: '', 
+        discountPercent: 0,
+        warehouse: 'main', 
+        merchant: '1', 
+        comment: ''
+    };
+    
+    receipts.push(newReceipt); 
+    activeReceiptId = newReceipt.id;
+    renderReceiptTabs(); 
+    loadReceiptToUI(activeReceiptId);
+}
+
+function renderReceiptTabs() {
+    const container = document.getElementById('receipt-tabs'); 
+    container.innerHTML = '';
+    
+    receipts.forEach((r) => {
+        const li = document.createElement('li'); 
+        li.className = 'nav-item';
+        const isActive = r.id === activeReceiptId;
+        const closeBtn = receipts.length > 1 
+            ? `<button type="button" class="close-receipt" onclick="closeReceipt(event, '${r.id}')"><i class="bi bi-x-lg"></i></button>` 
+            : '';
+        
+        li.innerHTML = `<button class="nav-link ${isActive ? 'active' : ''}" onclick="switchReceipt('${r.id}')">${r.num} ${closeBtn}</button>`;
+        container.appendChild(li);
+    });
+}
+
+function switchReceipt(id) { 
+    saveCurrentUIToState(); 
+    activeReceiptId = id; 
+    renderReceiptTabs(); 
+    loadReceiptToUI(id); 
+}
+
+function closeReceipt(event, id) { 
+    event.stopPropagation(); 
+    const index = receipts.findIndex(r => r.id === id); 
+    if (index === -1) return; 
+    
+    receipts.splice(index, 1); 
+    
+    if (activeReceiptId === id && receipts.length > 0) { 
+        activeReceiptId = receipts[Math.max(0, index - 1)].id; 
+    } 
+    renderReceiptTabs(); 
+    loadReceiptToUI(activeReceiptId); 
+}
+
+// БЕЗОПАСНОЕ СОХРАНЕНИЕ ТЕКУЩЕГО ОКНА В ОБЪЕКТ ЧЕКА
+function saveCurrentUIToState() {
+    const current = receipts.find(r => r.id === activeReceiptId); 
+    if (!current) return;
+    
+    current.customer.id = document.getElementById('customer_id')?.value || ''; 
+    current.customer.name = document.getElementById('customer_name')?.value || 'Основной покупатель';
+    current.paymentMethod = document.getElementById('paymentMethod')?.value || 'cash'; 
+    current.cashReceived = document.getElementById('cash')?.value || '';
+    current.discountPercent = parseInt(document.getElementById('discount')?.value) || 0; 
+    current.warehouse = document.getElementById('invoice_warehouse')?.value || 'main';
+    current.merchant = document.getElementById('invoice_merchant')?.value || '1'; 
+    current.comment = document.getElementById('invoice_comment')?.value || '';
+}
+
+// БЕЗОПАСНАЯ ВЫГРУЗКА ИЗ ОБЪЕКТА ЧЕКА В ИНТЕРФЕЙС (Исправляет падение на строке 1563)
+function loadReceiptToUI(id) {
+    const current = receipts.find(r => r.id === id); 
+    if (!current) return;
+    
+    if(document.getElementById('customer_id')) document.getElementById('customer_id').value = current.customer.id;
+    if(document.getElementById('customer_name')) document.getElementById('customer_name').value = current.customer.name;
+    if(document.getElementById('paymentMethod')) document.getElementById('paymentMethod').value = current.paymentMethod; 
+    if(document.getElementById('cash')) document.getElementById('cash').value = current.cashReceived;
+    if(document.getElementById('discount')) document.getElementById('discount').value = current.discountPercent || ''; 
+    
+    // Поля с вкладки "Дополнительно" (сработают без ошибок, даже если элементы еще не в DOM)
+    if(document.getElementById('invoice_warehouse')) document.getElementById('invoice_warehouse').value = current.warehouse;
+    if(document.getElementById('invoice_merchant')) document.getElementById('invoice_merchant').value = current.merchant; 
+    if(document.getElementById('invoice_comment')) document.getElementById('invoice_comment').value = current.comment;
+    
+    renderItemsTable(current.items); 
+    calculateTotals();
+}
+
+function renderItemsTable(items) {
+    const tbody = document.getElementById('item-products'); 
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    if (items.length === 0) { 
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`; 
+        return; 
+    }
+    
+    items.forEach((item, index) => {
+        const rowNumber = index + 1;
+        const price = parseFloat(item.price) || 0;
+        const qty = parseFloat(item.qty) || 1;
+        const lineSum = price * qty;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="ps-3 text-muted">${rowNumber}</td>
+            <td class="product-name" data-id="${item.id}" title="${item.name}" data-name="${item.name}">
+                ${item.name}
+            </td>
+            <td>
+                <div class="qty-control d-flex align-items-center gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-secondary minus" onclick="changeQtyFromBtn('${item.id}', -1)">-</button>
+                    <input type="number" class="form-control form-control-sm qty text-center" value="${qty}" min="1" style="width: 60px;" oninput="updateItemQty('${item.id}', this.value)">
+                    <button type="button" class="btn btn-sm btn-outline-secondary plus" onclick="changeQtyFromBtn('${item.id}', 1)">+</button>
+                </div>
+            </td>
+            <td>
+                <div class="pricepoduct fw-semibold" data-price="${price}">
+                    ${price.toFixed(2)} ₴
+                </div>
+                <small class="text-muted">
+                    Сумма:<br>
+                    <span class="line-sum fw-bold text-primary">${lineSum.toFixed(2)}</span> ₴
+                </small>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove remove" onclick="removeItem('${item.id}')">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// Кнопки + и - (вправо и влево)
+window.changeQtyFromBtn = function(itemId, direction) {
+    const current = receipts.find(r => r.id === activeReceiptId); 
+    if (!current) return;
+    
+    const item = current.items.find(i => i.id === itemId); 
+    if (item) { 
+        let newQty = (parseFloat(item.qty) || 1) + direction;
+        if (newQty < 1) newQty = 1; 
+        
+        item.qty = newQty;
+        
+        // Перерисовываем таблицу, чтобы обновилось число в инпуте и Сумма строки
+        renderItemsTable(current.items);
+        calculateTotals(); 
+    } 
+};
+
+// Сохраняем метод оплаты в текущий чек при его изменении кассиром
+function changePaymentMethod(method) {
+    if (typeof receipts !== 'undefined' && activeReceiptId) {
+        const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+        if (currentReceipt) {
+            currentReceipt.paymentMethod = method; // Перезаписываем 'cash' или 'card'
+        }
+    }
+}
+
+// Прямой ввод цифр в инпут
+window.updateItemQty = function(itemId, newQty) { 
+    const current = receipts.find(r => r.id === activeReceiptId); 
+    if (!current) return;
+    
+    const item = current.items.find(i => i.id === itemId); 
+    if (item) { 
+        let parsedQty = parseFloat(newQty);
+        if (isNaN(parsedQty) || parsedQty < 1) parsedQty = 1;
+        
+        // Важно: сохраняем новое количество в состояние чека!
+        item.qty = parsedQty; 
+        
+        // Обновляем сумму строки на лету (без перерисовки, чтобы не терять фокус)
+        const row = document.querySelector(`.product-name[data-id="${itemId}"]`)?.closest('tr');
+        if (row) {
+            const lineSumSpan = row.querySelector('.line-sum');
+            if (lineSumSpan) {
+                const price = parseFloat(item.price) || 0;
+                lineSumSpan.innerText = (price * parsedQty).toFixed(2);
+            }
+        }
+        
+        calculateTotals(); 
+    } 
+};
+
+function removeItem(itemId) { 
+    const current = receipts.find(r => r.id === activeReceiptId); 
+    if (!current) return;
+    
+    // 1. Удаляем товар из массива текущего чека
+    current.items = current.items.filter(i => i.id !== itemId); 
+    
+    // 2. Находим и удаляем строку товара из DOM-дерева таблицы
+    const row = document.querySelector(`.product-name[data-id="${itemId}"]`)?.closest('tr');
+    if (row) {
+        row.remove();
+    }
+    
+    // 3. Проверяем, остались ли вообще товары в этом чеке
+    const tbody = document.getElementById('item-products');
+    if (tbody) {
+        // Если массив товаров пуст — жестко затираем всё содержимое и пишем заглушку
+        if (!current.items || current.items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
+        } else {
+            // Если товары еще есть, заново собираем все оставшиеся строки <tr>
+            const rows = tbody.querySelectorAll('tr');
+            
+            // На всякий случай проверяем и количество реальных строк в DOM
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
+            } else {
+                // Корректно пересчитываем номера № (1, 2, 3...) для оставшихся строк
+                rows.forEach((tr, index) => {
+                    const numCell = tr.querySelector('td:first-child');
+                    if (numCell) {
+                        numCell.innerText = index + 1;
+                    }
+                });
+            }
+        }
+    }
+    
+    // 4. Пересчитываем общие итоги в правой панели (они станут по нулям)
+    calculateTotals(); 
+}
+
+function calculateTotals() {
+    const current = receipts.find(r => r.id === activeReceiptId); 
+    if (!current) return;
+    
+    let subtotal = 0; 
+    // Считаем сумму на основе актуального состояния массива items
+    current.items.forEach(i => { 
+        subtotal += (parseFloat(i.qty) || 0) * (parseFloat(i.price) || 0); 
+    });
+    
+    // Получаем актуальную скидку
+    const discountPercent = parseInt(document.getElementById('discount')?.value) || 0; 
+    const discountSum = subtotal * (discountPercent / 100); 
+    const total = subtotal - discountSum;
+    
+    // Считаем сдачу
+    const cashReceived = parseFloat(document.getElementById('cash')?.value) || 0; 
+    const change = cashReceived > total ? cashReceived - total : 0;
+    
+    // Выводим все данные в правый блок интерфейса
+    if(document.getElementById('subtotal-sum')) {
+        document.getElementById('subtotal-sum').innerText = subtotal.toFixed(2) + ' ₴'; 
+    }
+    if(document.getElementById('discount-label')) {
+        document.getElementById('discount-label').innerText = discountPercent;
+    }
+    if(document.getElementById('discount-sum')) {
+        document.getElementById('discount-sum').innerText = discountSum.toFixed(2) + ' ₴'; 
+    }
+    if(document.getElementById('total-sum')) {
+        document.getElementById('total-sum').innerText = total.toFixed(2) + ' ₴'; 
+    }
+    if(document.getElementById('change')) {
+        document.getElementById('change').innerText = change.toFixed(2) + ' ₴';
+    }
+    
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('add-receipt-btn')?.addEventListener('click', createNewReceipt);
+    document.getElementById('discount')?.addEventListener('input', calculateTotals); 
+    document.getElementById('cash')?.addEventListener('input', calculateTotals);
+    
+    document.querySelectorAll('.fast-cash-btn').forEach(btn => { 
+        btn.addEventListener('click', function() { 
+            const val = this.getAttribute('data-value'); 
+            const cashInput = document.getElementById('cash');
+            if (cashInput) {
+                cashInput.value = val; 
+                calculateTotals(); 
+            }
+        }); 
+    });
+    
+    createNewReceipt();
+});
+
