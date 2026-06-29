@@ -1019,75 +1019,201 @@ document.addEventListener('click', e => {
 });
 
 // Сохраняет чек
-async function saveInvoice() {
-    let subtotal = 0;
+// async function saveInvoice() {
+//     let subtotal = 0;
 
-    document
-        .querySelectorAll('.line-sum')
-        .forEach(cell => {
-            subtotal += Number(cell.textContent);
-        });
+//     document
+//         .querySelectorAll('.line-sum')
+//         .forEach(cell => {
+//             subtotal += Number(cell.textContent);
+//         });
+
+//     try {
+//         const items = [];
+
+//         document
+//             .querySelectorAll('#item-products tr')
+//             .forEach(row => {
+//                 if (row.querySelector('td[colspan]')) return; // Пропускаем заглушку
+
+//                 items.push({
+//                     product_id: Number(
+//                         row.querySelector('.product-name').dataset.id
+//                     ),
+//                     quantity: Number(
+//                         row.querySelector('.qty').value
+//                     ),
+//                     price: Number(
+//                         row.querySelector('.pricepoduct').dataset.price
+//                     )
+//                 });
+//             });
+
+//         if (!items.length) {
+//             alert('Добавьте товары в чек');
+//             return;
+//         }
+
+//         const total = Number(
+//             document
+//                 .getElementById('total-sum')
+//                 .textContent
+//                 .replace('₴', '')
+//                 .trim()
+//         );
+
+//         const discountPercent = Number(
+//             document.getElementById('discount').value
+//         ) || 0;
+
+//         const discountAmount = subtotal * discountPercent / 100;
+
+//         const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
+//         if (saveBtn) saveBtn.disabled = true;
+
+//         const response = await fetch(
+//             '/sales/save',
+//             {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json'
+//                 },
+//                 body: JSON.stringify({
+//                     customer_id: document.querySelector('#customer_id')?.value || null,
+//                     payment_method: activeReceipt.paymentMethod,
+//                     total,
+//                     discount_percent: discountPercent,
+//                     discount_amount: discountAmount,
+//                     items
+//                 })
+//             }
+//         );
+
+//         const result = await response.json();
+
+//         if (!result.success) {
+//             alert(result.error || 'Ошибка сохранения');
+//             if (saveBtn) saveBtn.disabled = false;
+//             return;
+//         }
+
+//         // --- ЛОГИКА УСПЕШНОГО ЗАКРЫТИЯ ИЛИ ОБНОВЛЕНИЯ ЕДИНСТВЕННОГО ЧЕКА ---
+//         //alert('Чек успешно сохранен!');
+
+//         // Глобально обновляем номер для генерации будущих вкладок
+//         if (result.next_num) {
+//             currentReceiptNum = result.next_num;
+//         }
+
+//         if (typeof receipts !== 'undefined' && activeReceiptId) {
+            
+//             if (receipts.length > 1) {
+//                 // ВАРИАНТ А: Вкладок несколько -> Полностью закрываем сохраненную
+//                 const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+//                 receipts = receipts.filter(r => r.id !== activeReceiptId);
+
+//                 // Переключаемся на соседний открытый чек
+//                 const nextActiveIndex = currentIndex < receipts.length ? currentIndex : receipts.length - 1;
+//                 activeReceiptId = receipts[nextActiveIndex].id;
+                
+//                 if (typeof loadReceiptToUI === 'function') {
+//                     loadReceiptToUI(activeReceiptId);
+//                 }
+                
+//             } else {
+//                 // ВАРИАНТ Б: Вкладка ВСЕГО ОДНА -> Обновляем её номер без закрытия
+//                 const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+//                 if (currentReceipt) {
+//                     currentReceipt.items = []; 
+//                     currentReceipt.cashReceived = ''; 
+//                     currentReceipt.discountPercent = 0; 
+//                     currentReceipt.customer = { id: '', name: 'Основной покупатель' }; 
+                    
+//                     // Обновляем номер вкладки
+//                     if (result.next_num) {
+//                         currentReceipt.num = result.next_num;
+//                     }
+//                 }
+                
+//                 // Сбрасываем интерфейс таблицы товаров
+//                 const tbody = document.getElementById('item-products');
+//                 if (tbody) {
+//                     tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
+//                 }
+
+//                 // Сбрасываем поля ввода
+//                 if (document.getElementById('cash')) document.getElementById('cash').value = '';
+//                 if (document.getElementById('discount')) document.getElementById('discount').value = '0';
+//                 if (document.getElementById('customer_id')) document.getElementById('customer_id').value = '';
+//                 if (document.getElementById('customer_name')) document.getElementById('customer_name').value = 'Основной покупатель';
+//             }
+//         }
+
+//         // Перерисовываем вкладки на экране — теперь номер точно обновится!
+//         if (typeof renderReceiptTabs === 'function') {
+//             renderReceiptTabs();
+//         }
+
+//         // Пересчитываем итоги (все обнулится)
+//         updateTotals();
+
+//         if (saveBtn) saveBtn.disabled = false;
+//         document.getElementById('product-search')?.focus();
+
+//     } catch (error) {
+//         console.error(error);
+//         alert('Ошибка соединения с сервером');
+//         const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
+//         if (saveBtn) saveBtn.disabled = false;
+//     }
+// }
+
+// Сохраняет чек
+async function saveInvoice() {
+    // 1. Находим активный чек (это исправляет вашу ошибку)
+    const activeReceipt = receipts.find(r => r.id === activeReceiptId);
+    
+    if (!activeReceipt) {
+        alert('Ошибка: Чек не найден');
+        return;
+    }
+
+    if (!activeReceipt.items || activeReceipt.items.length === 0) {
+        alert('Добавьте товары в чек');
+        return;
+    }
+
+    // 2. Считаем данные из объекта, а не из DOM
+    let subtotal = 0;
+    activeReceipt.items.forEach(i => {
+        subtotal += (Number(i.price) || 0) * (Number(i.qty) || 0);
+    });
+
+    const discountPercent = Number(activeReceipt.discountPercent) || 0;
+    const discountAmount = subtotal * discountPercent / 100;
+    const total = subtotal - discountAmount;
+
+    // 3. Подготовка данных
+    const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
+    if (saveBtn) saveBtn.disabled = true;
 
     try {
-        const items = [];
-
-        document
-            .querySelectorAll('#item-products tr')
-            .forEach(row => {
-                if (row.querySelector('td[colspan]')) return; // Пропускаем заглушку
-
-                items.push({
-                    product_id: Number(
-                        row.querySelector('.product-name').dataset.id
-                    ),
-                    quantity: Number(
-                        row.querySelector('.qty').value
-                    ),
-                    price: Number(
-                        row.querySelector('.pricepoduct').dataset.price
-                    )
-                });
-            });
-
-        if (!items.length) {
-            alert('Добавьте товары в чек');
-            return;
-        }
-
-        const total = Number(
-            document
-                .getElementById('total-sum')
-                .textContent
-                .replace('₴', '')
-                .trim()
-        );
-
-        const discountPercent = Number(
-            document.getElementById('discount').value
-        ) || 0;
-
-        const discountAmount = subtotal * discountPercent / 100;
-
-        const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
-        if (saveBtn) saveBtn.disabled = true;
-
-        const response = await fetch(
-            '/sales/save',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    customer_id: document.querySelector('#customer_id')?.value || null,
-                    payment_method: document.querySelector('[name="paymentMethod"]').value || null,
-                    total,
-                    discount_percent: discountPercent,
-                    discount_amount: discountAmount,
-                    items
-                })
-            }
-        );
+        const response = await fetch('/sales/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customer_id: activeReceipt.customer.id || null,
+                payment_method: activeReceipt.paymentMethod, // Берем из объекта
+                total: total,
+                discount_percent: discountPercent,
+                discount_amount: discountAmount,
+                items: activeReceipt.items.map(i => ({
+                    product_id: Number(i.id),
+                    quantity: Number(i.qty),
+                    price: Number(i.price)
+                }))
+            })
+        });
 
         const result = await response.json();
 
@@ -1097,78 +1223,38 @@ async function saveInvoice() {
             return;
         }
 
-        // --- ЛОГИКА УСПЕШНОГО ЗАКРЫТИЯ ИЛИ ОБНОВЛЕНИЯ ЕДИНСТВЕННОГО ЧЕКА ---
-        alert('Чек успешно сохранен!');
+        // 4. Логика обновления после успешного сохранения
+        if (result.next_num) currentReceiptNum = result.next_num;
 
-        // Глобально обновляем номер для генерации будущих вкладок
-        if (result.next_num) {
-            currentReceiptNum = result.next_num;
-        }
-
-        if (typeof receipts !== 'undefined' && activeReceiptId) {
+        if (receipts.length > 1) {
+            const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+            receipts = receipts.filter(r => r.id !== activeReceiptId);
+            activeReceiptId = receipts[Math.min(currentIndex, receipts.length - 1)].id;
+            loadReceiptToUI(activeReceiptId);
+        } else {
+            // Очистка единственного чека
+            activeReceipt.items = [];
+            activeReceipt.cashReceived = '';
+            activeReceipt.discountPercent = 0;
+            activeReceipt.customer = { id: '', name: 'Основной покупатель' };
+            if (result.next_num) activeReceipt.num = result.next_num;
             
-            if (receipts.length > 1) {
-                // ВАРИАНТ А: Вкладок несколько -> Полностью закрываем сохраненную
-                const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
-                receipts = receipts.filter(r => r.id !== activeReceiptId);
-
-                // Переключаемся на соседний открытый чек
-                const nextActiveIndex = currentIndex < receipts.length ? currentIndex : receipts.length - 1;
-                activeReceiptId = receipts[nextActiveIndex].id;
-                
-                if (typeof loadReceiptToUI === 'function') {
-                    loadReceiptToUI(activeReceiptId);
-                }
-                
-            } else {
-                // ВАРИАНТ Б: Вкладка ВСЕГО ОДНА -> Обновляем её номер без закрытия
-                const currentReceipt = receipts.find(r => r.id === activeReceiptId);
-                if (currentReceipt) {
-                    currentReceipt.items = []; 
-                    currentReceipt.cashReceived = ''; 
-                    currentReceipt.discountPercent = 0; 
-                    currentReceipt.customer = { id: '', name: 'Основной покупатель' }; 
-                    
-                    // Обновляем номер вкладки
-                    if (result.next_num) {
-                        currentReceipt.num = result.next_num;
-                    }
-                }
-                
-                // Сбрасываем интерфейс таблицы товаров
-                const tbody = document.getElementById('item-products');
-                if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`;
-                }
-
-                // Сбрасываем поля ввода
-                if (document.getElementById('cash')) document.getElementById('cash').value = '';
-                if (document.getElementById('discount')) document.getElementById('discount').value = '0';
-                if (document.getElementById('customer_id')) document.getElementById('customer_id').value = '';
-                if (document.getElementById('customer_name')) document.getElementById('customer_name').value = 'Основной покупатель';
-            }
+            // Сброс UI
+            loadReceiptToUI(activeReceiptId);
         }
 
-        // Перерисовываем вкладки на экране — теперь номер точно обновится!
-        if (typeof renderReceiptTabs === 'function') {
-            renderReceiptTabs();
-        }
+        if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
+        if (typeof updateTotals === 'function') updateTotals();
 
-        // Пересчитываем итоги (все обнулится)
-        updateTotals();
-
-        if (saveBtn) saveBtn.disabled = false;
         document.getElementById('product-search')?.focus();
 
     } catch (error) {
         console.error(error);
         alert('Ошибка соединения с сервером');
-        const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
+    } finally {
         if (saveBtn) saveBtn.disabled = false;
     }
 }
-
-
         
 let scanner = null;
 
@@ -1739,40 +1825,70 @@ function closeReceipt(event, id) {
     loadReceiptToUI(activeReceiptId); 
 }
 
-// БЕЗОПАСНОЕ СОХРАНЕНИЕ ТЕКУЩЕГО ОКНА В ОБЪЕКТ ЧЕКА
+// =========================================================
+// СИНХРОНИЗАЦИЯ СПОСОБОВ ОПЛАТЫ ДЛЯ КАЖДОЙ ВКЛАДКИ ЧЕКА
+// =========================================================
+
+// СОХРАНЕНИЕ: берем значение прямо из <select>
 function saveCurrentUIToState() {
     const current = receipts.find(r => r.id === activeReceiptId); 
     if (!current) return;
     
+    // ... другие поля ...
     current.customer.id = document.getElementById('customer_id')?.value || ''; 
     current.customer.name = document.getElementById('customer_name')?.value || 'Основной покупатель';
-    current.paymentMethod = document.getElementById('paymentMethod')?.value || 'cash'; 
     current.cashReceived = document.getElementById('cash')?.value || '';
     current.discountPercent = parseInt(document.getElementById('discount')?.value) || 0; 
-    current.warehouse = document.getElementById('invoice_warehouse')?.value || 'main';
-    current.merchant = document.getElementById('invoice_merchant')?.value || '1'; 
+    // СОХРАНЯЕМ новые поля
+    // current.warehouse = document.getElementById('invoice_warehouse')?.value || 'main';
+    // current.merchant = document.getElementById('invoice_merchant')?.value || '';
     current.comment = document.getElementById('invoice_comment')?.value || '';
+
+    // Берем метод оплаты из нового селекта
+    const paymentSelect = document.getElementById('payment-method');
+    if (paymentSelect) {
+        current.paymentMethod = paymentSelect.value;
+    }
+
+    
 }
 
-// БЕЗОПАСНАЯ ВЫГРУЗКА ИЗ ОБЪЕКТА ЧЕКА В ИНТЕРФЕЙС (Исправляет падение на строке 1563)
+// ЗАГРУЗКА: устанавливаем значение в <select>
 function loadReceiptToUI(id) {
     const current = receipts.find(r => r.id === id); 
     if (!current) return;
     
-    if(document.getElementById('customer_id')) document.getElementById('customer_id').value = current.customer.id;
-    if(document.getElementById('customer_name')) document.getElementById('customer_name').value = current.customer.name;
-    if(document.getElementById('paymentMethod')) document.getElementById('paymentMethod').value = current.paymentMethod; 
-    if(document.getElementById('cash')) document.getElementById('cash').value = current.cashReceived;
-    if(document.getElementById('discount')) document.getElementById('discount').value = current.discountPercent || ''; 
+    // ... другие поля ...
+    if (document.getElementById('customer_id')) document.getElementById('customer_id').value = current.customer.id;
+    if (document.getElementById('customer_name')) document.getElementById('customer_name').value = current.customer.name;
+    if (document.getElementById('cash')) document.getElementById('cash').value = current.cashReceived;
+    if (document.getElementById('discount')) document.getElementById('discount').value = current.discountPercent || '';
     
-    // Поля с вкладки "Дополнительно" (сработают без ошибок, даже если элементы еще не в DOM)
-    if(document.getElementById('invoice_warehouse')) document.getElementById('invoice_warehouse').value = current.warehouse;
-    if(document.getElementById('invoice_merchant')) document.getElementById('invoice_merchant').value = current.merchant; 
-    if(document.getElementById('invoice_comment')) document.getElementById('invoice_comment').value = current.comment;
-    
+    // ЗАГРУЖАЕМ новые поля
+    // const warehouseEl = document.getElementById('invoice_warehouse');
+    // if (warehouseEl) warehouseEl.value = current.warehouse || 'main';
+
+    // const merchantEl = document.getElementById('invoice_merchant');
+    // if (merchantEl) merchantEl.value = current.merchant || 'Администратор';
+
+    const commentEl = document.getElementById('invoice_comment');
+    if (commentEl) commentEl.value = current.comment || '';
+
+    // Устанавливаем метод оплаты
+    const paymentSelect = document.getElementById('payment-method');
+    if (paymentSelect) {
+        paymentSelect.value = current.paymentMethod || 'cash';
+    }
+
+
+
     renderItemsTable(current.items); 
     calculateTotals();
 }
+
+
+
+
 
 function renderItemsTable(items) {
     const tbody = document.getElementById('item-products'); 
@@ -1976,3 +2092,43 @@ document.addEventListener('DOMContentLoaded', () => {
     createNewReceipt();
 });
 
+// --- ЖЕЛЕЗНЫЙ ПЕРЕХВАТ КЛИКА МЫШКОЙ ПО СПОСОБУ ОПЛАТЫ ---
+document.addEventListener('click', function(e) {
+    // Ищем пункт выпадающего меню, по которому кликнули (в Bootstrap это обычно .dropdown-item)
+    const dropdownItem = e.target.closest('.dropdown-item, .dropdown-menu a, .dropdown-menu button');
+    if (!dropdownItem) return;
+
+    const text = dropdownItem.innerText.toLowerCase();
+    let method = '';
+
+    // Определяем выбранный метод по тексту пункта меню
+    if (text.includes('карт')) method = 'card';
+    else if (text.includes('перевод') || text.includes('безнал')) method = 'transfer';
+    else if (text.includes('налич')) method = 'cash';
+
+    if (method) {
+        e.preventDefault(); // Блокируем перезагрузку страницы, если это ссылка <a>
+        
+        // 1. Записываем способ оплаты прямо в память АКТИВНОГО чека
+        if (typeof receipts !== 'undefined' && activeReceiptId) {
+            const currentReceipt = receipts.find(r => r.id === activeReceiptId);
+            if (currentReceipt) {
+                currentReceipt.paymentMethod = method;
+            }
+        }
+        
+        // 2. Визуально меняем текст на главной кнопке
+        const paymentBtn = document.getElementById('paymentMethod') || 
+                           dropdownItem.closest('.payment-params, .card')?.querySelector('.dropdown-toggle') ||
+                           document.querySelector('.dropdown-toggle');
+                           
+        if (paymentBtn) {
+            if (method === 'card') paymentBtn.innerHTML = '💳 Карта';
+            else if (method === 'transfer') paymentBtn.innerHTML = '📱 Перевод';
+            else paymentBtn.innerHTML = '💵 Наличные';
+        }
+        
+        // 3. Запускаем сохранение состояния
+        if (typeof saveCurrentUIToState === 'function') saveCurrentUIToState();
+    }
+});

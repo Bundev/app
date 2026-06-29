@@ -338,6 +338,9 @@ tr.selected-product-row td {
     .new-header .badge {
         font-size: 1rem !important;
     }
+    .product-image {
+        display: none;
+    }
 }
 
 /* ЕДИНЫЙ МИНИМАЛИСТИЧНЫЙ СТИЛЬ ВКЛАДОК (По макету Снимок экрана от 2026-06-25 21-00-04.png) */
