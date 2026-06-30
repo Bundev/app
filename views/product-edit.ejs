@@ -194,21 +194,21 @@
 
                         </div>
 
-                       <%#  <div class="col-md-4">
+                        <div class="col-md-4">
 
                             <label class="form-label">
 
-                                Место на складе
+                                Еденица измерения
 
                             </label>
 
-                            <input
-                                type="text"
-                                name="location"
-                                class="form-control"
-                                placeholder="Стеллаж A-3" value="">
+                            <select name="unit" class="form-control" id="unit">
+                                <option value="шт" <%= (typeof product !== 'undefined' && product.unit === 'шт') ? 'selected' : '' %>>шт</option>
+                                <option value="м" <%= (typeof product !== 'undefined' && product.unit === 'м') ? 'selected' : '' %>>м</option>
+                                <option value="кг" <%= (typeof product !== 'undefined' && product.unit === 'кг') ? 'selected' : '' %>>кг</option>
+                            </select>
 
-                        </div> %>
+                        </div>
 
                     </div>
 

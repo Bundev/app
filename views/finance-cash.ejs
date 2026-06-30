@@ -1,0 +1,198 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
+<div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Финансы и Касса</h1>
+            <p class="text-muted small mb-0">Оперативный учет денежных средств компании</p>
+        </div>
+        <div class="btn-group shadow-sm">
+            <button type="button" class="btn btn-success btn-sm px-3" data-bs-toggle="modal" data-bs-target="#transModal" onclick="setTransType('income')">
+                <i class="bi bi-cash-coin me-1"></i> Внести деньги
+            </button>
+            <button type="button" class="btn btn-danger btn-sm px-3" data-bs-toggle="modal" data-bs-target="#transModal" onclick="setTransType('expense')">
+                <i class="bi bi-box-arrow-right me-1"></i> Расход / Инкассация
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100">
+                <div class="card-body py-3 d-flex flex-column justify-content-center">
+                    <h6 class="text-uppercase small text-white-50 fw-bold mb-1">Всего в кассе</h6>
+                    <h2 class="mb-0 fw-bold"><%= totalBalance.toFixed(2) %> ₴</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card border-0 shadow-sm bg-white h-100">
+                <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-success border-4 rounded-start">
+                    <h6 class="text-uppercase small text-muted fw-bold mb-1 text-success">Наличные (💵)</h6>
+                    <h2 class="mb-0 fw-bold text-dark"><%= cashBalance.toFixed(2) %> ₴</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card border-0 shadow-sm bg-white h-100">
+                <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-info border-4 rounded-start">
+                    <h6 class="text-uppercase small text-muted fw-bold mb-1 text-info">Безналичные / Терминал (💳)</h6>
+                    <h2 class="mb-0 fw-bold text-dark"><%= cardBalance.toFixed(2) %> ₴</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% if (currentUser.role === 'admin' || currentUser.role === 'Администратор') { %>
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white fw-bold py-3 text-muted text-uppercase small d-flex justify-content-between align-items-center border-bottom-0">
+                <span><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Кассы сотрудников (Контроль персонала)</span>
+                <span class="badge bg-primary px-2.5 py-1.5 fs-7">Админ-панель</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" style="font-size: 14px;">
+                        <thead class="table-light text-muted small fw-bold">
+                            <tr>
+                                <th class="ps-4">Сотрудник</th>
+                                <th>Роль</th>
+                                <th>Наличные в руках</th>
+                                <th>Безналичные (Карта)</th>
+                                <th class="pe-4 text-end">Всего принял</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% employeeCashes.forEach(emp => { %>
+                                <% const empTotal = Number(emp.employee_cash || 0) + Number(emp.employee_card || 0); %>
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">
+                                            <i class="bi bi-person-circle me-2 text-secondary"></i><%= emp.user_name %>
+                                            <% if (emp.user_id === currentUser.id) { %>
+                                                <span class="text-muted small fw-normal">(Вы)</span>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-secondary border"><%= emp.user_role %></span>
+                                    </td>
+                                    <td class="fw-medium text-success">
+                                        <%= Number(emp.employee_cash || 0).toFixed(2) %> ₴
+                                    </td>
+                                    <td class="fw-medium text-info">
+                                        <%= Number(emp.employee_card || 0).toFixed(2) %> ₴
+                                    </td>
+                                    <td class="pe-4 text-end fw-bold text-dark">
+                                        <%= empTotal.toFixed(2) %> ₴
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold py-3 text-muted text-uppercase small border-bottom-0">
+            <i class="bi bi-clock-history me-2"></i>История движений денежных средств
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 14px;">
+                    <thead class="table-light text-muted small fw-bold">
+                        <tr>
+                            <th class="ps-4">Дата / Время</th>
+                            <th>Тип документа</th>
+                            <th>Назначение / Описание</th>
+                            <th>Сотрудник</th>
+                            <th>Тип оплаты</th>
+                            <th class="pe-4 text-end">Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (history.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">Операций по кассе еще не зафиксировано</td>
+                            </tr>
+                        <% } else { %>
+                            <% history.forEach(item => { %>
+                                <tr>
+                                    <td class="ps-4 text-muted"><%= new Date(item.created_at).toLocaleString('ru-RU') %></td>
+                                    <td>
+                                        <span class="badge <%= item.source === 'Продажа' ? 'bg-light text-dark border' : 'bg-secondary text-white' %>">
+                                            <%= item.source %>
+                                        </span>
+                                    </td>
+                                    <td class="fw-medium">
+                                        <%= item.source === 'Продажа' ? 'Чек #' + item.doc_num : item.details %>
+                                    </td>
+                                    <td class="text-muted">
+                                        <i class="bi bi-person me-1"></i><%= item.employee_name || 'Система' %>
+                                    </td>
+                                    <td>
+                                        <%= item.payment_method === 'cash' ? '💵 Наличные' : '💳 Карта' %>
+                                    </td>
+                                    <td class="pe-4 text-end fw-bold <%= item.type === 'income' ? 'text-success' : 'text-danger' %>">
+                                        <%= item.type === 'income' ? '+' : '-' %><%= Number(item.amount).toFixed(2) %> ₴
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom-0 py-3">
+                <h5 class="modal-title fw-bold" id="transModalTitle">Финансовая операция</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/finance/transaction" method="POST">
+                <input type="hidden" id="trans_type" name="type" value="income">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Сумма (₴) *</label>
+                        <input type="number" name="amount" class="form-control form-control-lg fw-bold" min="0.01" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Способ расчета *</label>
+                        <select name="payment_method" class="form-select">
+                            <option value="cash">💵 Наличные</option>
+                            <option value="card">💳 Карта</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Комментарий / Назначение *</label>
+                        <input type="text" id="trans_desc" name="description" class="form-control" placeholder="Например: Инкассация, покупка канцтоваров..." required autocomplete="off">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary px-4">Выполнить операцию</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function setTransType(type) {
+    document.getElementById('trans_type').value = type;
+    if (type === 'income') {
+        document.getElementById('transModalTitle').innerText = 'Внесение наличных / Доход';
+        document.getElementById('trans_desc').placeholder = 'Основание (например: Внесение разменной монеты)';
+    } else {
+        document.getElementById('transModalTitle').innerText = 'Расходная операция / Инкассация';
+        document.getElementById('trans_desc').placeholder = 'Куда ушли деньги (например: Инкассация, оплата за аренду)';
+    }
+}
+</script>
+<%- include('blocks/footer') -%>

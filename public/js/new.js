@@ -5,7 +5,7 @@ const imagePreview = document.getElementById('imagePreview');
 // ПЕРЕМЕННАЯ ДЛЯ ХРАНЕНИЯ ИНДЕКСА ТЕКУЩЕГО ВЫБРАННОГО ТОВАРA
 let currentFocus = -1;
 
-// 1. Слушатель для ввода текста (Твой код с небольшим сбросом индекса)
+//1. Слушатель для ввода текста (Твой код с небольшим сбросом индекса)
 searchInput.addEventListener(
     'input',
     async () => {
@@ -79,7 +79,7 @@ searchInput.addEventListener(
                         ${Number(product.sale_price).toFixed(2)} ₴
                     </div>
                     <span class="badge bg-${stockColor} mt-2">
-                        ${qty} шт
+                        ${qty} ${product.unit}
                     </span>
                 </div>
             </div>
@@ -124,6 +124,7 @@ searchInput.addEventListener(
         searchResults.style.display = products.length > 0 ? 'block' : 'none';
     }
 );
+
 
 // 2. НОВЫЙ СЛУШАТЕЛЬ: Обработка кнопок Вверх, Вниз и Enter внутри инпута
 searchInput.addEventListener('keydown', function(e) {
@@ -728,6 +729,7 @@ function addProductToInvoice(product) {
         const newItem = {
             id: String(product.id),
             name: product.name,
+            unit: product.unit,
             qty: 1,
             price: price
         };
@@ -738,8 +740,8 @@ function addProductToInvoice(product) {
         const html = `
             <tr>
                 <td class="ps-3 text-muted">${rowNumber}</td>
-                <td class="product-name" data-id="${newItem.id}" title="${newItem.name}" data-name="${newItem.name}">
-                    ${newItem.name}
+                <td class="product-name" data-id="${newItem.id}" title="${newItem.name}" data-name="${newItem.name+', '+newItem.unit}">
+                    ${newItem.name+', '+newItem.unit}
                 </td>
                 <td>
                     <div class="qty-control d-flex align-items-center gap-1">
@@ -1204,6 +1206,7 @@ async function saveInvoice() {
             body: JSON.stringify({
                 customer_id: activeReceipt.customer.id || null,
                 payment_method: activeReceipt.paymentMethod, // Берем из объекта
+                comment: activeReceipt.comment || null,
                 total: total,
                 discount_percent: discountPercent,
                 discount_amount: discountAmount,
@@ -1223,29 +1226,47 @@ async function saveInvoice() {
             return;
         }
 
-        // 4. Логика обновления после успешного сохранения
-        if (result.next_num) currentReceiptNum = result.next_num;
 
+
+        // 4. Логика обновления после успешного сохранения
         if (receipts.length > 1) {
+            // Находим индекс чека, который только что сохранили
             const currentIndex = receipts.findIndex(r => r.id === activeReceiptId);
+            
+            // Удаляем сохраненный чек из памяти
             receipts = receipts.filter(r => r.id !== activeReceiptId);
+            
+            // Переключаем фокус на соседний чек
             activeReceiptId = receipts[Math.min(currentIndex, receipts.length - 1)].id;
+            
+            // Сначала перерисовываем вкладки, чтобы их номера (Чек #1, #2) обновились в памяти
+            if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
+            
+            // И только потом загружаем данные активного чека в UI
             loadReceiptToUI(activeReceiptId);
         } else {
-            // Очистка единственного чека
+            // Очистка единственного чека (подготовка к новой продаже)
             activeReceipt.items = [];
             activeReceipt.cashReceived = '';
             activeReceipt.discountPercent = 0;
             activeReceipt.customer = { id: '', name: 'Основной покупатель' };
-            if (result.next_num) activeReceipt.num = result.next_num;
+            //if (result.next_num) activeReceipt.num = result.next_num;
             
-            // Сброс UI
+            // СБРОС новых полей в объекте к дефолтным значениям
+            activeReceipt.comment = '';
+            activeReceipt.paymentMethod = 'cash';
+            
+            // Сбрасываем интерфейс
             loadReceiptToUI(activeReceiptId);
+            
+            // Перерисовываем вкладки (чтобы обновить имя, если это необходимо)
+            if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
         }
 
-        if (typeof renderReceiptTabs === 'function') renderReceiptTabs();
+        // Обновляем общие итоги (суммы, скидки) на экране
         if (typeof updateTotals === 'function') updateTotals();
 
+        // Возвращаем фокус в поле поиска товаров
         document.getElementById('product-search')?.focus();
 
     } catch (error) {
@@ -1749,6 +1770,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let receipts = []; 
 let activeReceiptId = null; 
+let receiptCounter = 1; // Счетчик для ID вкладок в JS
+
+// В эту переменную бэкенд должен передать просто стартовое число (например, 69)
+let currentReceiptNum = 1; 
 
 function createNewReceipt() {
     let receiptSaleNum;
@@ -1757,27 +1782,26 @@ function createNewReceipt() {
         // Первый чек берет номер напрямую из бэкенда
         receiptSaleNum = currentReceiptNum;
     } else {
-        // Для последующих инкрементируем числовую часть
-        const parts = currentReceiptNum.split('-'); 
-        const prefix = parts[0];
-        const year = parts[1];
-        // Вычисляем следующий номер на основе длины массива receipts
-        let nextId = parseInt(parts[2], 10) + receipts.length; 
-        
-        const formattedNumber = String(nextId).padStart(6, '0'); 
-        receiptSaleNum = `${prefix}-${year}-${formattedNumber}`;
+        // НАДЁЖНЫЙ ВАРИАНТ: ищем самый большой номер среди открытых вкладок
+        const maxCurrentNum = Math.max(...receipts.map(r => Number(r.num) || 0));
+
+        // Прибавляем единицу к максимальному существующему (69 -> 70 -> 71...)
+        receiptSaleNum = maxCurrentNum + 1; 
     }
 
+    // Генерируем обычный последовательный ID (receipt_1, receipt_2...)
+    const simpleId = 'receipt_' + receiptCounter;
+    receiptCounter++; 
+
     const newReceipt = {
-        id: 'receipt_' + Date.now() + '_' + receipts.length, 
-        num: receiptSaleNum,
+        id: simpleId, 
+        num: receiptSaleNum, // Здесь теперь будет просто чистое число (например, 70)
         customer: { id: '', name: 'Основной покупатель' }, 
         items: [],
         paymentMethod: 'cash', 
         cashReceived: '', 
         discountPercent: 0,
-        warehouse: 'main', 
-        merchant: '1', 
+        
         comment: ''
     };
     
@@ -1791,7 +1815,8 @@ function renderReceiptTabs() {
     const container = document.getElementById('receipt-tabs'); 
     container.innerHTML = '';
     
-    receipts.forEach((r) => {
+    // Добавляем 'index' в параметры, чтобы считать вкладки с 0
+    receipts.forEach((r, index) => {
         const li = document.createElement('li'); 
         li.className = 'nav-item';
         const isActive = r.id === activeReceiptId;
@@ -1799,7 +1824,11 @@ function renderReceiptTabs() {
             ? `<button type="button" class="close-receipt" onclick="closeReceipt(event, '${r.id}')"><i class="bi bi-x-lg"></i></button>` 
             : '';
         
-        li.innerHTML = `<button class="nav-link ${isActive ? 'active' : ''}" onclick="switchReceipt('${r.id}')">${r.num} ${closeBtn}</button>`;
+        // Формируем красивое имя чека (индекс + 1, чтобы вместо Чек #0 был Чек #1)
+        const tabTitle = `Чек #${index + 1}`;
+        
+        // Подставляем tabTitle вместо полного r.num
+        li.innerHTML = `<button class="nav-link ${isActive ? 'active' : ''}" onclick="switchReceipt('${r.id}')">${tabTitle} ${closeBtn}</button>`;
         container.appendChild(li);
     });
 }
@@ -1840,8 +1869,7 @@ function saveCurrentUIToState() {
     current.cashReceived = document.getElementById('cash')?.value || '';
     current.discountPercent = parseInt(document.getElementById('discount')?.value) || 0; 
     // СОХРАНЯЕМ новые поля
-    // current.warehouse = document.getElementById('invoice_warehouse')?.value || 'main';
-    // current.merchant = document.getElementById('invoice_merchant')?.value || '';
+    
     current.comment = document.getElementById('invoice_comment')?.value || '';
 
     // Берем метод оплаты из нового селекта
@@ -1868,9 +1896,6 @@ function loadReceiptToUI(id) {
     // const warehouseEl = document.getElementById('invoice_warehouse');
     // if (warehouseEl) warehouseEl.value = current.warehouse || 'main';
 
-    // const merchantEl = document.getElementById('invoice_merchant');
-    // if (merchantEl) merchantEl.value = current.merchant || 'Администратор';
-
     const commentEl = document.getElementById('invoice_comment');
     if (commentEl) commentEl.value = current.comment || '';
 
@@ -1887,7 +1912,19 @@ function loadReceiptToUI(id) {
 }
 
 
+// СОХРАНЕНИЕ: записываем способ оплаты в массив при изменении в UI
+const paymentMethodSelect = document.getElementById('payment-method');
 
+if (paymentMethodSelect) {
+    paymentMethodSelect.addEventListener('change', () => {
+        // Ищем в массиве тот чек, который сейчас открыт на экране
+        const currentActiveReceipt = receipts.find(r => r.id === activeReceiptId);
+        if (currentActiveReceipt) {
+            // Сохраняем новое значение ('cash', 'card' и т.д.) прямо в этот чек
+            currentActiveReceipt.paymentMethod = paymentMethodSelect.value;
+        }
+    });
+}
 
 
 function renderItemsTable(items) {
@@ -1909,8 +1946,8 @@ function renderItemsTable(items) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="ps-3 text-muted">${rowNumber}</td>
-            <td class="product-name" data-id="${item.id}" title="${item.name}" data-name="${item.name}">
-                ${item.name}
+            <td class="product-name" data-id="${item.id}" title="${item.name}" data-name="${item.name+', '+item.unit}">
+                ${item.name+', '+item.unit}
             </td>
             <td>
                 <div class="qty-control d-flex align-items-center gap-1">

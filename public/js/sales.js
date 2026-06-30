@@ -387,3 +387,132 @@ setInterval(
     loadLatestSales,
     5000
 );
+
+
+document.addEventListener('click', async (e) => {
+    // Ищем клик по кнопке принтера или по самой иконке внутри неё
+    const printBtn = e.target.closest('a[href*="/sales/print/"]') || e.target.closest('button[data-print-id]');
+    
+    if (printBtn) {
+        e.preventDefault(); // Отменяем стандартный переход по ссылке, если это тег <a>
+
+        // Достаем ID продажи из ссылки (например, из "/sales/print/112" заберем "112")
+        const href = printBtn.getAttribute('href');
+        const saleId = href ? href.split('/').pop() : printBtn.dataset.printId;
+
+        if (!saleId) return;
+
+        try {
+            // 1. Делаем быстрый запрос к бэкенду за данными конкретно этого чека
+            // Убедитесь, что у вас есть такой API эндпоинт, либо создайте его (Шаг 2)
+            const response = await fetch(`/api/sales/${saleId}`);
+            if (!response.ok) throw new Error('Не удалось загрузить данные чека');
+            
+            const saleData = await response.json();
+
+            // 2. Открываем чек в новой вкладке и печатаем
+            openReceiptInNewTab(saleData.invoice_number, saleData);
+
+        } catch (error) {
+            console.error(error);
+            alert('Ошибка при подготовке к печати: ' + error.message);
+        }
+    }
+});
+
+// Та самая функция генерации чека во вкладке (адаптированная под структуру из БД)
+function openReceiptInNewTab(invoiceNumber, receiptData) {
+    const printWindow = window.open('', '_blank');
+    
+    const cashierName = receiptData.cashier_name || 'Администратор';
+    const paymentMethodText = receiptData.payment_method === 'card' ? 'Карта' : 'Наличные';
+    
+    let itemsHtml = '';
+    receiptData.items.forEach(item => {
+        let name = item.name;
+        // Очищаем "шт/м" из названия
+        const unitMatch = name.match(/[,.\s]+([шШ][тТ]\.?|[мМ]\.?)$/);
+        if (unitMatch) {
+            name = name.replace(/[,.\s]+([шШ][тТ]\.?|[мМ]\.?)$/, '').trim();
+        }
+        
+        itemsHtml += `
+            <tr>
+                <td style="max-width: 35mm; word-break: break-all;">${name}</td>
+                <td style="text-align: center;">${item.quantity}</td>
+                <td style="text-align: right;">${(Number(item.quantity) * Number(item.price)).toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    let discountHtml = '';
+    if (Number(receiptData.discount_amount) > 0) {
+        discountHtml = `
+            <tr>
+                <td>Скидка:</td>
+                <td style="text-align: right;" colspan="2">-${Number(receiptData.discount_amount).toFixed(2)} ₴</td>
+            </tr>
+        `;
+    }
+
+    // Форматируем дату из базы
+    const formattedDate = new Date(receiptData.created_at || receiptData.date).toLocaleString('sv-SE', { timeZone: 'Europe/Kyiv' });
+
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Чек ${invoiceNumber}</title>
+            <style>
+                body { margin: 0; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #000; width: 58mm; }
+                .centered { text-align: center; }
+                .separator { border-top: 1px dashed #000; margin: 5px 0; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { font-size: 11px; vertical-align: top; }
+                @page { margin: 0; }
+            </style>
+        </head>
+        <body>
+            <div class="centered">
+                <h3 style="margin: 5px 0;">MY CRM UA</h3>
+                <p style="margin: 2px 0;"><b>ЧЕК: ${invoiceNumber}</b></p>
+                <p style="margin: 2px 0; font-size: 10px;">${formattedDate}</p>
+            </div>
+            <div class="separator"></div>
+            <p style="margin: 3px 0;">Кассир: ${cashierName}</p>
+            <div class="separator"></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Товар</th>
+                        <th style="text-align: center;">Кол.</th>
+                        <th style="text-align: right;">Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div class="separator"></div>
+            <table>
+                <tr>
+                    <td><b>ИТОГО:</b></td>
+                    <td style="text-align: right; font-weight: bold;" colspan="2">${Number(receiptData.total || receiptData.amount).toFixed(2)} ₴</td>
+                </tr>
+                ${discountHtml}
+                <tr>
+                    <td>Оплата:</td>
+                    <td style="text-align: right;" colspan="2">${paymentMethodText}</td>
+                </tr>
+            </table>
+            <div class="separator"></div>
+            <div class="centered"><p style="margin: 5px 0;">Спасибо за покупку!</p></div>
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 300);
+                }
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}

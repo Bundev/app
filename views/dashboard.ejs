@@ -126,7 +126,7 @@
                                     <span
                                         class="badge bg-primary">
 
-                                        <%= item.total_qty %> шт
+                                        <%= item.total_qty %> <%= item.unit %>
 
                                     </span>
 
@@ -180,15 +180,15 @@
                             🧾 Новый чек
 
                         </a>
-
+                        <% if (user && user.role === 'admin') { %>
                         <a href="/products"
                         class="btn btn-outline-secondary">
 
-                            📦 Товары
+                            📦 Склад
 
                         </a>
 
-                        <a href="/clients"
+                        <a href="/customers"
                         class="btn btn-outline-secondary">
 
                             👥 Клиенты
@@ -201,6 +201,7 @@
                             💰 Касса
 
                         </a>
+                        <%}%>
                     </div>
                 </div>
             </div>

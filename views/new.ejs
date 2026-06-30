@@ -1,12 +1,9 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<script>
-    let currentReceiptNum = "<%= invoiceNumber %>";
-</script>
 <div class="col content py-3">
 <!-- ВЕРХНЯЯ ПАНЕЛЬ: Мультичеки в стиле нижних вкладок -->
-    <div class="d-flex align-items-center justify-content-between mb-4 bg-white p-2 pb-0">
+    <div class="d-flex align-items-center justify-content-between border-bottom mb-4 bg-white p-2 pb-0">
         <!-- Добавлен класс custom-material-tabs -->
         <ul id="receipt-tabs" class="nav custom-material-tabs flex-grow-1 m-0">
             <!-- Заполняется динамически через JS -->
@@ -15,16 +12,17 @@
             <i class="bi bi-plus-lg fw-bold"></i><span>Новый чек</span>
         </button>
     </div>
-
-    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Основной</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Товары</button>
-        </li>
-    </ul>
-
+    <div class="d-flex justify-content-between align-items-center border-bottom mb-3">
+        <ul class="nav nav-pills" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">Основной</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Товары</button>
+            </li>
+        </ul>
+        
+    </div>
     <div class="row g-4">
         
         <div class="col-xl-8 col-lg-7">
@@ -38,11 +36,12 @@
                                 <div class="col-md-12">
                                     <label class="form-label text-muted small fw-bold text-uppercase mb-2">Покупатель / Клиент [F3]</label>
                                     
-                                    <div class="input-group position-relative">
+                                    <div class="input-group position-relative shadow-sm" style="border-radius: 6px;">
                                         <input type="hidden" id="customer_id" name="customer_id" value="">
-                                        <input type="text" id="customer_name" class="form-control form-control-lg pe-5 fw-medium" autocomplete="off" value="Основной покупатель" title="F3" required style="border-radius: 6px 0 0 6px !important;">
                                         
-                                        <div class="position-absolute d-flex gap-1 pe-2" style="z-index: 5; right: 60px; top: 50%; transform: translateY(-50%);">
+                                        <input type="text" id="customer_name" class="form-control form-control-lg pe-5 fw-medium fs-6" autocomplete="off" value="Основной покупатель" title="F3" required style="border-right: none; border-radius: 6px 0 0 6px;">
+                                        
+                                        <div class="position-absolute d-flex gap-1 pe-2" style="z-index: 5; right: 55px; top: 50%; transform: translateY(-50%);">
                                             <button type="button" id="editCustomerBtn" class="btn p-1 text-primary border-0 bg-transparent" style="display: none;" title="Редактировать клиента">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
@@ -51,36 +50,17 @@
                                             </button>
                                         </div>
 
-                                        <div id="customerList" class="list-group position-absolute w-100 d-none" style="z-index: 1050; max-height: 250px; overflow-y: auto; top: 100%; left: 0;"></div>
+                                        <div id="customerList" class="list-group position-absolute w-100 d-none shadow" style="z-index: 1050; max-height: 250px; overflow-y: auto; top: 100%; left: 0; border-radius: 0 0 6px 6px;"></div>
                                         
-                                        <button type="button" class="btn btn-success px-3" data-bs-toggle="modal" data-bs-target="#addCustomerModal" title="Добавить клиента [F4]" style="border-radius: 0 6px 6px 0 !important;">
+                                        <button type="button" class="btn btn-success px-3 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#addCustomerModal" title="Добавить клиента [F4]" style="border-radius: 0 6px 6px 0; border-left: none;">
                                             <i class="bi bi-plus-lg fs-5"></i>
                                         </button>
                                     </div>
                                 </div>
-<%# <div class="row mt-3">
-    <div class="col-6">
-        <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Склад</label>
-            <select id="invoice_warehouse" class="form-select">
-                <option value="main">Основной склад</option>
-                <option value="store1">Магазин 1</option>
-                <option value="store2">Магазин 2</option>
-            </select>
-        </div>
-    </div>
-    <div class="col-6">
-        <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Кассир</label>
-            <input type="text" id="invoice_merchant" class="form-control" value="Администратор">
-        </div>
-    </div>
-</div> %>
-
-<div class="mb-2">
-    <label class="form-label small fw-bold text-muted">Комментарий к чеку</label>
-    <textarea id="invoice_comment" class="form-control" rows="2" placeholder="Например: Доставка или особые условия..."></textarea>
-</div>
+                                <div class="mt-2">
+                                    <label class="form-label text-muted small fw-bold text-uppercase mb-2">Комментарий к чеку</label>
+                                    <textarea id="invoice_comment" class="form-control" rows="4" placeholder="Например: Доставка или особые условия..."></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -153,7 +133,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-semibold text-muted">Скидка в % [Ctrl+D]</label>
+                            <label class="form-label small fw-semibold text-muted">Скидка [Ctrl+D]</label>
                             <div class="input-group input-group-lg">
                                 <input type="number" id="discount" class="form-control" min="0" max="100" placeholder="0">
                             </div>

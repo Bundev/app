@@ -14,7 +14,7 @@ const uploadImport = require('./config/upload-import');
 const bwipjs = require('bwip-js');
 const multer = require('multer');
 const PDFDocument = require('pdfkit');
-const axios = require('axios');
+// const axios = require('axios');
 const port = 3000;
 
 
@@ -167,39 +167,39 @@ const uploadProduct =
         storage
     });
 
-let exchangeRates = {
-    USD: 41.7,
-    EUR: 48.7
-};
+// let exchangeRates = {
+//     USD: 41.7,
+//     EUR: 48.7
+// };
 
-async function updateRates() {
+// async function updateRates() {
 
-    try {
+//     try {
 
-        const { data } = await axios.get(
-            'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11'
-        );
+//         const { data } = await axios.get(
+//             'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11'
+//         );
 
-        exchangeRates.USD =
-            parseFloat(
-                data.find(x => x.ccy === 'USD').sale
-            );
+//         exchangeRates.USD =
+//             parseFloat(
+//                 data.find(x => x.ccy === 'USD').sale
+//             );
 
-        exchangeRates.EUR =
-            parseFloat(
-                data.find(x => x.ccy === 'EUR').sale
-            );
+//         exchangeRates.EUR =
+//             parseFloat(
+//                 data.find(x => x.ccy === 'EUR').sale
+//             );
 
-    } catch (err) {
+//     } catch (err) {
 
-        console.error('Ошибка получения курса:', err.message);
+//         console.error('Ошибка получения курса:', err.message);
 
-    }
+//     }
 
-}
+// }
 
-updateRates();
-setInterval(updateRates, 60 * 60 * 1000);
+// updateRates();
+// setInterval(updateRates, 60 * 60 * 1000);
 
 // Проверка подключения
 (async () => {
@@ -225,143 +225,124 @@ function auth(req, res, next) {
 }
 
 async function renderDashboard(req, res) {
-  
-    const [[salesTodayRow]] =
-        await db.query(`
+    try {
+        const companyId = req.session.user.company_id;
+        const userId = req.session.user.id;
+
+        // 1. Продажи текущего пользователя за сегодня
+        const [[salesTodayRow]] = await db.query(
+            `
             SELECT
-                COALESCE(SUM(total),0) AS total,
+                COALESCE(SUM(total), 0) AS total,
                 COUNT(*) AS invoices
             FROM sales
-            WHERE DATE(created_at)=CURDATE()
-            AND status IN (
-                'completed',
-                'partial_return',
-                'returned'
-            )
-        `);
+            WHERE company_id = ?
+              AND user_id = ?
+              AND DATE(created_at) = CURDATE()
+              AND status IN ('completed', 'partial_return', 'returned')
+            `,
+            [companyId, userId]
+        );
 
-    const [[returnsTodayRow]] =
-        await db.query(`
+        // 2. Возвраты текущего пользователя за сегодня
+        const [[returnsTodayRow]] = await db.query(
+            `
             SELECT
-                COALESCE(SUM(total),0) AS total
-            FROM sale_returns
-            WHERE DATE(created_at)=CURDATE()
-        `);
+                COALESCE(SUM(sr.total), 0) AS total
+            FROM sale_returns sr
+            JOIN sales s ON s.id = sr.sale_id
+            WHERE s.company_id = ?
+              AND s.user_id = ?
+              AND DATE(sr.created_at) = CURDATE()
+            `,
+            [companyId, userId]
+        );
 
-    const [[clientsRow]] =
-        await db.query(`
+        // 3. Количество клиентов (клиентская база общая для всей компании)
+        const [[clientsRow]] = await db.query(
+            `
             SELECT COUNT(*) AS total
             FROM customers
-        `);
+            WHERE company_id = ? AND status = 'active'
+            `,
+            [companyId]
+        );
 
-    const [[productsTodayRow]] =
-        await db.query(`
+        // 4. Продано товаров текущим пользователем за сегодня
+        const [[productsTodayRow]] = await db.query(
+            `
             SELECT
-                COALESCE(
-                    SUM(si.quantity),
-                    0
-                ) AS total
+                COALESCE(SUM(si.quantity), 0) AS total
             FROM sale_items si
-            JOIN sales s
-                ON s.id = si.sale_id
-            WHERE DATE(s.created_at)=CURDATE()
-        `);
+            JOIN sales s ON s.id = si.sale_id
+            WHERE s.company_id = ?
+              AND s.user_id = ?
+              AND DATE(s.created_at) = CURDATE()
+            `,
+            [companyId, userId]
+        );
 
-    const [latestSales] =
-        await db.query(`
+        // 5. Последние 10 чеков текущего пользователя
+        const [latestSales] = await db.query(
+            `
             SELECT *
             FROM sales
+            WHERE company_id = ?
+              AND user_id = ?
             ORDER BY id DESC
             LIMIT 10
-        `);
+            `,
+            [companyId, userId]
+        );
 
-const [topProducts] =
-    await db.query(
-        `
-        SELECT
-            p.name,
+        // 6. Топ 10 товаров текущего пользователя за последние 7 дней
+        const [topProducts] = await db.query(
+            `
+            SELECT
+                p.name,
+                p.unit, -- Забираем единицу измерения из таблицы товаров
+                SUM(si.quantity) AS total_qty,
+                SUM(si.subtotal) AS total_sales
+            FROM sale_items si
+            JOIN products p ON p.id = si.product_id
+            JOIN sales s ON s.id = si.sale_id
+            WHERE s.company_id = ?
+              AND s.user_id = ?
+              AND s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            GROUP BY p.id, p.name, p.unit
+            ORDER BY total_qty DESC
+            LIMIT 10
+            `,
+            [companyId, userId]
+        );
 
-            SUM(si.quantity)
-                AS total_qty,
+        const salesToday = Number(salesTodayRow.total);
+        const returnsToday = Number(returnsTodayRow.total);
+        const incomeToday = salesToday - returnsToday;
+        
+        res.render('dashboard', {
+            titleKey: 'title.dashboard',
+            activeMenu: 'dashboard',
+            salesToday: incomeToday,
+            grossSalesToday: salesToday,
+            returnsToday,
+            topProducts,
+            invoicesToday: salesTodayRow.invoices,
+            clientsCount: clientsRow.total,
+            productsToday: productsTodayRow.total,
+            invoices: latestSales,
+            statuses, 
+            script: [{ src: 'dashboard.js' }],
+            style: [{ href: 'dashboard.css' }],
+            breadcrumbs: [
+                { title: req.__('title.dashboard'), url: '/' }
+            ]
+        });
 
-            SUM(si.subtotal)
-                AS total_sales
-
-        FROM sale_items si
-
-        JOIN products p
-            ON p.id = si.product_id
-
-        JOIN sales s
-            ON s.id = si.sale_id
-
-        WHERE s.created_at >=
-            DATE_SUB(
-                NOW(),
-                INTERVAL 7 DAY
-            )
-
-        GROUP BY
-            p.id,
-            p.name
-
-        ORDER BY
-            total_qty DESC
-
-        LIMIT 10
-        `
-    );
-
-
-    const salesToday =
-        Number(salesTodayRow.total);
-
-    const returnsToday =
-        Number(returnsTodayRow.total);
-
-    const incomeToday =
-        salesToday - returnsToday;
-    
-    res.render('dashboard', {
-        titleKey: 'title.dashboard',
-        activeMenu: 'dashboard',
-
-        salesToday: incomeToday,
-
-        grossSalesToday: salesToday,
-
-        returnsToday,
-        topProducts,
-        invoicesToday:
-            salesTodayRow.invoices,
-
-        clientsCount:
-            clientsRow.total,
-
-        productsToday:
-            productsTodayRow.total,
-
-        invoices:
-            latestSales,
-
-        statuses,
-        script: [
-            {
-                src: 'dashboard.js',
-            }
-        ],
-        style: [
-            {
-                href: 'dashboard.css',
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            }
-        ]
-    });
+    } catch (error) {
+        console.error('Ошибка при рендере дашборда:', error);
+        res.status(500).send('Ошибка сервера при загрузке панели управления');
+    }
 }
 function renderLogin(res, error = null, success = null) {
 
@@ -627,6 +608,59 @@ sale.return_percent =
         ]
     });
 
+});
+
+// Новый API-роут для получения данных чека (печать из списка продаж)
+app.get('/api/sales/:id', auth, async (req, res) => {
+    try {
+        const saleId = req.params.id;
+
+        // 1. Достаем основную информацию о чеке и кассире
+        const [[sale]] = await db.query(
+            `
+            SELECT 
+                s.id, 
+                s.invoice_number, 
+                s.total, 
+                s.discount_amount, 
+                s.payment_method, 
+                s.created_at,
+                u.name AS cashier_name
+            FROM sales s
+            LEFT JOIN user u ON u.id = s.user_id
+            WHERE s.id = ?
+            `,
+            [saleId]
+        );
+
+        if (!sale) {
+            return res.status(404).json({ error: 'Продажа не найдена' });
+        }
+
+        // 2. Достаем все товары из этого чека
+        const [items] = await db.query(
+            `
+            SELECT 
+                si.quantity, 
+                si.price, 
+                p.name 
+            FROM sale_items si
+            JOIN products p ON p.id = si.product_id
+            WHERE si.sale_id = ?
+            `,
+            [saleId]
+        );
+
+        // Объединяем данные в один объект
+        sale.items = items;
+
+        // Отправляем JSON на фронтенд
+        res.json(sale);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Ошибка сервера при загрузке чека' });
+    }
 });
 
 // Роут страницы возврата продажи
@@ -1156,12 +1190,16 @@ app.get('/sales/latest', auth, async (req, res) => {
 
 //Роут Сохранение чека
 app.post('/sales/save', auth, async (req, res) => {
+    const https = require('https');
 
-    const connection =
-        await db.getConnection();
+    // Токены вашего бота (лучше вынести в .env файл)
+    const TELEGRAM_BOT_TOKEN = '8627452539:AAEVgdXq8q_g9JAWCKaovvcCbknewx1pHYk';
+    // ВНИМАНИЕ: Здесь должен быть ID вашего личного чата с ботом или ID группы (число), а не юзернейм самого бота!
+    const TELEGRAM_CHAT_ID = '218308591'; 
+
+    const connection = await db.getConnection();
 
     try {
-
         await connection.beginTransaction();
 
         const {
@@ -1170,149 +1208,149 @@ app.post('/sales/save', auth, async (req, res) => {
             total,
             discount_percent,
             discount_amount,
-            items
+            items,
+            comment
         } = req.body;
 
-        const company_id =
-            req.session.user.company_id;
+        const company_id = req.session.user.company_id;
 
-        const [[userStore]] =
-            await connection.query(
-                `
-                SELECT store_id
-                FROM user_stores
-                WHERE user_id = ?
-                LIMIT 1
-                `,
-                [
-                    req.session.user.id
-                ]
-            );
+        const [[userStore]] = await connection.query(
+            `
+            SELECT store_id
+            FROM user_stores
+            WHERE user_id = ?
+            LIMIT 1
+            `,
+            [req.session.user.id]
+        );
 
-        const store_id =
-            userStore?.store_id || 1;
+        const store_id = userStore?.store_id || 1;
 
-        const year =
-            new Date().getFullYear();
+        const year = new Date().getFullYear();
 
-        const [[lastSale]] =
-            await connection.query(
-                `
-                SELECT invoice_number
-                FROM sales
-                WHERE company_id = ?
-                AND invoice_number LIKE ?
-                ORDER BY id DESC
-                LIMIT 1
-                `,
-                [
-                    company_id,
-                    `SALE-${year}-%`
-                ]
-            );
+        const [[lastSale]] = await connection.query(
+            `
+            SELECT invoice_number
+            FROM sales
+            WHERE company_id = ?
+            AND invoice_number LIKE ?
+            ORDER BY id DESC
+            LIMIT 1
+            `,
+            [company_id, `SALE-${year}-%`]
+        );
 
         let nextNumber = 1;
 
-        if (
-            lastSale &&
-            lastSale.invoice_number
-        ) {
-
-            const parts =
-                lastSale.invoice_number
-                    .split('-');
-
-            nextNumber =
-                Number(parts[2]) + 1;
-
+        if (lastSale && lastSale.invoice_number) {
+            const parts = lastSale.invoice_number.split('-');
+            nextNumber = Number(parts[2]) + 1;
         }
 
-        const invoiceNumber =
-            `SALE-${year}-${String(nextNumber)
-                .padStart(6, '0')}`;
+        const invoiceNumber = `SALE-${year}-${String(nextNumber).padStart(6, '0')}`;
 
-        const created_at =
-            new Date()
-                .toLocaleString(
-                    'sv-SE',
-                    {
-                        timeZone:
-                            'Europe/Kyiv'
-                    }
-                );
+        const created_at = new Date().toLocaleString('sv-SE', {
+            timeZone: 'Europe/Kyiv'
+        });
 
-        const [saleResult] =
-            await connection.execute(
-                `
-                INSERT INTO sales
-                (
-                    company_id,
-                    invoice_number,
-                    customer_id,
-                    user_id,
-                    store_id,
-                    total,
-                    discount_percent,
-                    discount_amount,
-                    payment_method,
-                    status,
-                    created_at
-                )
-                VALUES
-                (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                )
-                `,
-                [
-                    company_id,
-                    invoiceNumber,
-                    customer_id > 0
-                        ? customer_id
-                        : null,
-                    req.session.user.id,
-                    store_id,
-                    total,
-                    discount_percent,
-                    discount_amount,
-                    payment_method,
-                    'completed',
-                    created_at
-                ]
-            );
+        const [saleResult] = await connection.execute(
+            `
+            INSERT INTO sales
+            (
+                company_id,
+                invoice_number,
+                customer_id,
+                user_id,
+                store_id,
+                total,
+                discount_percent,
+                discount_amount,
+                payment_method,
+                status,
+                created_at,
+                comment
+            )
+            VALUES
+            (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
+            `,
+            [
+                company_id,
+                invoiceNumber,
+                customer_id > 0 ? customer_id : null,
+                req.session.user.id,
+                store_id,
+                total,
+                discount_percent,
+                discount_amount,
+                payment_method,
+                'completed',
+                created_at,
+                comment
+            ]
+        );
 
-        const saleId =
-            saleResult.insertId;
+        const saleId = saleResult.insertId;
+
+        // ПЕРЕМЕННЫЕ ДЛЯ СБОРА ДАННЫХ В ТЕЛЕГРАМ
+        let totalPurchaseTotal = 0;
+        let itemsTextForTelegram = '';
+        let itemIndex = 1;
 
         for (const item of items) {
 
-            const [[stock]] =
-                await connection.query(
-                    `
-                    SELECT quantity
-                    FROM product_stores
-                    WHERE product_id = ?
-                    AND store_id = ?
-                    `,
-                    [
-                        item.product_id,
-                        store_id
-                    ]
-                );
+            const [[stock]] = await connection.query(
+                `
+                SELECT quantity
+                FROM product_stores
+                WHERE product_id = ?
+                AND store_id = ?
+                `,
+                [item.product_id, store_id]
+            );
 
-            if (
-                !stock ||
-                stock.quantity < item.quantity
-            ) {
-
-                throw new Error(
-                    `Недостаточно остатка: ${item.name}`
-                );
-
+            if (!stock || stock.quantity < item.quantity) {
+                throw new Error(`Недостаточно остатка: ${item.name}`);
             }
 
-            const subtotal =
-                Number(item.quantity) *
-                Number(item.price);
+            // Достаем оригинальное имя товара и закупочную цену из таблицы products
+            const [[productInfo]] = await connection.query(
+                `SELECT name, purchase_price FROM products WHERE id = ? LIMIT 1`,
+                [item.product_id]
+            );
+
+            let productName = productInfo?.name || item.name || `Товар ID ${item.product_id}`;
+            const purchasePrice = Number(productInfo?.purchase_price) || 0;
+
+            const subtotal = Number(item.quantity) * Number(item.price);
+            const subtotalPurchase = Number(item.quantity) * purchasePrice;
+
+            totalPurchaseTotal += subtotalPurchase;
+
+            // ========================================================
+            // ОПРЕДЕЛЕНИЕ ЕДИНИЦЫ ИЗМЕРЕНИЯ ИЗ НАЗВАНИЯ
+            // ========================================================
+            let unit = 'шт.'; // Единица измерения по умолчанию
+            
+            // Регулярное выражение ищет в конце названия "шт", "шт.", "м", "м." (игнорируя регистр)
+            // Пример: "Провод 2х1.5 м." -> Название: "Провод 2х1.5", Единица: "м."
+            const unitMatch = productName.match(/\s+([шШ][тТ]\.?|[мМ]\.?)$/);
+            
+            if (unitMatch) {
+                unit = unitMatch[1].toLowerCase();
+                if (!unit.endsWith('.')) unit += '.'; // Приводим к виду "шт." или "м."
+                
+                // Удаляем найденную единицу измерения из названия товара
+                productName = productName.replace(/[,.\s]+([шШ][тТ]\.?|[мМ]\.?)$/, '').trim();
+            }
+            // ========================================================
+            // Формируем текст по каждому товару прямо в цикле
+            itemsTextForTelegram += `${itemIndex}. *${productName}*\n`;
+            itemsTextForTelegram += `    🔹 Кол-во: ${item.quantity} ${unit}\n`;
+            // itemsTextForTelegram += `    🔹 Продажа: ${item.price} ₴ | Сумма: ${subtotal} ₴\n`;
+            itemsTextForTelegram += `    🔸 Продажа: ${purchasePrice} ₴ | Сумма: ${subtotalPurchase} ₴\n`; //закупочная цена
+            itemIndex++;
 
             await connection.execute(
                 `
@@ -1329,62 +1367,100 @@ app.post('/sales/save', auth, async (req, res) => {
                     ?, ?, ?, ?, ?
                 )
                 `,
-                [
-                    saleId,
-                    item.product_id,
-                    item.quantity,
-                    item.price,
-                    subtotal
-                ]
+                [saleId, item.product_id, item.quantity, item.price, subtotal]
             );
 
             await connection.execute(
                 `
                 UPDATE product_stores
-                SET quantity =
-                    quantity - ?
+                SET quantity = quantity - ?
                 WHERE product_id = ?
                 AND store_id = ?
                 `,
-                [
-                    item.quantity,
-                    item.product_id,
-                    store_id
-                ]
+                [item.quantity, item.product_id, store_id]
             );
-
         }
 
+        // Подтверждаем транзакцию в БД
         await connection.commit();
 
-        // Рассчитываем номер для СЛЕДУЮЩЕГО чека, который откроется после сохранения текущего
-        const futureNumber = nextNumber + 1;
-        const nextInvoiceNumber = `SALE-${year}-${String(futureNumber).padStart(6, '0')}`;
+        // ========================================================
+        // НАЧАЛО БЛОКА: ОТПРАВКА В ТЕЛЕГРАМ С БЭКЕНДА
+        // ========================================================
+        try {
+            const cashierName = req.body.merchant || req.session?.user?.name || 'Администратор';
+            
+            // Получаем имя текущего склада для отчета Telegram
+            const [[storeInfo]] = await connection.query(
+                `SELECT name FROM stores WHERE id = ? LIMIT 1`, 
+                [store_id]
+            );
+            const storeName = storeInfo?.name || `Склад №${store_id}`;
+            
+            let message = `🧾 *Чек №${invoiceNumber}*\n`;
+            message += `👨‍💼 Кассир: ${cashierName}\n`;
+            message += `📦 Склад: ${storeName}\n`;
+            message += `-------------------------------------\n`;
+
+            // Вставляем сгенерированный в цикле текст товаров
+            message += itemsTextForTelegram;
+
+            message += `-------------------------------------\n`;
+            //message += `💰 *Итого Продажа: ${total} ₴*`;
+            message += `💰 *Итого Продажа: ${totalPurchaseTotal} ₴*`;
+            // if (Number(discount_percent) > 0) message += ` (Скидка ${discount_percent}%)`;
+            // message += `\n📉 *Итого Закупка: ${totalPurchaseTotal} ₴*\n`;
+            
+            // const profit = total - totalPurchaseTotal;
+            // message += `📈 *Чистая маржа: ${profit} ₴*`;
+            
+            if (comment) message += `\n💬 Комментарий: _${comment}_`;
+
+            const tgData = JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            });
+
+            const tgOptions = {
+                hostname: 'api.telegram.org',
+                port: 443,
+                path: `/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(tgData)
+                }
+            };
+
+            const tgReq = https.request(tgOptions);
+            tgReq.on('error', (tgErr) => console.error('Ошибка сети Telegram:', tgErr));
+            tgReq.write(tgData);
+            tgReq.end();
+
+        } catch (tgError) {
+            console.error('Ошибка формирования отчета в Telegram:', tgError);
+        }
+        // ========================================================
+        // КОНЕЦ БЛОКА: ОТПРАВКА В ТЕЛЕГРАМ
+        // ========================================================
 
         res.json({
             success: true,
             sale_id: saleId,
-            invoice_number: invoiceNumber,     // Номер сохраненного чека
-            next_num: nextInvoiceNumber        // Номер для новой/обновленной вкладки
+            invoice_number: invoiceNumber
         });
 
     } catch (error) {
-
         await connection.rollback();
-
         console.error(error);
-
         res.status(500).json({
             success: false,
             error: error.message
         });
-
     } finally {
-
         connection.release();
-
     }
-
 });
 //Роут страницы нового чека
 app.get('/new', auth, async (req, res) => {
@@ -1426,6 +1502,8 @@ app.get('/new', auth, async (req, res) => {
         `SALE-${year}-${String(nextNumber)
             .padStart(6, '0')}`;
 
+
+
     res.render('new', {
 
         titleKey: 'title.new',
@@ -1435,6 +1513,7 @@ app.get('/new', auth, async (req, res) => {
         activeMenu: 'sales',
 
         statuses,
+        invoice_merchant: req.session.user.name,
 
         script: [
             {
@@ -1464,18 +1543,98 @@ app.get('/new', auth, async (req, res) => {
     });
 
 });
+// 1. ПОЛУЧЕНИЕ КЛИЕНТОВ: Выводим только со статусом 'active'
+app.get('/customers', auth, async (req, res) => {
+    try {
+        const companyId = req.session?.user?.company_id || 1; 
 
-// Получение списка клиентов компании
+        // Добавили условие: status = 'active'
+        const [customers] = await db.query(
+            `SELECT * FROM customers WHERE company_id = ? AND status = 'active' ORDER BY id DESC`,
+            [companyId]
+        );
+
+        res.render('customers', {
+            titleKey: 'Клиенты',
+            customers,
+            activeMenu: 'customers',
+            breadcrumbs: [
+                { title: req.__('title.dashboard') || 'Главная', url: '/' },
+                { title: 'Клиенты' }
+            ]
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка сервера');
+    }
+});
+
+// 2. АРХИВАЦИЯ: Меняем статус на 'archived' вместо удаления строки
+app.get('/customers/archive/:id', auth, async (req, res) => {
+    try {
+        const companyId = req.session?.user?.company_id || 1;
+        const customerId = req.params.id;
+
+        // Защита розничного покупателя
+        if (Number(customerId) === 1) {
+            return res.status(400).send('Нельзя архивировать системного розничного покупателя');
+        }
+
+        // Вместо DELETE делаем UPDATE статуса
+        await db.query(
+            "UPDATE customers SET status = 'archived', updated_at = NOW() WHERE id = ? AND company_id = ?",
+            [customerId, companyId]
+        );
+
+        res.redirect('/customers');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка при архивации клиента');
+    }
+});
+
+// 2. Роут обработки формы создания клиента
+app.post('/customers/add', auth, async (req, res) => {
+    try {
+        const { name, phone, email, discount_percentage, comment } = req.body;
+        const companyId = req.session?.user?.company_id || 1; // Заглушка 1, если сессия еще не настроена
+
+        if (!name || name.trim() === '') {
+            return res.status(400).send('Имя клиента обязательно для заполнения');
+        }
+
+        // Вставляем строго по полям вашей структуры из phpMyAdmin
+        await db.query(
+            `INSERT INTO customers (company_id, name, phone, email, discount_percentage, comment, created_at) 
+             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+            [
+                companyId,
+                name.trim(), 
+                phone ? phone.trim() : null, 
+                email ? email.trim() : null, 
+                discount_percentage ? Number(discount_percentage) : 0.00, 
+                comment ? comment.trim() : null
+            ]
+        );
+
+        res.redirect('/customers');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка сервера при создании клиента');
+    }
+});
+// Получение списка клиентов компании (только активные)
 app.get('/api/customers', auth, async (req, res) => {
     try {
         const companyId = req.session.user.company_id;
 
-        // Запрашиваем клиентов именно этой компании (используем вашу таблицу customers)
+        // ИСПРАВЛЕНО: добавлено условие AND status = 'active'
         const [customers] = await db.query(
             `
             SELECT id, name, phone, email, discount_percentage 
             FROM customers 
             WHERE company_id = ? 
+              AND status = 'active'
             ORDER BY name ASC
             `,
             [companyId]
@@ -1601,6 +1760,62 @@ app.put('/api/customers/:id', auth, async (req, res) => {
     }
 });
 
+
+// 2. Обработка формы редактирования (POST-запрос)
+app.post('/customers/edit/:id', auth, async (req, res) => {
+    try {
+        const { name, phone, email, discount_percentage, comment } = req.body;
+        const companyId = req.session?.user?.company_id || 1;
+        const customerId = req.params.id;
+
+        if (!name || name.trim() === '') {
+            return res.status(400).send('Имя клиента обязательно');
+        }
+
+        await db.query(
+            `UPDATE customers 
+             SET name = ?, phone = ?, email = ?, discount_percentage = ?, comment = ?, updated_at = NOW() 
+             WHERE id = ? AND company_id = ?`,
+            [
+                name.trim(), 
+                phone ? phone.trim() : null, 
+                email ? email.trim() : null, 
+                discount_percentage ? Number(discount_percentage) : 0.00, 
+                comment ? comment.trim() : null,
+                customerId,
+                companyId
+            ]
+        );
+
+        res.redirect('/customers');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка при обновлении клиента');
+    }
+});
+
+// Обновленный API-роут для получения данных одного клиента
+app.get('/api/customers/:id', auth, async (req, res) => {
+    try {
+        const customerId = req.params.id;
+
+        // Временно убираем фильтр по company_id, чтобы проверить связь
+        const [[customer]] = await db.query(
+            'SELECT * FROM customers WHERE id = ?',
+            [customerId]
+        );
+
+        if (!customer) {
+            return res.status(404).json({ error: 'Клиент не найден в базе данных' });
+        }
+
+        res.json(customer);
+    } catch (error) {
+        console.error('Ошибка API Клиенты:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
 // Роутер товаров
 app.get('/products', auth, async (req, res) => {
 
@@ -1708,15 +1923,11 @@ app.get('/products/add', auth, async (req, res) => {
         [req.session.user.company_id]
     );
 
-
-
     res.render('add-product', {
         titleKey: 'title.addProducts',
         activeMenu: 'products',
         categories,
         stores,
-        usdRate: exchangeRates.USD,
-        eurRate: exchangeRates.EUR,
         script: [
             {
                 src: 'add-products.js'
@@ -1745,16 +1956,14 @@ app.get('/products/add', auth, async (req, res) => {
 
 });
 // Роут создает новый тавар
-app.post(
-    '/products/add',
-    uploadProduct.single('image'),
-    async (req, res) => {
+app.post('/products/add', uploadProduct.single('image'), async (req, res) => {
 
         try {
 
             const {
                 category_id,
                 name,
+                unit,
                 sku,
                 barcode,
                 purchase_price,
@@ -1773,6 +1982,7 @@ app.post(
                 (
                     category_id,
                     name,
+                    unit,
                     sku,
                     barcode,
                     purchase_price,
@@ -1780,11 +1990,12 @@ app.post(
                     image,
                     description
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `,
                 [
                     category_id,
                     name,
+                    unit,
                     sku,
                     barcode,
                     purchase_price,
@@ -1985,10 +2196,7 @@ app.get(
 
     }
 );
-app.get(
-    '/products/edit/:id',
-    auth,
-    async (req, res) => {
+app.get('/products/edit/:id',auth, async (req, res) => {
 
         try {
             const [categories] =
@@ -2061,33 +2269,10 @@ app.get(
                     storeStocks,
                     product,
                     categories,
-                    usdRate: exchangeRates.USD,
-                    eurRate: exchangeRates.EUR,
                     activeMenu: 'products',
-                    script: [
-                        {
-                            src: 'product-edit.js'
-                        }
-                    ],
-                    style: [
-                        {
-                            href: 'product-edit.css'
-                        }
-                    ],
-                    breadcrumbs: [
-                        {
-                            title: req.__('title.dashboard'),
-                            url: '/'
-                        },
-                        {
-                            title: req.__('title.products'),
-                            url: '/products'
-                        },
-                        {
-                            title: req.__('title.product-edit'),
-                            
-                        }
-                    ]   
+                    script: [{src: 'product-edit.js'}],
+                    style: [{href: 'product-edit.css'}],
+                    breadcrumbs: [{title: req.__('title.dashboard'),url: '/'},{title: req.__('title.products'),url: '/products'},{title: req.__('title.product-edit')}]   
                 }
             );
 
@@ -2104,16 +2289,12 @@ app.get(
     }
 );
 
-app.post(
-    '/products/edit/:id',
-    auth,
-    uploadProduct.single('image'),
-    async (req, res) => {
-
+app.post('/products/edit/:id',auth,uploadProduct.single('image'),async (req, res) => {
         try {
             const productId = req.params.id;
             const {
                 name,
+                unit,
                 category_id,
                 purchase_price,
                 sale_price,
@@ -2127,6 +2308,7 @@ app.post(
                 UPDATE products
                 SET
                     name = ?,
+                    unit = ?,
                     sku = ?,
                     barcode = ?,
                     category_id = ?,
@@ -2137,6 +2319,7 @@ app.post(
 
             const params = [
                 name,
+                unit,
                 sku,
                 barcode ,
                 category_id,
@@ -2473,6 +2656,7 @@ app.get('/api/products/search', auth, async (req, res) => {
             SELECT
                 p.id,
                 p.name,
+                p.unit,
                 p.sku,
                 p.barcode,
                 p.sale_price,
@@ -2547,11 +2731,7 @@ app.get('/api/products/search', auth, async (req, res) => {
     }
 });
 
-app.get(
-    '/api/barcode/generate',
-    auth,
-    async (req, res) => {
-
+app.get('/api/barcode/generate', auth, async (req, res) => {
         try {
 
             let barcode;
@@ -3123,7 +3303,7 @@ app.post('/user/new', auth, upload.single('avatar'),
                     `
                     INSERT INTO user
                     (
-                        id_admin,
+                        company_id,
                         login,
                         password,
                         name,
@@ -3144,7 +3324,7 @@ app.post('/user/new', auth, upload.single('avatar'),
                     )
                     `,
                     [
-                        req.session.user.id,
+                        req.session.user.company_id,
                         login,
                         hashedPassword,
                         name,
@@ -3611,18 +3791,14 @@ app.get('/settings', auth, async(req, res) => {
     }
 
    
-    const [stores] =
-    await db.execute(
+    const [stores] = await db.execute(
         `
-        SELECT s.*
-        FROM stores s
-        INNER JOIN user_stores us
-            ON us.store_id = s.id
-        WHERE us.user_id = ?
+        SELECT * FROM stores 
+        WHERE company_id = ?
+        ORDER BY name ASC
         `,
-        [req.session.user.id]
+        [req.session.user.company_id] // Здесь company_id используется абсолютно правильно
     );
-
     const [users] =
     await db.execute(
         `
@@ -3812,7 +3988,139 @@ doc
 );
 
 
+app.get('/finance/cash', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+        const currentUser = req.session.user; // Данные текущего авторизованного юзера
 
+        // 1. Считаем общую выручку всей компании (Наличные и Карты)
+        const [[salesTotals]] = await db.query(
+            `SELECT 
+                SUM(CASE WHEN payment_method = 'cash' THEN total ELSE 0 END) AS sales_cash,
+                SUM(CASE WHEN payment_method = 'card' THEN total ELSE 0 END) AS sales_card
+            FROM sales WHERE company_id = ?`,
+            [companyId]
+        );
+
+        // 2. Считаем общие ручные транзакции всей компании
+        const [[transTotals]] = await db.query(
+            `SELECT 
+                SUM(CASE WHEN payment_method = 'cash' AND type = 'income' THEN amount 
+                         WHEN payment_method = 'cash' AND type = 'expense' THEN -amount ELSE 0 END) AS trans_cash,
+                SUM(CASE WHEN payment_method = 'card' AND type = 'income' THEN amount 
+                         WHEN payment_method = 'card' AND type = 'expense' THEN -amount ELSE 0 END) AS trans_card
+            FROM transactions WHERE company_id = ?`,
+            [companyId]
+        );
+
+        const cashBalance = Number(salesTotals.sales_cash || 0) + Number(transTotals.trans_cash || 0);
+        const cardBalance = Number(salesTotals.sales_card || 0) + Number(transTotals.trans_card || 0);
+        const totalBalance = cashBalance + cardBalance;
+
+        // 3. НОВОЕ: Получаем баланс кассы в разрезе КАЖДОГО СОТРУДНИКА
+        // Считаем сколько наличных и карт принял/потратил каждый юзер
+        const [employeeCashes] = await db.query(
+            `
+            SELECT 
+                u.id AS user_id,
+                u.name AS user_name,
+                u.role AS user_role,
+                (
+                    SELECT COALESCE(SUM(s.total), 0) 
+                    FROM sales s 
+                    WHERE s.user_id = u.id AND s.payment_method = 'cash'
+                ) + (
+                    SELECT COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END), 0)
+                    FROM transactions t 
+                    WHERE t.user_id = u.id AND t.payment_method = 'cash'
+                ) AS employee_cash,
+                (
+                    SELECT COALESCE(SUM(s.total), 0) 
+                    FROM sales s 
+                    WHERE s.user_id = u.id AND s.payment_method = 'card'
+                ) + (
+                    SELECT COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END), 0)
+                    FROM transactions t 
+                    WHERE t.user_id = u.id AND t.payment_method = 'card'
+                ) AS employee_card
+            FROM user u
+            WHERE u.company_id = ?
+            ORDER BY u.name ASC
+            `,
+            [companyId]
+        );
+
+        // 4. РЕШЕНИЕ: Принудительная конвертация кодировок для UNION ALL
+        const [history] = await db.query(
+            `
+            (SELECT 
+                CONVERT('Продажа' USING utf8mb4) as source, 
+                CONVERT(s.invoice_number USING utf8mb4) as doc_num, 
+                s.total as amount, 
+                CONVERT(s.payment_method USING utf8mb4) as payment_method, 
+                CONVERT('income' USING utf8mb4) as type, 
+                CONVERT(u.name USING utf8mb4) as employee_name, 
+                CONVERT('Продажа товаров' USING utf8mb4) as details, 
+                s.created_at 
+             FROM sales s
+             LEFT JOIN user u ON u.id = s.user_id
+             WHERE s.company_id = ?)
+            UNION ALL
+            (SELECT 
+                CONVERT('Касса' USING utf8mb4) as source, 
+                CONVERT(t.id USING utf8mb4) as doc_num, 
+                t.amount, 
+                CONVERT(t.payment_method USING utf8mb4) as payment_method, 
+                CONVERT(t.type USING utf8mb4) as type, 
+                CONVERT(u.name USING utf8mb4) as employee_name, 
+                CONVERT(t.description USING utf8mb4) as details, 
+                t.created_at 
+             FROM transactions t
+             LEFT JOIN user u ON u.id = t.user_id
+             WHERE t.company_id = ?)
+            ORDER BY created_at DESC LIMIT 50
+            `,
+            [companyId, companyId]
+        );
+
+        res.render('finance-cash', {
+            titleKey: 'Финансы',
+            cashBalance,
+            cardBalance,
+            totalBalance,
+            employeeCashes, // Передаем кассы сотрудников в шаблон
+            currentUser,    // Передаем текущего юзера, чтобы проверять роль в EJS
+            history,
+            activeMenu: 'finance',
+            breadcrumbs: [
+                { title: req.__('title.dashboard') || 'Главная', url: '/' },
+                { title: 'Касса и Финансы' }
+            ]
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка сервера');
+    }
+});
+
+// Не забудьте обновить роут создания ручной транзакции, чтобы писался user_id:
+app.post('/finance/transaction', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+        const userId = req.session.user.id; // ID сотрудника, который делает операцию
+        const { type, amount, payment_method, description } = req.body;
+
+        await db.query(
+            `INSERT INTO transactions (company_id, user_id, type, amount, payment_method, description) VALUES (?, ?, ?, ?, ?, ?)`,
+            [companyId, userId, Number(amount), payment_method, description.trim()]
+        );
+
+        res.redirect('/finance/cash');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка');
+    }
+});
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });
