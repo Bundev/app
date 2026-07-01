@@ -740,8 +740,8 @@ function addProductToInvoice(product) {
         const html = `
             <tr>
                 <td class="ps-3 text-muted">${rowNumber}</td>
-                <td class="product-name" data-id="${newItem.id}" title="${newItem.name}" data-name="${newItem.name+', '+newItem.unit}">
-                    ${newItem.name+', '+newItem.unit}
+                <td class="product-name" data-id="${newItem.id}" title="${newItem.name}" data-name="${newItem.name+','+newItem.unit}">
+                    ${newItem.name+','+newItem.unit}
                 </td>
                 <td>
                     <div class="qty-control d-flex align-items-center gap-1">
@@ -1946,8 +1946,8 @@ function renderItemsTable(items) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="ps-3 text-muted">${rowNumber}</td>
-            <td class="product-name" data-id="${item.id}" title="${item.name}" data-name="${item.name+', '+item.unit}">
-                ${item.name+', '+item.unit}
+            <td class="product-name" data-id="${item.id}" title="${item.name}" data-name="${item.name+','+item.unit}">
+                ${item.name+','+item.unit}
             </td>
             <td>
                 <div class="qty-control d-flex align-items-center gap-1">

@@ -1,170 +1,3 @@
-// const filterInvoice =
-//     document.getElementById(
-//         'filterInvoice'
-//     );
-
-// const filterCustomer =
-//     document.getElementById(
-//         'filterCustomer'
-//     );
-
-// const filterAmount =
-//     document.getElementById(
-//         'filterAmount'
-//     );
-
-// const filterStatus =
-//     document.getElementById(
-//         'filterStatus'
-//     );
-
-// const dateFrom =
-//     document.getElementById(
-//         'dateFrom'
-//     );
-
-// const dateTo =
-//     document.getElementById(
-//         'dateTo'
-//     );
-
-// function filterSales() {
-
-//     const invoice =
-//         filterInvoice.value
-//             .toLowerCase();
-
-//     const customer =
-//         filterCustomer.value
-//             .toLowerCase();
-
-//     const amount =
-//         filterAmount.value;
-
-//     const status =
-//         filterStatus.value;
-
-//     const from =
-//         dateFrom.value;
-
-//     const to =
-//         dateTo.value;
-
-//     document
-//         .querySelectorAll(
-//             '#salesTable tr'
-//         )
-//         .forEach(row => {
-
-//             const rowInvoice =
-//                 row.dataset.invoice
-//                     .toLowerCase();
-
-//             const rowCustomer =
-//                 row.dataset.customer
-//                     .toLowerCase();
-
-//             const rowAmount =
-//                 Number(
-//                     row.dataset.total
-//                 );
-
-//             const rowStatus =
-//                 row.dataset.status;
-
-//             const rowDate =
-//                 row.dataset.date;
-
-//             let dateMatch =
-//                 true;
-
-//             if (from) {
-
-//                 dateMatch =
-//                     rowDate >= from;
-
-//             }
-
-//             if (to) {
-
-//                 dateMatch =
-//                     dateMatch &&
-//                     rowDate <= to;
-
-//             }
-
-//             const visible =
-
-//                 rowInvoice.includes(
-//                     invoice
-//                 )
-
-//                 &&
-
-//                 rowCustomer.includes(
-//                     customer
-//                 )
-
-//                 &&
-
-//                 (
-//                     !amount
-//                     ||
-//                     rowAmount >=
-//                     Number(amount)
-//                 )
-
-//                 &&
-
-//                 (
-//                     !status
-//                     ||
-//                     rowStatus === status
-//                 )
-
-//                 &&
-
-//                 dateMatch;
-
-//             row.style.display =
-//                 visible
-//                     ? ''
-//                     : 'none';
-
-//         });
-
-// }
-
-// filterInvoice.addEventListener(
-//     'input',
-//     filterSales
-// );
-
-// filterCustomer.addEventListener(
-//     'input',
-//     filterSales
-// );
-
-// filterAmount.addEventListener(
-//     'input',
-//     filterSales
-// );
-
-// filterStatus.addEventListener(
-//     'change',
-//     filterSales
-// );
-
-// dateFrom.addEventListener(
-//     'change',
-//     filterSales
-// );
-
-// dateTo.addEventListener(
-//     'change',
-//     filterSales
-// );
-
 document.addEventListener('DOMContentLoaded', () => {
     const filterInvoice = document.getElementById('filterInvoice');
     const filterCustomer = document.getElementById('filterCustomer');
@@ -220,173 +53,111 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Автообновлеие чеков
-let lastSaleId =
-    Number(
-        document
-            .querySelector('#salesTable')
-            .dataset.lastId || 0
-    );
+// Автообновление чеков
+let lastSaleId = Number(document.querySelector('#salesTable')?.dataset.lastId || 0);
 
 async function loadLatestSales() {
-
     try {
+        const response = await fetch('/sales/latest');
+        const sales = await response.json();
 
-        const response =
-            await fetch('/sales/latest');
+        if (!sales || !sales.length) return;
 
-        const sales =
-            await response.json();
+        // Фильтруем только новые продажи
+        const newSales = sales.filter(sale => sale.id > lastSaleId);
+        if (!newSales.length) return;
 
-        if (!sales.length) {
-            return;
-        }
+        const tbody = document.getElementById('salesTable');
+        if (!tbody) return;
 
-        const newSales =
-            sales.filter(
-                sale =>
-                    sale.id > lastSaleId
-            );
+        // Разворачиваем массив, чтобы добавлять элементы сверху поочередно (от старых к самым новым)
+        newSales.reverse().forEach(sale => {
+            // Формируемbadge статуса в новом дизайне
+            let statusBadge = '';
+            if (sale.status === 'returned') {
+                statusBadge = `
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 w-100 py-1.5">
+                        ↩️ Полный возврат
+                    </span>`;
+            } else if (sale.status === 'partial_return') {
+                statusBadge = `
+                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50 w-100 py-1.5">
+                        ⚠️ Частичный возврат
+                    </span>`;
+            } else {
+                statusBadge = `
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 w-100 py-1.5">
+                        📦 Продажа
+                    </span>`;
+            }
 
-        if (!newSales.length) {
-            return;
-        }
-
-        const tbody =
-            document.getElementById(
-                'salesTable'
-            );
-
-        newSales.reverse()
-            .forEach(sale => {
-
-                const status =
-                    sale.status === 'returned'
-                        ? `
-                        <span class="badge bg-danger">
-                            Возврат
+            // Рендерим строку таблицы строго по новой верстке
+            const rowHtml = `
+                <tr class="invoice-row" 
+                    data-url="/sale/${sale.id}"
+                    data-invoice="${sale.invoice_number}"
+                    data-customer="${sale.customer_name || ''}"
+                    data-total="${sale.total}"
+                    data-status="${sale.status}"
+                    data-date="${new Date(sale.created_at).toISOString().split('T')[0]}">
+                    
+                    <td class="ps-3">
+                        <span class="badge bg-light text-dark border fw-medium px-2 py-1.5">
+                            ${sale.invoice_number}
                         </span>
-                        `
-                        : sale.status === 'partial_return'
-                            ? `
-                            <span class="badge bg-warning text-dark">
-                                Частичный возврат
-                            </span>
-                            `
-                            : `
-                            <span class="badge bg-success">
-                                Продажа
-                            </span>
-                            `;
+                    </td>
 
-                tbody.insertAdjacentHTML(
-                    'afterbegin',
-                    `
-                    <tr
-                        class="invoice-row"
-                        data-url="/sale/${sale.id}"
-                        data-invoice="${sale.invoice_number}"
-                        data-customer="${sale.customer_name || ''}"
-                        data-total="${sale.total}"
-                        data-status="${sale.status}"
-                        sale.status="${new Date(sale.created_at).toISOString().split('T')[0]}">
+                    <td>
+                        <div class="fw-semibold text-dark">
+                            ${new Date(sale.created_at).toLocaleDateString('ru-RU')}
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-clock me-1" style="font-size: 11px;"></i>${new Date(sale.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </td>
 
-                        <td>
+                    <td>
+                        <div class="fw-medium text-dark">
+                            <i class="bi bi-person text-muted me-1"></i>${sale.customer_name || 'Розничный покупатель'}
+                        </div>
+                    </td>
 
-                            <span class="invoice-badge">
+                    <td class="text-end fw-bold text-dark">
+                        ${Number(sale.total).toFixed(2)} ₴
+                    </td>
 
-                                ${sale.invoice_number}
+                    <td class="text-center">
+                        ${statusBadge}
+                    </td>
 
-                            </span>
+                    <td class="pe-3 text-end">
+                        <div class="btn-group shadow-sm">
+                            <a href="/sale/${sale.id}" class="btn btn-sm btn-outline-secondary border-end-0" title="Просмотр" target="_blank">
+                                <i class="bi bi-eye text-primary"></i>
+                            </a>
+                            <a href="/sales/print/${sale.id}" class="btn btn-sm btn-outline-secondary" title="Печать" target="_blank">
+                                <i class="bi bi-printer text-success"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
 
-                        </td>
+            // Вставляем в самое начало таблицы (сверху)
+            tbody.insertAdjacentHTML('afterbegin', rowHtml);
+        });
 
-                        <td>
-
-                            <div class="fw-semibold">
-                                ${new Date(sale.created_at).toLocaleDateString('ru-RU')}
-                            </div>
-
-                            <small class="text-muted">
-                                ${new Date(sale.created_at).toLocaleTimeString(
-                                    'ru-RU',
-                                    {
-                                        timeZone: 'Europe/Kyiv',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    }
-                                )}
-                            </small>
-
-                        </td>
-
-                        <td>
-                            <div class="customer-name">
-                                ${sale.customer_name ||
-                                    'Розничный покупатель'}
-                            </div>
-
-                        </td>
-
-                        <td class="text-end">
-                            <span class="sale-sum">
-                                ${Number(
-                                    sale.total
-                                ).toFixed(2)} ₴
-                            </span>
-                        </td>
-
-                        <td class="text-center">
-
-                            ${status}
-
-                        </td>
-
-                        <td>
-
-                            <div class="btn-group">
-
-                                <a
-                                    href="/sale/${sale.id}"
-                                    class="btn btn-outline-primary btn-sm" target="_blank" title="Просмотр">
-
-                                    <i class="bi bi-eye"></i>
-
-                                </a>
-
-                                <a
-                                    href="/sales/print/${sale.id}"
-                                    class="btn btn-outline-success btn-sm" target="_blank" title="Печать" >
-
-                                    <i class="bi bi-printer"></i>
-
-                                </a>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-                    `
-                );
-
-            });
-
-        lastSaleId =
-            sales[0].id;
+        // Обновляем ID последней известной продажи (берем первую из ответа сервера, так как она самая свежая)
+        lastSaleId = sales[0].id;
+        tbody.dataset.lastId = lastSaleId;
 
     } catch (error) {
-
-        console.error(error);
-
+        console.error('Ошибка автообновления чеков:', error);
     }
-
 }
 
-setInterval(
-    loadLatestSales,
-    5000
-);
+// Запуск интервала (каждые 5 секунд)
+setInterval(loadLatestSales, 5000);
 
 
 document.addEventListener('click', async (e) => {
