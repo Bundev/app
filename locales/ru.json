@@ -1,7 +1,7 @@
 {
 	"title": {
 		"dashboard": "Панель управления",
-		"products": "Товары",
+		"products": "Склад",
 		"categories": "Категории",
 		"customers": "Клиенты",
 		"sales": "Продажи",
@@ -22,7 +22,8 @@
 		"products_import": "Импорт товаров",
 		"product-view": "Просмотр товара",
 		"product-edit": "Редактирование товара",
-		"addProducts": "Добовление товара"
+		"addProducts": "Добовление товара",
+		"purchases_add": "title.purchases_add"
 	},
 	"dashboard": {
 		"salesToday": "Продажи сегодня",

@@ -4148,6 +4148,258 @@ app.post('/finance/transaction', auth, async (req, res) => {
         res.status(500).send('Ошибка');
     }
 });
+
+// Маршрут: Список поставщиков
+app.get('/suppliers', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+
+        // Берем только неархивных поставщиков текущей компании
+        const [suppliers] = await db.execute(
+            `SELECT * FROM suppliers WHERE company_id = ? AND archived = 0 ORDER BY name ASC`,
+            [companyId]
+        );
+
+        res.render('suppliers', {
+            titleKey: 'title.suppliers', // Не забудь добавить в локализацию
+            activeMenu: 'suppliers',
+            suppliers,
+            breadcrumbs: [
+                { title: req.__('title.dashboard'), url: '/' },
+                { title: 'Поставщики' }
+            ]
+        });
+    } catch (error) {
+        console.error('Ошибка в роутере поставщиков:', error);
+        res.status(500).send('Ошибка сервера');
+    }
+});
+
+// Маршрут: Добавление нового поставщика
+app.post('/suppliers/add', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+        const { name, phone, email, address } = req.body;
+
+        if (!name || name.trim() === '') {
+            return res.status(400).send('Название поставщика обязательно');
+        }
+
+        await db.execute(
+            `INSERT INTO suppliers (company_id, name, phone, email, address) VALUES (?, ?, ?, ?, ?)`,
+            [companyId, name.trim(), phone?.trim() || null, email?.trim() || null, address?.trim() || null]
+        );
+
+        res.redirect('/suppliers');
+    } catch (error) {
+        console.error('Ошибка при добавлении поставщика:', error);
+        res.status(500).send('Ошибка сервера');
+    }
+});
+
+// Маршрут: Список всех закупок
+app.get('/purchases', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+
+        // Запрашиваем накладные закупки с именами поставщиков и складов
+        const [purchases] = await db.execute(
+            `SELECT 
+                p.*, 
+                sup.name AS supplier_name, 
+                st.name AS store_name,
+                DATE_FORMAT(p.date, '%d.%m.%Y') AS formatted_date
+             FROM purchases p
+             LEFT JOIN suppliers sup ON p.supplier_id = sup.id
+             LEFT JOIN stores st ON p.store_id = st.id
+             WHERE p.company_id = ?
+             ORDER BY p.date DESC, p.id DESC`,
+            [companyId]
+        );
+
+        res.render('purchases', {
+            titleKey: 'title.purchases',
+            activeMenu: 'purchases',
+            purchases, // Передаем массив закупок в шаблон
+            breadcrumbs: [
+                { title: req.__('title.dashboard'), url: '/' },
+                { title: 'Закупівлі' }
+            ]
+        });
+    } catch (error) {
+        console.error('Ошибка в роутере закупок:', error);
+        res.status(500).send('Ошибка сервера');
+    }
+});
+
+// Маршрут: Страница создания новой закупки
+app.get('/purchases/add', auth, async (req, res) => {
+    try {
+        const companyId = req.session.user.company_id;
+
+        // 1. Получаем активных поставщиков компании
+        const [suppliers] = await db.execute(
+            `SELECT id, name FROM suppliers WHERE company_id = ? AND archived = 0 ORDER BY name ASC`,
+            [companyId]
+        );
+
+        // 2. Получаем склады компании
+        const [stores] = await db.execute(
+            `SELECT id, name FROM stores WHERE company_id = ? ORDER BY name ASC`,
+            [companyId]
+        );
+
+        // 3. Получаем список товаров для выбора в накладной
+        const [products] = await db.execute(
+            `SELECT id, name, purchase_price FROM products WHERE company_id = ? AND archived = 0 ORDER BY name ASC`,
+            [companyId]
+        );
+
+        // Рендерим страницу добавления
+        res.render('purchases_add', {
+            titleKey: 'title.purchases_add',
+            activeMenu: 'purchases',
+            suppliers,
+            stores,
+            products,
+            breadcrumbs: [
+                { title: req.__('title.dashboard'), url: '/' },
+                { title: 'Закупка', url: '/purchases' },
+                { title: 'Новая закупка' }
+            ]
+        });
+    } catch (error) {
+        console.error('Ошибка при открытии страницы новой закупки:', error);
+        res.status(500).send('Ошибка сервера');
+    }
+});
+
+// Просмотр конкретной закупки
+app.get('/purchases/view/:id', async (req, res) => {
+    const purchaseId = req.params.id;
+    const companyId = req.session.user ? req.session.user.company_id : 1; 
+
+    try {
+        // Получаем закупку, подтягивая названия поставщика и склада
+        const [purchases] = await db.query(`
+            SELECT p.*, 
+                   s.name AS supplier_name, s.phone AS supplier_phone,
+                   st.name AS store_name
+            FROM purchases p
+            LEFT JOIN suppliers s ON p.supplier_id = s.id
+            LEFT JOIN stores st ON p.store_id = st.id
+            WHERE p.id = ? AND p.company_id = ?
+        `, [purchaseId, companyId]);
+
+        if (purchases.length === 0) {
+            return res.status(404).send('Закупка не найдена');
+        }
+
+        const purchase = purchases[0];
+        // Добавляем имя менеджера из сессии (так как в таблице нет поля user_id)
+        purchase.user_name = req.session.user ? req.session.user.name : 'Иван';
+
+        // Получаем товары для этой закупки
+        const [items] = await db.query(`
+            SELECT pi.*, pr.name AS product_name
+            FROM purchase_items pi
+            JOIN products pr ON pi.product_id = pr.id
+            WHERE pi.purchase_id = ?
+        `, [purchaseId]);
+
+        // Рендерим шаблон
+        res.render('purchases_view', {
+            activeMenu: 'purchases',
+            purchase: purchase,
+            items: items,
+            user: req.session.user || { name: 'Иван', role: 'Администратор' },
+            breadcrumbs: [
+                { title: req.__('title.dashboard'), url: '/' },
+                { title: 'Закупка', url: '/purchases' },
+                { title: 'Приходная накладная' }
+            ]
+        });
+
+    } catch (error) {
+        console.error('Ошибка при генерации страницы закупки:', error);
+        res.status(500).send('Внутренняя ошибка сервера');
+    }
+});
+
+// Маршрут: Обработка отправки формы закупки (Сохранение в БД + Обновление остатков)
+app.post('/purchases/add', auth, async (req, res) => {
+    // Получаем соединение из пула для работы с транзакцией
+    const connection = await db.getConnection();
+    
+    try {
+        const companyId = req.session.user.company_id;
+        const { number, date, supplier_id, store_id, items } = req.body;
+
+        // Базовая валидация данных
+        if (!number || !date || !supplier_id || !store_id || !items || !items.length) {
+            return res.status(400).send('Все поля документа и хотя бы один товар обязательны для заполнения');
+        }
+
+        // Стартуем транзакцию — если упадет один запрос, откатятся все
+        await connection.beginTransaction();
+
+        // 1. Считаем общую сумму накладной на стороне сервера (для безопасности)
+        let totalAmount = 0;
+        items.forEach(item => {
+            const qty = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.price) || 0;
+            totalAmount += qty * price;
+        });
+
+        // 2. Вставляем «шапку» накладной в таблицу purchases
+        // Ставим статус 'received' (проведено), так как товар сразу поступает на склад
+        const [purchaseResult] = await connection.execute(
+            `INSERT INTO purchases (company_id, supplier_id, store_id, number, date, total_amount, status) 
+             VALUES (?, ?, ?, ?, ?, ?, 'received')`,
+            [companyId, supplier_id, store_id, number.trim(), date, totalAmount]
+        );
+
+        const purchaseId = purchaseResult.insertId;
+
+        // 3. Циклом обходим все товары из накладной
+        for (const item of items) {
+            const productId = item.product_id;
+            const quantity = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.price) || 0;
+
+            if (!productId || quantity <= 0) continue; // Пропускаем пустые строки, если затесались
+
+            // а) Сохраняем товар в спецификацию накладной (purchase_items)
+            await connection.execute(
+                `INSERT INTO purchase_items (purchase_id, product_id, quantity, price) VALUES (?, ?, ?, ?)`,
+                [purchaseId, productId, quantity, price]
+            );
+
+            // б) ПРИХОД НА СКЛАД: обновляем остатки в таблице product_stores
+            // Если товара на этом складе еще не было — вставим (INSERT), если был — прибавим к текущему (ON DUPLICATE KEY UPDATE)
+            await connection.execute(
+                `INSERT INTO product_stores (product_id, store_id, quantity) 
+                 VALUES (?, ?, ?) 
+                 ON DUPLICATE KEY UPDATE quantity = quantity + ?`,
+                [productId, store_id, quantity, quantity]
+            );
+        }
+
+        // Если всё прошло гладко — сохраняем изменения в базе окончательно
+        await connection.commit();
+        res.redirect('/purchases');
+
+    } catch (error) {
+        // Если произошла любая ошибка — отменяем всё, что успели записать в этой транзакции
+        await connection.rollback();
+        console.error('Ошибка при проведении закупки:', error);
+        res.status(500).send('Ошибка при сохранении накладной в базу данных');
+    } finally {
+        // Обязательно возвращаем соединение обратно в пул
+        connection.release();
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
 });

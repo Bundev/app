@@ -1,36 +1,55 @@
 <div class="col-md-2 sidebar" id="sidebar">
     <ul class="nav flex-column">
 
+    <li class="nav-item">
+        <a class="nav-link <%= activeMenu === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+            📊 <%= __('title.dashboard') %>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link <%= activeMenu === 'sales' ? 'active' : '' %>" href="/sales">
+            🛍️ <%= __('title.sales') %>
+        </a>
+    </li>
+
+    <% if (user && user.role === 'admin') { %>
         <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'dashboard' ? 'active' : '' %>" href="/dashboard">📊 <%= __('title.dashboard') %></a>
+            <a class="nav-link <%= activeMenu === 'purchases' ? 'active' : '' %>" href="/purchases">
+                🛒 <%= __('title.purchases') %>
+            </a>
         </li>
 
         <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'sales' ? 'active' : '' %>" href="/sales">🛒 <%= __('title.sales') %></a>
-        </li>
-        <% if (user && user.role === 'admin') { %>
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">📦 <%= __('title.products') %></a>
+            <a class="nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">
+                📦 <%= __('title.products') %>
+            </a>
         </li>
     
         <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'clients' ? 'active' : '' %>" href="/customers">👥 <%= __('title.customers') %></a>
+            <a class="nav-link <%= activeMenu === 'customers' ? 'active' : '' %>" href="/customers">
+                👥 <%= __('title.customers') %>
+            </a>
         </li>
 
-        <a class="nav-link <%= activeMenu === 'finance' ? 'active' : '' %>"
-        href="/finance/cash">
-        💰 <%= __('title.finance') %>
-        </a>
+        <li class="nav-item">
+            <a class="nav-link <%= activeMenu === 'finance' ? 'active' : '' %>" href="/finance/cash">
+                💰 <%= __('title.finance') %>
+            </a>
+        </li>
         
-        <a class="nav-link <%= activeMenu === 'suppliers' ? 'active' : '' %>"
-        href="/suppliers">
-        🚚 <%= __('title.suppliers') %>
-        </a>
+        <li class="nav-item">
+            <a class="nav-link <%= activeMenu === 'suppliers' ? 'active' : '' %>" href="/suppliers">
+                🚚 <%= __('title.suppliers') %>
+            </a>
+        </li>
         
-        <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>"
-        href="/settings">
-        ⚙️ <%= __('title.settings') %>
-        </a>
-        <% } %>
+        <li class="nav-item">
+            <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>" href="/settings">
+                ⚙️ <%= __('title.settings') %>
+            </a>
+        </li>
+    <% } %>
+
     </ul>
 </div>

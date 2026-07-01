@@ -1,0 +1,304 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<div class="col content">
+    <!-- Заголовок и навигация назад -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800 fw-bold">📝 Новая закупка товаров</h1>
+        <a href="/purchases" class="btn btn-light btn-sm border rounded-2 fw-medium">
+            <i class="bi bi-arrow-left me-1"></i> Назад в журнал
+        </a>
+    </div>
+
+    <!-- Форма создания закупки -->
+    <form action="/purchases/add" method="POST">
+        <div class="row g-4">
+            
+            <!-- Левая колонка: Параметры документа -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-3 p-4">
+                    <h5 class="fw-bold text-dark mb-3">Параметры документа</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-bold">Номер накладной *</label>
+                        <input type="text" name="number" class="form-control rounded-2" placeholder="Например, ПР-001" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-bold">Дата закупки *</label>
+                        <input type="date" name="date" class="form-control rounded-2" value="2026-07-01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-bold">Поставщик *</label>
+                        <select name="supplier_id" class="form-select rounded-2" required>
+                            <option value="" disabled selected>Выберите поставщика...</option>
+                            <% suppliers.forEach(sup => { %>
+                                <option value="<%= sup.id %>"><%= sup.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-bold">Склад поступления *</label>
+                        <select name="store_id" class="form-select rounded-2" required>
+                            <option value="" disabled selected>Выберите склад...</option>
+                            <% stores.forEach(store => { %>
+                                <option value="<%= store.id %>">🏢 <%= store.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!-- Правая колонка: Таблица состава закупки с фиксированной версткой -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-3 mt-1" style="overflow: visible;">
+                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-dark mb-0">Состав накладной</h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-2" onclick="addRow()">
+                            <i class="bi bi-plus-circle me-1"></i> Добавить товар
+                        </button>
+                    </div>
+                    
+                    <!-- Убрали table-responsive, который обрезал и ломал разметку, добавили overflow: visible -->
+                    <div class="card-body p-0" style="overflow: visible;">
+                        <table class="table align-middle mb-0" id="itemsTable" style="table-layout: fixed; width: 100%;">
+                            <thead class="table-light text-secondary text-uppercase" style="font-size: 0.75rem;">
+                                <tr>
+                                    <!-- Жестко задаем ширину каждой колонки в процентах -->
+                                    <th class="ps-4 py-3" style="width: 45%;">Товар (Поиск по названию)</th>
+                                    <th class="py-3" style="width: 15%;">Кол-во</th>
+                                    <th class="py-3" style="width: 20%;">Цена закупки</th>
+                                    <th class="py-3 text-end" style="width: 15%;">Сумма</th>
+                                    <th class="pe-4 py-3 text-end" style="width: 5%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Первая строка -->
+                                <tr class="item-row">
+                                    <td class="ps-4 position-relative" style="overflow: visible;">
+                                        <div class="dropdown product-dropdown position-relative">
+                                            <!-- Добавили padding-right, чтобы текст не перекрывал крестик -->
+                                            <input type="text" class="form-control form-control-sm rounded-2 product-search" style="padding-right: 30px;" placeholder="Начните вводить название..." onfocus="showDropdown(this)" oninput="filterProducts(this)" onblur="hideDropdown(this)" autocomplete="off" required>
+                                            
+                                            <!-- КНОПКА-КРЕСТИК -->
+                                            <i class="bi bi-x-circle-fill text-muted position-absolute top-50 translate-middle-y end-0 me-2 clear-input-btn" style="cursor: pointer; display: none; z-index: 5; font-size: 0.9rem;" onclick="clearProductInput(this)"></i>
+                                            
+                                            <input type="hidden" name="items[0][product_id]" class="product-id-hidden" required>
+                                            
+                                            <ul class="dropdown-menu w-100 product-options-list shadow border-light" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto; font-size: 0.85rem; margin-top: 2px;">
+                                                <% products.forEach(prod => { %>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-wrap" href="#" data-id="<%= prod.id %>" data-price="<%= prod.purchase_price %>" onclick="selectProduct(this, event)">
+                                                            <%= prod.name %>
+                                                        </a>
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="items[0][quantity]" class="form-control form-control-sm rounded-2 quantity-input" value="1" min="1" step="any" oninput="calculateTotal()" required>
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm rounded-2 overflow-hidden">
+                                            <input type="number" name="items[0][price]" class="form-control price-input" value="0.00" min="0" step="0.01" oninput="calculateTotal()" required>
+                                            <span class="input-group-text bg-light text-muted small">₴</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end fw-bold row-total text-dark">0.00 ₴</td>
+                                    <td class="pe-4 text-end">
+                                        <button type="button" class="btn btn-link text-danger p-1 border-0" onclick="deleteRow(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Итоговый блок -->
+                    <div class="card-footer bg-light border-top-0 p-4 d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
+                        <div>
+                            <span class="text-secondary small text-uppercase fw-bold">Итого к оплате:</span>
+                            <h3 class="fw-bold text-dark mb-0 mt-1" id="grandTotal">0.00 ₴</h3>
+                        </div>
+                        <button type="submit" class="btn btn-success px-4 py-2 rounded-2 fw-medium shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i> Провести закупку
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<script>
+    let rowIndex = 1;
+
+    // Показываем выпадающий список при фокусе
+     
+    function showDropdown(input) {
+        // Закрываем другие списки
+        document.querySelectorAll('.product-options-list').forEach(el => el.classList.remove('show'));
+        
+        const menu = input.closest('.product-dropdown').querySelector('.product-options-list');
+        menu.classList.add('show');
+        
+        // Сбрасываем фильтр (показываем все элементы)
+        menu.querySelectorAll('li').forEach(li => li.style.display = '');
+    }
+
+    // Фильтруем элементы списка "на лету" + управляем видимостью крестика
+    function filterProducts(input) {
+        const filter = input.value.toLowerCase();
+        const dropdown = input.closest('.product-dropdown');
+        const menu = dropdown.querySelector('.product-options-list');
+        const items = menu.querySelectorAll('.dropdown-item');
+        const clearBtn = dropdown.querySelector('.clear-input-btn');
+        
+        // Показываем крестик, если есть текст
+        clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
+        
+        menu.classList.add('show');
+        
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                item.closest('li').style.display = '';
+            } else {
+                item.closest('li').style.display = 'none';
+            }
+        });
+    }
+
+    // Обработчик выбора товара
+    function selectProduct(element, event) {
+        event.preventDefault();
+        
+        const id = element.getAttribute('data-id');
+        const price = element.getAttribute('data-price');
+        const name = element.textContent.trim();
+        
+        const row = element.closest('.item-row');
+        const dropdown = element.closest('.product-dropdown');
+        
+        dropdown.querySelector('.product-search').value = name;
+        dropdown.querySelector('.product-id-hidden').value = id;
+        
+        // Показываем крестик при выборе
+        dropdown.querySelector('.clear-input-btn').style.display = 'block';
+        
+        row.querySelector('.price-input').value = Number(price).toFixed(2);
+        
+        dropdown.querySelector('.product-options-list').classList.remove('show');
+        calculateTotal();
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Очистка инпута по клику на крестик
+    function clearProductInput(btnElement) {
+        const dropdown = btnElement.closest('.product-dropdown');
+        const row = btnElement.closest('.item-row');
+        const input = dropdown.querySelector('.product-search');
+        
+        input.value = ''; // Очищаем текст
+        dropdown.querySelector('.product-id-hidden').value = ''; // Сбрасываем ID
+        btnElement.style.display = 'none'; // Прячем сам крестик
+        
+        row.querySelector('.price-input').value = '0.00'; // Сбрасываем цену
+        
+        calculateTotal(); // Пересчитываем математику таблицы
+    }
+
+    // Закрытие списков при клике в любое другое место экрана
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.product-dropdown')) {
+            document.querySelectorAll('.product-options-list').forEach(el => el.classList.remove('show'));
+        }
+    });
+
+    
+    // Обнови функцию добавления строки в секции <script>
+    function addRow() {
+        const tableBody = document.querySelector('#itemsTable tbody');
+        const newRow = document.createElement('tr');
+        newRow.className = 'item-row border-bottom-0';
+        
+        newRow.innerHTML = `
+            <td class="ps-4 position-relative" style="overflow: visible;">
+                <div class="dropdown product-dropdown position-relative">
+                    <input type="text" class="form-control form-control-sm rounded-2 product-search" style="padding-right: 30px;" placeholder="Начните вводить название..." onfocus="showDropdown(this)" oninput="filterProducts(this)" onblur="hideDropdown(this)" autocomplete="off" required>
+                    
+                    <!-- КРЕСТИК ДЛЯ ДИНАМИЧЕСКИХ СТРОК -->
+                    <i class="bi bi-x-circle-fill text-muted position-absolute top-50 translate-middle-y end-0 me-2 clear-input-btn" style="cursor: pointer; display: none; z-index: 5; font-size: 0.9rem;" onclick="clearProductInput(this)"></i>
+                    
+                    <input type="hidden" name="items[\${rowIndex}][product_id]" class="product-id-hidden" required>
+                    <ul class="dropdown-menu w-100 product-options-list shadow border-light" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto; font-size: 0.85rem; margin-top: 2px;">
+                        <% products.forEach(prod => { %>
+                            <li>
+                                <a class="dropdown-item py-2 text-wrap" href="#" data-id="<%= prod.id %>" data-price="<%= prod.purchase_price %>" onclick="selectProduct(this, event)">
+                                    <%= prod.name %>
+                                </a>
+                            </li>
+                        <% }) %>
+                    </ul>
+                </div>
+            </td>
+            <td>
+                <input type="number" name="items[\${rowIndex}][quantity]" class="form-control form-control-sm rounded-2 quantity-input" value="1" min="1" step="any" oninput="calculateTotal()" required>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="number" name="items[\${rowIndex}][price]" class="form-control rounded-2 price-input" value="0.00" min="0" step="0.01" oninput="calculateTotal()" required>
+                    <span class="input-group-text bg-light text-muted small">₴</span>
+                </div>
+            </td>
+            <td class="text-end fw-bold row-total text-dark">0.00 ₴</td>
+            <td class="pe-4 text-end">
+                <button type="button" class="btn btn-link text-danger p-1 border-0" onclick="deleteRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(newRow);
+        rowIndex++;
+    }
+
+    function deleteRow(button) {
+        const rows = document.querySelectorAll('.item-row');
+        if (rows.length > 1) {
+            button.closest('.item-row').remove();
+            calculateTotal();
+        }
+    }
+
+    function calculateTotal() {
+        let grandTotal = 0;
+        const rows = document.querySelectorAll('.item-row');
+
+        rows.forEach(row => {
+            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const price = parseFloat(row.querySelector('.price-input').value) || 0;
+            const rowTotal = qty * price;
+            
+            row.querySelector('.row-total').textContent = rowTotal.toFixed(2) + ' ₴';
+            grandTotal += rowTotal;
+        });
+
+        document.getElementById('grandTotal').textContent = grandTotal.toFixed(2) + ' ₴';
+    }
+
+    // Скрываем список при потере фокуса с небольшой задержкой
+    function hideDropdown(input) {
+        setTimeout(() => {
+            const menu = input.closest('.product-dropdown').querySelector('.product-options-list');
+            if (menu) {
+                menu.classList.remove('show');
+            }
+        }, 200); // 200 мс достаточно, чтобы клик по товару успел отработать
+    }
+</script>
+
+<%- include('blocks/footer') -%>
