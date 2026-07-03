@@ -1404,54 +1404,32 @@ document
     );
 
 // Копирует название товара
-document.addEventListener(
-    'click',
-    async e => {
-
-        const cell =
-            e.target.closest(
-                '.product-name'
-            );
-
-        if (!cell) {
-            return;
-        }
-
-        try {
-
-            let name =
-                (cell.dataset.name ||
-                 cell.textContent)
-                .trim();
-
-            name = name.replace(
-                /,\s*(шт|м|кг|уп|л)\s*$/i,
-                ''
-            );
-
-            await navigator.clipboard
-                .writeText(name);
-
-            cell.classList.add(
-                'copied'
-            );
-
-            setTimeout(() => {
-
-                cell.classList.remove(
-                    'copied'
-                );
-
-            }, 1000);
-
-        } catch (err) {
-
-            console.error(err);
-
-        }
-
+document.addEventListener('click', async e => {
+    const cell = e.target.closest('.product-name');
+    if (!cell) {
+        return;
     }
-);
+
+    try {
+        // 1. Берем видимый текст ячейки вместо data-name, 
+        // чтобы кавычки дюймов (1/2") не ломали HTML-атрибуты
+        let name = cell.textContent;
+
+        // 2. Схлопываем лишние пробелы, табы и переносы строк в один пробел
+        name = name.replace(/\s+/g, ' ').trim();
+
+        // 3. Убираем единицы измерения на конце (например: ", шт"), если они есть
+        name = name.replace(/,\s*(шт|м|кг|уп|л)\s*$/i, '');
+
+        // 4. Записываем чистый текст в буфер
+        await navigator.clipboard.writeText(name);
+
+        
+
+    } catch (err) {
+        console.error('Ошибка при копировании названия:', err);
+    }
+});
 
 async function createCustomer(event) {
     event.preventDefault(); // Защита от перезагрузки страницы
