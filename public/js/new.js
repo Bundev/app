@@ -64,7 +64,7 @@ searchInput.addEventListener('input', async () => {
             }, 300);
 
             // НЕ закрываем поиск и НЕ очищаем инпут. Просто возвращаем фокус в поле ввода.
-            searchInput.focus();
+            //searchInput.focus();
         });
 
         searchResults.appendChild(item);
