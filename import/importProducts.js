@@ -136,8 +136,8 @@ module.exports = async (db, filePath, storeId, companyId) => {
             } else {
                 salePrice = Math.round(
                     product.purchase_price > 100
-                        ? product.purchase_price * 1.10
-                        : product.purchase_price * 1.20
+                        ? product.purchase_price * 1.15
+                        : product.purchase_price * 1.30
                 );
             }
 
