@@ -3,7 +3,7 @@
         <%- include('blocks/menu') -%>
         <div class="col content">
             <div class="buttonblox">
-                <a href="/new" class="btn btn-primary">+ <%= __('title.new') %></a>
+                <a href="/sales/new" class="btn btn-primary">+ <%= __('title.new') %></a>
             </div>
 
 
@@ -100,13 +100,14 @@
             <th>Клиент</th>
             <th class="text-end" style="width: 140px;">Сумма</th>
             <th class="text-center" style="width: 150px;">Статус</th>
-            <th class="pe-3 text-end" style="width: 100px;">Действия</th>
+            
         </tr>
     </thead>
     <tbody id="salesTable" data-last-id="<%= sales[0]?.id || 0 %>">
         <% sales.forEach(sale => { %>
-            <tr class="invoice-row" 
-                data-url="/sale/<%= sale.id %>"
+            <tr class="invoice-row"
+                data-id="<%= sale.id %>"
+                data-url="/sales/<%= sale.id %>"
                 data-invoice="<%= sale.invoice_number %>"
                 data-customer="<%= sale.customer_name || '' %>"
                 data-total="<%= sale.total %>"
@@ -154,16 +155,7 @@
                     <% } %>
                 </td>
 
-                <td class="pe-3 text-end">
-                    <div class="btn-group shadow-sm">
-                        <a href="/sale/<%= sale.id %>" class="btn btn-sm btn-outline-secondary border-end-0" title="Просмотр" target="_blank">
-                            <i class="bi bi-eye text-primary"></i>
-                        </a>
-                        <a href="/sales/print/<%= sale.id %>" class="btn btn-sm btn-outline-secondary" title="Печать" target="_blank">
-                            <i class="bi bi-printer text-success"></i>
-                        </a>
-                    </div>
-                </td>
+                
             </tr>
         <% }) %>
     </tbody>

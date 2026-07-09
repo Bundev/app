@@ -1,0 +1,191 @@
+const express = require('express');
+const router = express.Router();
+
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+const requireAdmin = require('../middleware/requireAdmin');
+const uploadImport = require('../config/upload-import');
+
+const importProducts = require('../import/importProducts');
+// const XLSX = require('xlsx');
+// const fs = require('fs');
+
+
+router.get('/import',auth,requireAdmin,async (req, res) => {
+
+        const [stores] =
+            await db.execute(
+                `
+                SELECT *
+                FROM stores
+                WHERE company_id = ?
+                ORDER BY name
+                `,
+                [
+                    req.session.user.company_id
+                ]
+            );
+
+        res.render('products_import',{
+                titleKey: 'Импорт товаров',
+                activeMenu: 'products',
+                stores,
+                user: req.session.user,
+                script: [
+                    {
+                        src: 'products_import.js'
+                    }
+                ],
+                style: [
+                    {
+                        href: 'products_import.css'
+                    }
+                ],
+                breadcrumbs: [
+                    {
+                        title: req.__('title.dashboard'),
+                        url: '/'
+                    },
+                    {
+                        title: req.__('title.products'),
+                        url: '/products'
+                    },
+                    {
+                        title: req.__('title.products_import')
+                    }
+                ]
+                
+            }
+        );
+
+    }
+);
+router.post('/import/preview',auth, uploadImport.single('excel'), async (req, res) => {
+
+    try{
+        
+        const XLSX = require('xlsx');
+        const workbook =
+            XLSX.readFile(req.file.path);
+
+        
+
+        const sheet =
+            workbook.Sheets[
+                workbook.SheetNames[0]
+            ];
+
+        const rows =
+            XLSX.utils.sheet_to_json(
+                sheet,
+                { header: 1 }
+            );
+
+        
+
+        res.json({
+            success: true,
+            rows: rows.slice(0, 20)
+        });
+    }finally {
+
+            const fs = require('fs');
+
+            if (
+                req.file &&
+                fs.existsSync(req.file.path)
+            ) {
+
+                fs.unlinkSync(
+                    req.file.path
+                );
+
+            }
+
+        }
+
+    }
+);
+
+
+router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (req, res) => {
+        
+        try {
+
+
+            const [[userStore]] =
+                await db.query(
+                    `
+                    SELECT store_id
+                    FROM user_stores
+                    WHERE user_id = ?
+                    LIMIT 1
+                    `,
+                    [
+                        req.session.user.id
+                    ]
+                );
+
+            const storeId =
+                    Number(
+                        req.body.store_id
+                    );
+
+            if (!storeId) {
+
+                return res.status(400).send(
+                    'Магазин пользователя не найден'
+                );
+
+            }
+
+            const result =
+                await importProducts(
+                    db,
+                    req.file.path,
+                    storeId,
+                    req.session.user.company_id
+                );
+
+
+
+
+            req.session.importSuccess = {
+                categoriesCreated: result.categoriesCreated,
+                createdCount: result.createdCount,
+                updatedCount: result.updatedCount
+            };
+            
+            res.redirect('/products');
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).send(
+                error.message
+            );
+
+        }   finally {
+            
+                const fs =
+                    require('fs');
+
+                if (
+                    req.file &&
+                    fs.existsSync(
+                        req.file.path
+                    )
+                ) {
+
+                    fs.unlinkSync(
+                        req.file.path
+                    );
+
+                }
+
+        }
+
+    }
+);
+module.exports = router;

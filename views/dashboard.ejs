@@ -73,17 +73,32 @@
 
                 <div class="card-body">
 
-                    <div class="text-muted">
-                        Чеков за сегодня
-                    </div>
+                    <% if (user.role === 'admin') { %>
 
-                    <h3 class="mt-2">
-                        <%= invoicesToday%>
-                    </h3>
+                        <div class="text-muted">
+                            Маржа за сегодня
+                        </div>
+
+                        <h3 class="mt-2 text-success">
+                            <%= todayMargin.toFixed(2) %> ₴
+                        </h3>
+
+                    <% } else { %>
+
+                        <div class="text-muted">
+                            Чеков за сегодня
+                        </div>
+
+                        <h3 class="mt-2">
+                            <%= invoicesToday %>
+                        </h3>
+
+                    <% } %>
 
                 </div>
 
             </div>
+
         </div>
     </div>
     <div class="row g-3">
@@ -174,7 +189,7 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="/new"
+                        <a href="/sales/new"
                         class="btn btn-primary">
 
                             🧾 Новый чек

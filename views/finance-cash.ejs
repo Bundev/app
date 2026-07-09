@@ -14,11 +14,45 @@
             
             <label for="period" class="me-2 fw-medium">Период:</label>
             <select name="period" id="period" class="form-select w-auto" onchange="this.form.submit()">
-                <option value="day" <%= period === 'day' ? 'selected' : '' %>>За сегодня</option>
-                <option value="week" <%= period === 'week' ? 'selected' : '' %>>За неделю</option>
-                <option value="month" <%= period === 'month' ? 'selected' : '' %>>За месяц</option>
-                <option value="year" <%= period === 'year' ? 'selected' : '' %>>За год</option>
-                <option value="all" <%= period === 'all' ? 'selected' : '' %>>За все время</option>
+                <option value="day" <%= period === 'day' ? 'selected' : '' %>>
+                    За сегодня
+                </option>
+
+                <option value="yesterday" <%= period === 'yesterday' ? 'selected' : '' %>>
+                    За вчера
+                </option>
+
+                <option value="week" <%= period === 'week' ? 'selected' : '' %>>
+                    За неделю
+                </option>
+
+                <option value="current_month" <%= period === 'current_month' ? 'selected' : '' %>>
+                    За текущий месяц
+                </option>
+
+                <option value="month" <%= period === 'month' ? 'selected' : '' %>>
+                    За последние 30 дней
+                </option>
+
+                <option value="2months" <%= period === '2months' ? 'selected' : '' %>>
+                    За последние 2 месяца
+                </option>
+
+                <option value="3months" <%= period === '3months' ? 'selected' : '' %>>
+                    За последние 3 месяца
+                </option>
+
+                <option value="current_year" <%= period === 'current_year' ? 'selected' : '' %>>
+                    За текущий год
+                </option>
+
+                <option value="year" <%= period === 'year' ? 'selected' : '' %>>
+                    За последние 12 месяцев
+                </option>
+
+                <option value="all" <%= period === 'all' ? 'selected' : '' %>>
+                    За всё время
+                </option>
             </select>
         </form>
         <div class="btn-group shadow-sm">

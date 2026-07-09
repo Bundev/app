@@ -160,6 +160,7 @@ async function loadLatestSales() {
 setInterval(loadLatestSales, 5000);
 
 
+
 document.addEventListener('click', async (e) => {
     // Ищем клик по кнопке принтера или по самой иконке внутри неё
     const printBtn = e.target.closest('a[href*="/sales/print/"]') || e.target.closest('button[data-print-id]');
@@ -287,3 +288,69 @@ function openReceiptInNewTab(invoiceNumber, receiptData) {
     `);
     printWindow.document.close();
 }
+
+
+
+// =========================================
+// Запоминаем открытый чек
+// =========================================
+
+document.querySelectorAll('.invoice-row').forEach(row => {
+
+    row.addEventListener('click', function (e) {
+
+        // Всегда запоминаем выбранный чек
+        sessionStorage.setItem('selectedSaleId', this.dataset.id);
+
+        // Ctrl + ЛКМ или Cmd + ЛКМ (macOS)
+        if (e.ctrlKey || e.metaKey) {
+
+            window.open(this.dataset.url, '_blank');
+            return;
+
+        }
+
+        // Обычный переход
+        window.location.href = this.dataset.url;
+
+    });
+
+});
+
+
+// =========================================
+// Восстановление положения списка
+// =========================================
+
+function restoreSelectedRow() {
+
+    const selectedId = sessionStorage.getItem('selectedSaleId');
+
+    if (!selectedId) return;
+
+    const row = document.querySelector(
+        `.invoice-row[data-id="${selectedId}"]`
+    );
+
+    // Удаляем ID сразу, чтобы при следующем открытии страницы
+    // ничего не подсвечивалось
+    sessionStorage.removeItem('selectedSaleId');
+
+    if (!row) return;
+
+    document.querySelectorAll('.invoice-row.active-row').forEach(r => {
+        r.classList.remove('active-row');
+    });
+
+    row.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+    row.classList.add('active-row');
+
+}
+
+document.addEventListener('DOMContentLoaded', restoreSelectedRow);
+
+window.addEventListener('pageshow', restoreSelectedRow);

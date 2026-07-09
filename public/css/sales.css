@@ -5,6 +5,7 @@
 /* Кнопка новый чек в разделе продажи */
 
 
+
 .sales-table {
     background: #fff;
 }
@@ -99,4 +100,15 @@
 
     border-bottom: 2px solid #dee2e6;
 
+}
+
+.invoice-row{
+    cursor: pointer;
+    
+}
+
+
+
+.table-hover > tbody > tr.active-row > * {
+    background-color: var(--bs-table-hover-bg) !important;
 }
