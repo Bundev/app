@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
+const page = require('../helpers/page');
 
 function renderLogin(res, error = null, success = null) {
     res.render('login', {

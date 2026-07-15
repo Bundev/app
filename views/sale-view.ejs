@@ -40,21 +40,101 @@
                 </h2>
 
                 <div class="btn-group sale-actions">
-                    <a
-                        href="/sales/print/<%= sale.id %>"
-                        class="btn btn-outline-success btn-lg" title="Печать">
-                        <i class="bi bi-printer"></i>
-                    </a>
+<div class="btn-group">
 
-                    <a
-                        href="/sales/pdf/<%= sale.id %>"
-                        class="btn btn-outline-primary btn-lg" title="PDF">
-                        <i class="bi bi-file-earmark-pdf"></i>
-                    </a>
+    <!-- Основная кнопка -->
+    <a href="/sales/print/58/<%= sale.id %>"
+       target="_blank"
+       class="btn btn-primary btn-lg"
+       title="Печать">
+
+        <i class="bi bi-printer"></i>
+
+    </a>
+
+    <!-- Выпадающее меню -->
+    <button
+        type="button"
+        class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+        data-bs-toggle="dropdown"
+        aria-expanded="false">
+        <i class="bi bi-caret-down-fill"></i>
+    </button>
+
+    <ul class="dropdown-menu dropdown-menu-end shadow">
+
+        <li>
+            <h6 class="dropdown-header">
+                Печать документов
+            </h6>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/sales/print/58/<%= sale.id %>"
+               target="_blank">
+
+                <i class="bi bi-receipt me-2 text-primary"></i>
+                Кассовый чек (58 мм)
+
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/sales/print/80/<%= sale.id %>"
+               target="_blank">
+
+                <i class="bi bi-receipt-cutoff me-2 text-primary"></i>
+                Кассовый чек (80 мм)
+
+            </a>
+        </li>
+
+        <li><hr class="dropdown-divider"></li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/sales/receipt/<%= sale.id %>"
+               target="_blank">
+
+                <i class="bi bi-file-earmark-text me-2 text-success"></i>
+                Товарный чек
+
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/sales/waybill/<%= sale.id %>"
+               target="_blank">
+
+                <i class="bi bi-file-earmark-spreadsheet me-2 text-warning"></i>
+                Расходная накладная
+
+            </a>
+        </li>
+
+        <li>
+            <a class="dropdown-item"
+               href="/sales/labels/<%= sale.id %>"
+               target="_blank">
+
+                <i class="bi bi-upc-scan me-2 text-info"></i>
+                Этикетки / ценники
+
+            </a>
+        </li>
+
+    </ul>
+
+</div>
+
+                    
                     <% if (sale.status !== 'cancelled') { %>
                         <a
                             href="/sales/<%= sale.id %>/return"
-                            class="btn btn-outline-warning btn-lg" title="Возврат">
+                            class="btn btn-outline-warning btn-lg"  title="Возврат">
                             <i class="bi bi-arrow-counterclockwise"></i>
                         </a>
 

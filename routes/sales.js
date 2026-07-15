@@ -5,11 +5,10 @@ const auth = require('../middleware/auth');
 const statuses = require('../config/statuses');
 const roles = require('../config/roles');
 const https = require('https');
+const page = require('../helpers/page');
 // Продажи
 router.get('/', auth, async (req, res) => {
-
     try {
-
         let sql = `
             SELECT
                 s.*,
@@ -35,63 +34,37 @@ router.get('/', auth, async (req, res) => {
             sql += `
                 WHERE s.company_id = ?
             `;
-
-            params.push(
-                req.session.user.company_id
-            );
+            params.push(req.session.user.company_id);
 
         } else {
             
             sql += `
-                WHERE s.user_id = ?
+                WHERE s.user_id = ? 
             `;
-
-            params.push(
-                req.session.user.id
-            );
+            params.push(req.session.user.id);
 
         }
 
-        sql += `
-            ORDER BY s.id DESC
-        `;
+        sql += `ORDER BY s.id DESC`;
 
-        const [sales] =
-            await db.query(
-                sql,
-                params
-            );
+        const [sales] = await db.query(sql,params);
 
-        res.render('sales', {
+        res.render('sales', 
+        {
             titleKey: 'title.sales',
             activeMenu: 'sales',
             sales,
             statuses,
-            script: [
-                {
-                    src: 'sales.js'
-                }
-            ],
-            style: [
-                {
-                    href: 'sales.css'
-                }
-            ],
-            breadcrumbs: [
-                {
-                    title: req.__('title.dashboard'),
-                    url: '/'
-                },
+            ...page(req, 'sales', [
                 {
                     title: req.__('title.sales')
                 }
-            ]
+            ])
         });
 
     } catch (error) {
 
         console.error(error);
-
         res.status(500).send(error.message);
 
     }
@@ -137,33 +110,11 @@ router.get('/new', auth, async (req, res) => {
 
 
     res.render('new', {
-
         titleKey: 'title.new',
-
-        
-
         activeMenu: 'sales',
-
         statuses,
         invoice_merchant: req.session.user.name,
-
-        script: [
-            {
-                src: 'new.js'
-            }
-        ],
-
-        style: [
-            {
-                href: 'new.css'
-            }
-        ],
-
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
+        ...page(req, 'new', [
             {
                 title: req.__('title.sales'),
                 url: '/sales'
@@ -171,7 +122,8 @@ router.get('/new', auth, async (req, res) => {
             {
                 title: req.__('title.new')
             }
-        ]
+        ])
+       
     });
 
 });
@@ -273,32 +225,21 @@ sale.return_percent =
         returnTotal,
         subtotal, 
         activeMenu: 'sales',
-        script: [
+        ...page(req, 'sale-view', [
             {
-                src: 'sale-view.js'
-            }
-        ],
-        style: [
-            {
-                href: 'sale-view.css'
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: 'Продажи',
+                title: req.__('title.sales'),
                 url: '/sales'
             },
             {
                 title: `Чек`
             }
-        ]
+        ])
+       
+        
     });
 
 });
+
 
 
 // Роут страницы возврата продажи
@@ -346,36 +287,22 @@ router.get('/:id/return',auth,async (req, res) => {
                 [saleId]
             );
 
-        res.render(
-            'sale_return',
+        res.render('sale_return',
             {
                 titleKey: "Возврата товара",
                 sale,
                 items,
                 activeMenu: 'sales',
-                script: [
+                ...page(req, 'sale-return', [
                     {
-                        src: 'sale-return.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'sale-return.css'
-                    }
-                ],
-                breadcrumbs: [
-                    {
-                        title: req.__('title.dashboard'),
-                        url: '/'
-                    },
-                    {
-                        title: 'Продажи',
+                        title: req.__('title.sales'),
                         url: '/sales'
                     },
                     {
                         title: `Возврать по чек`
                     }
-                ]
+                ])
+                
             }
         );
 
