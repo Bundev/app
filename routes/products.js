@@ -6,6 +6,7 @@ const uploadProduct = require('../config/uploadProduct');
 const requireAdmin = require('../middleware/requireAdmin');
 const PDFDocument = require('pdfkit');
 const bwipjs = require('bwip-js');
+const page = require('../helpers/page');
 // Роутер товаров с фильтрацией по категориям
 router.get('/', auth, async (req, res) => {
     try {
@@ -66,12 +67,9 @@ router.get('/', auth, async (req, res) => {
             categoryId,      // Передаем текущий активный фильтр
             importSuccess,
             productSuccess,
-            script: [{ src: 'products.js' }],
-            style: [{ href: 'products.css' }],
-            breadcrumbs: [
-                { title: req.__('title.dashboard'), url: '/' },
-                { title: req.__('title.products') }
-            ]
+            ...page(req, 'products', [
+                {title: req.__('title.products')}
+            ])
         });
 
     } catch (error) {
@@ -97,35 +95,17 @@ router.get('/add', auth, async (req, res) => {
         [req.session.user.company_id]
     );
 
-    res.render('add-product', {
+    res.render('product-add', {
         titleKey: 'title.addProducts',
         activeMenu: 'products',
         categories,
         stores,
-        script: [
-            {
-                src: 'add-products.js'
-            }
-        ],
-        style: [
-            {
-                href: 'add-products.css'
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.products'),
-                url: '/products'
-            },
-            {
-                title: req.__('title.addProducts'),
-                
-            }
-        ]
+        ...page(req, 'product-add', [
+                {title: req.__('title.products'),url: '/products'},
+                {title: req.__('title.addProducts')}
+            ])
+       
+        
     });
 
 });
@@ -300,34 +280,11 @@ router.get('/view/:id',auth,async (req, res) => {
                 {
                     product,
                     storeStocks,
-
                     activeMenu: 'products',
-
-                    script: [
-                        {
-                            src: 'product-view.js'
-                        }
-                    ],
-
-                    style: [
-                        {
-                            href: 'product-view.css'
-                        }
-                    ],
-                    breadcrumbs: [
-                        {
-                            title: req.__('title.dashboard'),
-                            url: '/'
-                        },
-                        {
-                            title: req.__('title.products'),
-                            url: '/products'
-                        },
-                        {
-                            title: req.__('title.product-edit'),
-                            
-                        }
-                    ]
+                    ...page(req, 'product-view', [
+                        {title: req.__('title.products'),url: '/products'},
+                        {title: req.__('title.product-edit')}
+                    ])
                 }
             );
 
@@ -417,9 +374,11 @@ router.get('/edit/:id',auth, async (req, res) => {
                     product,
                     categories,
                     activeMenu: 'products',
-                    script: [{src: 'product-edit.js'}],
-                    style: [{href: 'product-edit.css'}],
-                    breadcrumbs: [{title: req.__('title.dashboard'),url: '/'},{title: req.__('title.products'),url: '/products'},{title: req.__('title.product-edit')}]   
+                    ...page(req, 'product-edit', [
+                        {title: req.__('title.products'),url: '/products'},
+                        {title: req.__('title.product-edit')}
+                    ])
+                       
                 }
             );
 

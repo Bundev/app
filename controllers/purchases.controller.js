@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const page = require('../helpers/page');
 
 // ======================================================
 // Список закупок
@@ -30,15 +31,10 @@ exports.index = async (req, res) => {
             titleKey: 'title.purchases',
             activeMenu: 'purchases',
             purchases,
-            breadcrumbs: [
-                {
-                    title: req.__('title.dashboard'),
-                    url: '/'
-                },
-                {
-                    title: 'Закупівлі'
-                }
-            ]
+            ...page(req, 'purchases', [
+                {title: 'Закупка'}
+            ])
+            
         });
 
     } catch (error) {
@@ -98,19 +94,10 @@ exports.showAdd = async (req, res) => {
             suppliers,
             stores,
             products,
-            breadcrumbs: [
-                {
-                    title: req.__('title.dashboard'),
-                    url: '/'
-                },
-                {
-                    title: 'Закупка',
-                    url: '/purchases'
-                },
-                {
-                    title: 'Новая закупка'
-                }
-            ]
+            ...page(req, 'purchases_add', [
+                {title: 'Закупка',url: '/purchases'},
+                {title: 'Новая закупка'}
+            ])
         });
 
     } catch (error) {
@@ -189,21 +176,10 @@ exports.view = async (req, res) => {
             items,
 
             user: req.session.user,
-
-            breadcrumbs: [
-                {
-                    title: req.__('title.dashboard'),
-                    url: '/'
-                },
-                {
-                    title: 'Закупка',
-                    url: '/purchases'
-                },
-                {
-                    title: 'Приходная накладная'
-                }
-            ]
-
+            ...page(req, 'purchases_view', [
+                {title: 'Закупка',url: '/purchases'},
+                {title: 'Приходная накладная'}
+            ])
         });
 
     } catch (error) {

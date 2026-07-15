@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const statuses = require('../config/statuses');
 const roles = require('../config/roles');
+const page = require('../helpers/page');
 async function renderDashboard(req, res) {
     try {
         const companyId = req.session.user.company_id;
@@ -126,11 +127,7 @@ async function renderDashboard(req, res) {
             invoices: latestSales,
             statuses,
             todayMargin: Number(todayMargin.margin || 0),
-            script: [{ src: 'dashboard.js' }],
-            style: [{ href: 'dashboard.css' }],
-            breadcrumbs: [
-                { title: req.__('title.dashboard'), url: '/' }
-            ]
+            ...page(req, 'dashboard')
         });
 
     } catch (error) {

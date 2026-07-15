@@ -56,9 +56,7 @@ router.get('/', auth, async (req, res) => {
             sales,
             statuses,
             ...page(req, 'sales', [
-                {
-                    title: req.__('title.sales')
-                }
+                {title: req.__('title.sales')}
             ])
         });
 
@@ -115,13 +113,8 @@ router.get('/new', auth, async (req, res) => {
         statuses,
         invoice_merchant: req.session.user.name,
         ...page(req, 'new', [
-            {
-                title: req.__('title.sales'),
-                url: '/sales'
-            },
-            {
-                title: req.__('title.new')
-            }
+            {title: req.__('title.sales'),url: '/sales'},
+            {title: req.__('title.new')}
         ])
        
     });
@@ -226,22 +219,14 @@ sale.return_percent =
         subtotal, 
         activeMenu: 'sales',
         ...page(req, 'sale-view', [
-            {
-                title: req.__('title.sales'),
-                url: '/sales'
-            },
-            {
-                title: `Чек`
-            }
+            {title: req.__('title.sales'),url: '/sales'},
+            {title: `Чек`}
         ])
        
         
     });
 
 });
-
-
-
 // Роут страницы возврата продажи
 router.get('/:id/return',auth,async (req, res) => {
 
@@ -294,13 +279,8 @@ router.get('/:id/return',auth,async (req, res) => {
                 items,
                 activeMenu: 'sales',
                 ...page(req, 'sale-return', [
-                    {
-                        title: req.__('title.sales'),
-                        url: '/sales'
-                    },
-                    {
-                        title: `Возврать по чек`
-                    }
+                    {title: req.__('title.sales'),url: '/sales'},
+                    {title: `Возврать по чек`}
                 ])
                 
             }

@@ -7,12 +7,7 @@ function renderLogin(res, error = null, success = null) {
         titleKey: 'title.login',
         error,
         success,
-        script: [
-            { src: 'login.js' }
-        ],
-        style: [
-            { href: 'login.css' }
-        ]
+        ...page(req, 'login')
     });
 }
 
@@ -30,16 +25,7 @@ exports.showLogin = (req, res) => {
         titleKey: 'title.login',
         error: null,
         success,
-        script: [
-            {
-                src: 'login.js'
-            }
-        ],
-        style: [
-            {
-                href: 'login.css'
-            }
-        ]
+        ...page(req, 'login')
     });
 
 };
@@ -70,16 +56,7 @@ exports.login = async (req, res) => {
                 titleKey: 'title.login',
                 error: 'Неверный логин или пароль',
                 success: null,
-                script: [
-                    {
-                        src: 'login.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'login.css'
-                    }
-                ]
+                ...page(req, 'login')
             });
 
         }
@@ -97,16 +74,7 @@ exports.login = async (req, res) => {
                 titleKey: 'title.login',
                 error: 'Неверный логин или пароль',
                 success: null,
-                script: [
-                    {
-                        src: 'login.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'login.css'
-                    }
-                ]
+                ...page(req, 'login')
             });
 
         }
@@ -117,16 +85,7 @@ exports.login = async (req, res) => {
                 titleKey: 'title.login',
                 error: 'Ваш аккаунт заблокирован',
                 success: null,
-                script: [
-                    {
-                        src: 'login.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'login.css'
-                    }
-                ]
+                ...page(req, 'login')
             });
 
         }
@@ -165,16 +124,7 @@ exports.showRegister = (req, res) => {
         titleKey: 'title.register',
         error: null,
         success: null,
-        script: [
-            {
-                src: 'register.js'
-            }
-        ],
-        style: [
-            {
-                href: 'register.css'
-            }
-        ]
+        ...page(req, 'register')
     });
 
 };
@@ -197,16 +147,7 @@ exports.register = async (req, res) => {
                 titleKey: 'title.register',
                 error: 'Пароли не совпадают',
                 success: null,
-                script: [
-                    {
-                        src: 'register.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'register.css'
-                    }
-                ]
+                ...page(req, 'register')
             });
 
         }
@@ -230,16 +171,7 @@ exports.register = async (req, res) => {
                 titleKey: 'title.register',
                 error: 'Пользователь с таким логином или email уже существует',
                 success: null,
-                script: [
-                    {
-                        src: 'register.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'register.css'
-                    }
-                ]
+                ...page(req, 'register')
             });
 
         }
