@@ -74,19 +74,50 @@ async function renderDashboard(req, res) {
         );
 
         const [[todayMargin]] = await db.query(`
-        SELECT
-            SUM(
-                (si.price - p.purchase_price) * si.quantity
-            ) AS margin
-        FROM sale_items si
-        JOIN sales s
-            ON s.id = si.sale_id
-        JOIN products p
-            ON p.id = si.product_id
-        WHERE
-            s.company_id = ?
-            AND DATE(s.created_at) = CURDATE()
-            AND s.status = 'completed'
+            SELECT
+                SUM(
+                    (
+                        (
+                            (si.price * si.quantity)
+
+                            * (1 - IFNULL(s.discount_percent, 0) / 100)
+
+                            -
+
+                            (
+                                IFNULL(s.discount_amount, 0)
+                                *
+                                (
+                                    (si.price * si.quantity)
+                                    /
+                                    NULLIF(
+                                        s.total * (1 - IFNULL(s.discount_percent,0)/100),
+                                        0
+                                    )
+                                )
+                            )
+
+                        )
+
+                        -
+
+                        (p.purchase_price * si.quantity)
+
+                    )
+                ) AS margin
+
+            FROM sale_items si
+
+            INNER JOIN sales s
+                ON s.id = si.sale_id
+
+            INNER JOIN products p
+                ON p.id = si.product_id
+
+            WHERE
+                s.company_id = ?
+                AND DATE(s.created_at) = CURDATE()
+                AND s.status = 'completed'
         `, [companyId]);
 
         // 6. Топ 10 товаров текущего пользователя за последние 7 дней
