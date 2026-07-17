@@ -182,7 +182,8 @@ function addProductToInvoice(product) {
             qty: 1,
             price: price,
             stock: productStock,
-            stock_info: productStockInfo
+            stock_info: productStockInfo,
+            
         });
     }
 
@@ -225,6 +226,7 @@ function renderItemsTable(items) {
         tr.className = "receipt-item-row align-middle";
         tr.style.cursor = "pointer";
         tr.dataset.stock = item.stock || 0;
+        tr.dataset.purchasePrice = item.purchasePrice || 0;
         tr.dataset.stockInfo = item.stock_info || '';
         
         tr.innerHTML = `
