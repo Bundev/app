@@ -691,6 +691,15 @@ router.post('/save', auth, async (req, res) => {
             ]
         );
 
+        let totalAfterPercent = 0;
+
+        for (const item of items) {
+            const subtotal = Number(item.price) * Number(item.quantity);
+
+            totalAfterPercent +=
+                subtotal * (1 - Number(discount_percent || 0) / 100);
+        }
+
         const saleId = saleResult.insertId;
 
         // ПЕРЕМЕННЫЕ ДЛЯ СБОРА ДАННЫХ В ТЕЛЕГРАМ
@@ -735,7 +744,19 @@ router.post('/save', auth, async (req, res) => {
             // itemsTextForTelegram += `    🔹 Продажа: ${item.price} ₴ | Сумма: ${subtotal} ₴\n`;
             itemsTextForTelegram += `    🔸 Продажа: ${purchasePrice} ₴ | Сумма: ${subtotalPurchase} ₴\n`; //закупочная цена
             itemIndex++;
+            const subtotalAfterPercent =
+                subtotal * (1 - Number(discount_percent || 0) / 100);
 
+            const share =
+                totalAfterPercent > 0
+                    ? subtotalAfterPercent / totalAfterPercent
+                    : 0;
+
+            const itemDiscount =
+                Number(discount_amount || 0) * share;
+
+            const finalSubtotal =
+                subtotalAfterPercent - itemDiscount;
             await connection.execute(
                 `
                 INSERT INTO sale_items
@@ -744,14 +765,24 @@ router.post('/save', auth, async (req, res) => {
                     product_id,
                     quantity,
                     price,
-                    subtotal
+                    purchase_price,
+                    subtotal,
+                    final_subtotal
                 )
                 VALUES
                 (
-                    ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?
                 )
                 `,
-                [saleId, item.product_id, item.quantity, item.price, subtotal]
+                [
+                    saleId, 
+                    item.product_id, 
+                    item.quantity, 
+                    item.price, 
+                    purchasePrice, 
+                    subtotal,
+                    finalSubtotal
+                ]
             );
 
             await connection.execute(

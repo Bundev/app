@@ -1,21 +1,33 @@
 const mysql = require('mysql2/promise');
-const fs = require('fs');
-const path = require('path');
 
-const user1 = "u891612247_bundev95";
-const password1 = "Bundev1995";
-const database1 = "u891612247_crm";
+const configs = {
+    1: {
+        user: "u891612247_bundev95",
+        password: "Bundev1995",
+        database: "u891612247_crm"
+    },
+    2: {
+        user: "u891612247_bundev",
+        password: "R?O09@g6",
+        database: "u891612247_crm_clon"
+    },
+    3: {
+        user: "u891612247_bundev22",
+        password: "8Aj6vAt&",
+        database: "u891612247_crm_test"
+    }
+};
 
-const user2 = "u891612247_bundev";
-const password2 = "R?O09@g6";
-const database2 = "u891612247_crm_clon";
+const num = 1;
 
 const db = mysql.createPool({
-    host: 'srv1798.hstgr.io.',
+    host: 'srv1798.hstgr.io',
     port: 3306,
-    user: user1,
-    password: password1,
-    database: database1,
+
+    user: configs[num].user,
+    password: configs[num].password,
+    database: configs[num].database,
+
     timezone: '+03:00',
 
     waitForConnections: true,
@@ -24,7 +36,6 @@ const db = mysql.createPool({
 
     enableKeepAlive: true,
     keepAliveInitialDelay: 0
-    
 });
 
 module.exports = db;

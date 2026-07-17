@@ -181,9 +181,9 @@ function addProductToInvoice(product) {
             unit: product.unit,
             qty: 1,
             price: price,
+            originalPrice: price,
             stock: productStock,
             stock_info: productStockInfo,
-            
         });
     }
 
@@ -209,7 +209,7 @@ function renderItemsTable(items) {
     
     // Если чек полностью очищен
     if (items.length === 0) { 
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-muted">Чек пуст. Отсканируйте или найдите товар.</td></tr>`; 
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-receipt">Чек пуст. Отсканируйте или найдите товар.</td></tr>`; 
         
         // ИСПРАВЛЕНИЕ: Сбрасываем боковую панель сразу здесь, перед досрочным выходом!
         updateSideStockPanel('Товар не выбран', 0, 'В чеке нет товаров');
@@ -226,7 +226,6 @@ function renderItemsTable(items) {
         tr.className = "receipt-item-row align-middle";
         tr.style.cursor = "pointer";
         tr.dataset.stock = item.stock || 0;
-        tr.dataset.purchasePrice = item.purchasePrice || 0;
         tr.dataset.stockInfo = item.stock_info || '';
         
         tr.innerHTML = `
@@ -995,3 +994,28 @@ document.getElementById('payment-method')?.addEventListener('change', function()
         currentReceipt.paymentMethod = this.value;
     }
 });
+
+
+function applyMarkup() {
+
+    const percent = Number(document.getElementById('markup').value) || 0;
+
+    const current = receipts.find(r => r.id === activeReceiptId);
+    if (!current) return;
+
+    current.items.forEach(item => {
+
+        // Запоминаем первоначальную цену
+        if (item.originalPrice === undefined) {
+            item.originalPrice = Number(item.price);
+        }
+
+        item.price = Number(
+            (item.originalPrice * (1 + percent / 100)).toFixed(2)
+        );
+
+    });
+
+    renderItemsTable(current.items);
+    calculateTotals();
+}

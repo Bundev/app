@@ -55,6 +55,16 @@
 /* ==========================================================================
    2. ТАБЛИЦА ТОВАРОВ (ЧЕК)
    ========================================================================== */
+.table-responsive{
+    height: 750px;
+    overflow-y: auto;
+}
+
+.empty-receipt{
+    height: 600px;
+    vertical-align: middle !important;
+    text-align: center;
+}
 
 .table-sales {
     background: #fff;
@@ -181,6 +191,8 @@ tr.selected-product-row {
 tr.selected-product-row td {
     background-color: #f1f3f5 !important;
 }
+
+
 
 /* ==========================================================================
    3. СПИСКИ И ВЫБОР (ОКНА ПОИСКА)
@@ -443,3 +455,6 @@ tr.selected-product-row td {
         background-color: #0d6efd;
         border-radius: 3px 3px 0 0;
     }
+
+
+

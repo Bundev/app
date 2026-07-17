@@ -73,53 +73,42 @@ async function renderDashboard(req, res) {
             [companyId, userId]
         );
 
-        const [[todayMargin]] = await db.query(`
-            SELECT
-                SUM(
-                    (
-                        (
-                            (si.price * si.quantity)
+const [[todayMargin]] = await db.query(`
+SELECT
+    COALESCE(
+        SUM(
+            (si.final_subtotal - (si.purchase_price * si.quantity))
+            -
+            COALESCE(r.return_margin, 0)
+        ),
+        0
+    ) AS margin
+FROM sale_items si
 
-                            * (1 - IFNULL(s.discount_percent, 0) / 100)
+JOIN sales s
+    ON s.id = si.sale_id
 
-                            -
+LEFT JOIN (
+    SELECT
+        sri.sale_item_id,
+        SUM(
+            (
+                (si2.final_subtotal / si2.quantity)
+                - si2.purchase_price
+            ) * sri.quantity
+        ) AS return_margin
+    FROM sale_return_items sri
+    JOIN sale_items si2
+        ON si2.id = sri.sale_item_id
+    GROUP BY sri.sale_item_id
+) r
+    ON r.sale_item_id = si.id
 
-                            (
-                                IFNULL(s.discount_amount, 0)
-                                *
-                                (
-                                    (si.price * si.quantity)
-                                    /
-                                    NULLIF(
-                                        s.total * (1 - IFNULL(s.discount_percent,0)/100),
-                                        0
-                                    )
-                                )
-                            )
-
-                        )
-
-                        -
-
-                        (p.purchase_price * si.quantity)
-
-                    )
-                ) AS margin
-
-            FROM sale_items si
-
-            INNER JOIN sales s
-                ON s.id = si.sale_id
-
-            INNER JOIN products p
-                ON p.id = si.product_id
-
-            WHERE
-                s.company_id = ?
-                AND DATE(s.created_at) = CURDATE()
-                AND s.status = 'completed'
-        `, [companyId]);
-
+WHERE
+    s.company_id = ?
+    AND DATE(s.created_at) = CURDATE()
+    AND s.status IN ('completed', 'partial_return', 'returned')
+`, [companyId]);
         // 6. Топ 10 товаров текущего пользователя за последние 7 дней
         const [topProducts] = await db.query(
             `
