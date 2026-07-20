@@ -120,6 +120,110 @@ router.get('/new', auth, async (req, res) => {
     });
 
 });
+// Отложенные чеки не создают продажу и не меняют остатки до проведения.
+router.get('/held', auth, async (req, res) => {
+    try {
+        const [heldReceipts] = await db.execute(
+            `
+            SELECT id, customer_id, customer_name, items, payment_method,
+                   cash_received, discount_percent, comment, created_at, updated_at
+            FROM held_sales
+            WHERE company_id = ? AND user_id = ?
+            ORDER BY updated_at DESC
+            `,
+            [req.session.user.company_id, req.session.user.id]
+        );
+
+        res.json({
+            success: true,
+            receipts: heldReceipts.map(receipt => ({
+                ...receipt,
+                items: typeof receipt.items === 'string'
+                    ? JSON.parse(receipt.items)
+                    : receipt.items
+            }))
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: 'Не удалось получить отложенные чеки.' });
+    }
+});
+
+router.post('/held', auth, async (req, res) => {
+    try {
+        const { customer_id, customer_name, items, payment_method, cash_received, discount_percent, comment } = req.body;
+
+        if (!Array.isArray(items) || !items.length) {
+            return res.status(400).json({ success: false, error: 'В отложенном чеке должен быть хотя бы один товар.' });
+        }
+
+        if (items.length > 100) {
+            return res.status(400).json({ success: false, error: 'В чеке слишком много товаров.' });
+        }
+
+        const normalizedItems = items.map(item => ({
+            id: Number(item.id),
+            name: String(item.name || '').slice(0, 255),
+            unit: String(item.unit || '').slice(0, 50),
+            qty: Number(item.qty),
+            price: Number(item.price),
+            originalPrice: Number(item.originalPrice || item.price),
+            stock: Number(item.stock || 0),
+            stock_info: String(item.stock_info || '').slice(0, 500)
+        }));
+
+        if (normalizedItems.some(item => !Number.isInteger(item.id) || item.id <= 0 || item.qty <= 0 || item.price < 0)) {
+            return res.status(400).json({ success: false, error: 'В чеке есть некорректные товары.' });
+        }
+
+        const [result] = await db.execute(
+            `
+            INSERT INTO held_sales
+            (company_id, user_id, customer_id, customer_name, items, payment_method, cash_received, discount_percent, comment)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+            [
+                req.session.user.company_id,
+                req.session.user.id,
+                Number(customer_id) > 0 ? Number(customer_id) : null,
+                String(customer_name || 'Основной покупатель').slice(0, 255),
+                JSON.stringify(normalizedItems),
+                ['cash', 'card', 'transfer'].includes(payment_method) ? payment_method : 'cash',
+                Math.max(0, Number(cash_received) || 0),
+                Math.min(100, Math.max(0, Number(discount_percent) || 0)),
+                String(comment || '').slice(0, 2000) || null
+            ]
+        );
+
+        res.status(201).json({ success: true, id: result.insertId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: 'Не удалось отложить чек.' });
+    }
+});
+
+router.delete('/held/:id', auth, async (req, res) => {
+    try {
+        const [result] = await db.execute(
+            `
+            DELETE FROM held_sales
+            WHERE id = ? AND company_id = ? AND user_id = ?
+            LIMIT 1
+            `,
+            [req.params.id, req.session.user.company_id, req.session.user.id]
+        );
+
+        if (!result.affectedRows) {
+            return res.status(404).json({ success: false, error: 'Отложенный чек не найден.' });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: 'Не удалось удалить отложенный чек.' });
+    }
+});
+
 // Роут просмотра продажи
 router.get('/:id', auth, async (req, res) => {
 

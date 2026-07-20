@@ -55,7 +55,7 @@
 /* ==========================================================================
    2. ТАБЛИЦА ТОВАРОВ (ЧЕК)
    ========================================================================== */
-.table-responsive{
+#receipt-items-scroll {
     height: 750px;
     overflow-y: auto;
 }
@@ -276,6 +276,11 @@ tr.selected-product-row td {
    ========================================================================== */
 
 @media (max-width: 768px) {
+    #receipt-items-scroll {
+        height: auto !important;
+        max-height: 60vh;
+    }
+
     #product-search {
         border-radius: 0;
     }

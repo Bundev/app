@@ -11,6 +11,9 @@
         <button type="button" id="add-receipt-btn" class="btn btn-primary btn-sm d-flex align-items-center gap-1 ms-3">
             <i class="bi bi-plus-lg fw-bold"></i><span>Новый чек</span>
         </button>
+        <button type="button" id="held-receipts-btn" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1 ms-2" data-bs-toggle="modal" data-bs-target="#heldReceiptsModal">
+            <i class="bi bi-archive"></i><span>Отложенные</span><span id="held-receipts-count" class="badge text-bg-secondary">0</span>
+        </button>
     </div>
     <div class="d-flex justify-content-between align-items-center border-bottom mb-3">
         <ul class="nav nav-pills" id="pills-tab" role="tablist">
@@ -87,7 +90,7 @@
                     </div>  
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-body p-0 d-flex flex-column">
-                            <div class="table-responsive sales-table">
+                            <div id="receipt-items-scroll" class="table-responsive sales-table">
                                 <table class="table table-sales align-middle mb-0">
                                     <thead class="table-light sticky-top">
                                         <tr>
@@ -108,7 +111,7 @@
         </div>
 
         <div class="col-xl-4 col-lg-5">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 20px; z-index: 1020;">
+            <div id="payment-panel" class="card border-0 shadow-sm sticky-top" style="top: 20px; z-index: 1020;">
                 <div class="card-header bg-white border-0 pt-4 px-4">
                     <h3 class="h5 fw-bold mb-0 text-muted text-uppercase small tracking-wider">Параметры оплаты</h3>
                 </div>
@@ -192,10 +195,27 @@
                         <i class="bi bi-check2-circle fs-5"></i>
                         Провести чек
                     </button>
+                    <button id="holdInvoice" type="button" class="btn btn-outline-secondary w-100 mt-2 py-2" onclick="holdInvoice()">
+                        <i class="bi bi-archive me-1"></i>Отложить чек
+                    </button>
                 </div>
             </div>
         </div>
 
+    </div>
+</div>
+
+<div class="modal fade" id="heldReceiptsModal" tabindex="-1" aria-labelledby="heldReceiptsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="heldReceiptsModalLabel"><i class="bi bi-archive me-2"></i>Отложенные чеки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body p-0" id="held-receipts-list">
+                <div class="p-4 text-center text-muted">Загрузка…</div>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -17,7 +17,7 @@
 
         <div class="col-md-3">
 
-            <div class="list-group shadow-sm">
+            <div class="list-group shadow-sm settings-nav">
 
                 <a href="#company"
                 class="list-group-item list-group-item-action <%= activeSettingsTab === 'company' ? 'active' : '' %>"
@@ -95,16 +95,29 @@
                 <div class="tab-pane fade <%= activeSettingsTab === 'company' ? 'show active' : '' %>"
                     id="company">
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0 settings-panel">
 
-                        <div class="card-header">
-
-                            Данные компании
-
+                        <div class="card-header settings-panel__header">
+                            <h5 class="settings-panel__title"><i class="bi bi-building me-2"></i>Данные компании</h5>
+                            <p class="settings-panel__description">Основная информация об организации</p>
                         </div>
 
                         <div class="card-body">
 
+                            <% if (companySuccess) { %>
+                                <div class="alert alert-success" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i><%= companySuccess %>
+                                </div>
+                            <% } %>
+
+                            <% if (companyError) { %>
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="bi bi-exclamation-circle-fill me-2"></i><%= companyError %>
+                                </div>
+                            <% } %>
+
+                            <% if (company) { %>
+                            <form method="POST" action="/settings/company">
                             <div class="mb-3">
 
                                 <label class="form-label">
@@ -115,25 +128,33 @@
 
                                 <input
                                     type="text"
+                                    name="name"
                                     class="form-control"
-                                    value="RetailPro">
+                                    value="<%= company.name %>"
+                                    maxlength="255"
+                                    required>
 
                             </div>
 
-                            <div class="mb-3">
+                            <div class="company-meta mb-3">
+                                <span class="badge <%= company.status === 'active' ? 'bg-success' : 'bg-danger' %>">
+                                    <%= company.status === 'active' ? 'Активна' : 'Заблокирована' %>
+                                </span>
 
-                                <label class="form-label">
-
-                                    Телефон
-
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control">
-
+                                <% if (company.created_at) { %>
+                                    <span class="text-muted ms-2">Создана: <%= new Date(company.created_at).toLocaleDateString('ru-RU') %></span>
+                                <% } %>
                             </div>
 
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-floppy me-1"></i>Сохранить
+                            </button>
+                            </form>
+                            <% } else { %>
+                                <div class="alert alert-warning mb-0" role="alert">
+                                    Не удалось найти данные компании.
+                                </div>
+                            <% } %>
                         </div>
 
                     </div>
@@ -149,25 +170,24 @@
                 <!-- Пользователи -->
                 <div class="tab-pane fade <%= activeSettingsTab === 'users' ? 'show active' : '' %>" id="users">
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0 settings-panel employees-card">
 
-                        <div class="card-header bg-white">
+                        <div class="card-header bg-white settings-panel__header">
 
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
 
-                                <h5 class="mb-0">
-
-                                    👥 Сотрудники
-
-                                </h5>
+                                <div>
+                                    <h5 class="mb-1">Сотрудники</h5>
+                                    <p class="text-muted small mb-0">
+                                        Управляйте доступом и данными команды
+                                    </p>
+                                </div>
 
                                 <a
                                     href="/user/new"
-                                    class="btn btn-primary">
+                                    class="btn btn-primary text-nowrap">
 
-                                    <i class="bi bi-person-plus"></i>
-
-                                    Добавить сотрудника
+                                    <i class="bi bi-person-plus me-1"></i>Добавить сотрудника
 
                                 </a>
 
@@ -175,92 +195,62 @@
 
                         </div>
 
-                        <div class="table-responsive">
-
-                            <table class="table table-hover align-middle mb-0 users-table">
-                                <tbody>
-
-                                <% users.forEach(user => { %>
-
-                                <tr>
-
-                                    <td>
-                                        <img
-                                            src="<%= user.avatar %>"
-                                            class="user-avatar">
-                                    </td>
-
-                                    <td>
-
-                                        <div class="user-name">
-                                            <%= user.name %>
-                                        </div>
-
-                                        <div class="user-login">
-                                            @<%= user.login %>
-                                        </div>
-
-                                    </td>
-
-                                    <td>
-                                        <%= user.email %>
-                                    </td>
-
-                                    <td>
-
-                                        <span class="badge rounded-pill role-<%= user.role %>">
-
-                                            <%= roles[user.role] %>
-
-                                        </span>
-
-                                    </td>
-
-                                    <td>
-
-                                        <span class="badge rounded-pill status-<%= user.status %>">
-
-                                            <%= user.status === 'active'
-                                                ? 'Активен'
-                                                : 'Заблокирован'
-                                            %>
-
-                                        </span>
-
-                                    </td>
-
-                                    <td>
-
-                                        <div class="btn-group">
-
-                                            <a
-                                                href="/user/<%= user.id %>"
-                                                class="btn btn-sm btn-outline-primary">
-
-                                                <i class="bi bi-eye"></i>
-
-                                            </a>
-
-                                            <a
-                                                href="/users/edit/<%= user.id %>"
-                                                class="btn btn-sm btn-outline-secondary">
-
-                                                <i class="bi bi-pencil"></i>
-
-                                            </a>
-
-                                        </div>
-
-                                    </td>
-
-                                </tr>
-
-                                <% }) %>
-
-                                </tbody>
-                            </table>
-
+                        <% if (users.length) { %>
+                        <div class="employees-summary">
+                            <span>Всего: <strong><%= users.length %></strong></span>
+                            <span class="employees-summary__active">
+                                <i class="bi bi-circle-fill"></i>
+                                Активных: <%= users.filter(user => user.status === 'active').length %>
+                            </span>
                         </div>
+
+                        <div class="employees-list">
+                            <% users.forEach(user => { %>
+                            <article class="employee-row">
+                                <img
+                                    src="<%= user.avatar || '/img/default-avatar.png' %>"
+                                    alt="Аватар сотрудника <%= user.name %>"
+                                    class="employee-avatar">
+
+                                <div class="employee-main">
+                                    <a href="/user/<%= user.id %>" class="employee-name"><%= user.name %></a>
+                                    <div class="employee-login">@<%= user.login %></div>
+                                </div>
+
+                                <div class="employee-contact">
+                                    <% if (user.email) { %>
+                                        <a href="mailto:<%= user.email %>"><i class="bi bi-envelope"></i><%= user.email %></a>
+                                    <% } else if (user.phone) { %>
+                                        <a href="tel:<%= user.phone %>"><i class="bi bi-telephone"></i><%= user.phone %></a>
+                                    <% } else { %>
+                                        <span class="text-muted">Контакты не указаны</span>
+                                    <% } %>
+                                </div>
+
+                                <div class="employee-labels">
+                                    <span class="employee-role role-<%= user.role %>"><%= roles[user.role] || user.role %></span>
+                                    <span class="employee-status status-<%= user.status %>">
+                                        <i class="bi bi-circle-fill"></i>
+                                        <%= user.status === 'active' ? 'Активен' : 'Заблокирован' %>
+                                    </span>
+                                </div>
+
+                                <div class="employee-actions" aria-label="Действия с сотрудником">
+                                    <a href="/user/<%= user.id %>" class="btn btn-sm btn-outline-primary" title="Открыть профиль" aria-label="Открыть профиль <%= user.name %>">
+                                        <i class="bi bi-box-arrow-up-right me-1"></i>Открыть
+                                    </a>
+                                </div>
+                            </article>
+                            <% }) %>
+                        </div>
+                        <% } else { %>
+                        <div class="employees-empty text-center">
+                            <div class="employees-empty__icon"><i class="bi bi-people"></i></div>
+                            <h6>Сотрудников пока нет</h6>
+                            <p class="text-muted mb-3">Добавьте первого сотрудника, чтобы назначить ему роль и доступ.</p>
+                            <a href="/user/new" class="btn btn-primary btn-sm">Добавить сотрудника</a>
+                        </div>
+                        <% } %>
 
                     </div>
 
@@ -270,33 +260,47 @@
 
 
                 <div class="tab-pane fade <%= activeSettingsTab === 'stores' ? 'show active' : '' %>" id="stores">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between">
-                            <span>
-                                🏪 Магазины
-                            </span>
+                    <div class="card shadow-sm border-0 settings-panel">
+                        <div class="card-header settings-panel__header d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div>
+                                <h5 class="settings-panel__title"><i class="bi bi-shop me-2"></i>Магазины</h5>
+                                <p class="settings-panel__description">Точки продаж вашей компании</p>
+                            </div>
 
                             <a
                                 href="/stores/new"
-                                class="btn btn-sm btn-primary">
+                                class="btn btn-primary btn-sm text-nowrap">
 
-                                Добавить магазин
+                                <i class="bi bi-plus-lg me-1"></i>Добавить магазин
 
                             </a>
 
                         </div>
 
-                        <div class="card-body p-0">
+                        <% if (stores.length) { %>
+                        <% if (storeSuccess) { %>
+                        <div class="alert alert-success settings-alert mb-0" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i><%= storeSuccess %>
+                        </div>
+                        <% } %>
 
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                        <% if (storeError) { %>
+                        <div class="alert alert-danger settings-alert mb-0" role="alert">
+                            <i class="bi bi-exclamation-circle-fill me-2"></i><%= storeError %>
+                        </div>
+                        <% } %>
+
+                        <div class="table-responsive settings-table-wrap">
+
+                        <table class="table table-hover align-middle mb-0 settings-table">
+                            <thead>
                                 <tr>
                                     
                                     <th>Название</th>
                                     <th>Адрес</th>
                                     <th>Телефон</th>
-                                    <th width="120">Статус</th>
-                                    <th width="150">Действия</th>
+                                    <th>Статус</th>
+                                    <th class="text-end">Действия</th>
                                 </tr>
                             </thead>
 
@@ -316,25 +320,24 @@
                                     </td>
 
                                     <td>
-                                        <% if(store.status === 'active') { %>
-                                            <span class="badge bg-success">
-                                                Активен
-                                            </span>
-                                        <% } else { %>
-                                            <span class="badge bg-danger">
-                                                Неактивен
-                                            </span>
-                                        <% } %>
+                                        <span class="employee-status status-<%= store.status === 'active' ? 'active' : 'blocked' %>">
+                                            <i class="bi bi-circle-fill"></i><%= store.status === 'active' ? 'Активен' : 'В архиве' %>
+                                        </span>
                                     </td>
 
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            ✏️
-                                        </button>
-
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            🗑️
-                                        </button>
+                                    <td class="text-end">
+                                        <div class="settings-table-actions">
+                                            <a href="/stores/<%= store.id %>/edit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil me-1"></i>Изменить
+                                            </a>
+                                            <% if (store.status === 'active') { %>
+                                            <form method="POST" action="/stores/<%= store.id %>/archive" onsubmit="return confirm('Архивировать магазин? Продажи и данные сохранятся.');">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-archive me-1"></i>В архив
+                                                </button>
+                                            </form>
+                                            <% } %>
+                                        </div>
                                     </td>
                                 </tr>
                                 <% }) %>
@@ -344,6 +347,14 @@
                             
 
                         </div>
+                        <% } else { %>
+                        <div class="settings-empty text-center">
+                            <div class="settings-empty__icon"><i class="bi bi-shop"></i></div>
+                            <h6>Магазинов пока нет</h6>
+                            <p class="text-muted mb-3">Добавьте точку продаж, чтобы вести учёт остатков и продаж.</p>
+                            <a href="/stores/new" class="btn btn-primary btn-sm">Добавить магазин</a>
+                        </div>
+                        <% } %>
 
                     </div>
 
@@ -353,11 +364,16 @@
                 <div class="tab-pane fade <%= activeSettingsTab === 'payments' ? 'show active' : '' %>"
                     id="payments">
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0 settings-panel">
+
+                        <div class="card-header settings-panel__header">
+                            <h5 class="settings-panel__title"><i class="bi bi-credit-card me-2"></i>Способы оплаты</h5>
+                            <p class="settings-panel__description">Выберите варианты оплаты, доступные при продаже</p>
+                        </div>
 
                         <div class="card-body">
 
-                            <div class="form-check">
+                            <div class="settings-option form-check">
 
                                 <input
                                     class="form-check-input"
@@ -372,7 +388,7 @@
 
                             </div>
 
-                            <div class="form-check">
+                            <div class="settings-option form-check">
 
                                 <input
                                     class="form-check-input"
@@ -387,7 +403,7 @@
 
                             </div>
 
-                            <div class="form-check">
+                            <div class="settings-option form-check">
 
                                 <input
                                     class="form-check-input"
@@ -409,14 +425,19 @@
                 </div>
 
                 <!-- Статусы -->
-                <div class="tab-pane fade"
+                <div class="tab-pane fade <%= activeSettingsTab === 'statuses' ? 'show active' : '' %>"
                     id="statuses">
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0 settings-panel">
+
+                        <div class="card-header settings-panel__header">
+                            <h5 class="settings-panel__title"><i class="bi bi-card-checklist me-2"></i>Статусы заказов</h5>
+                            <p class="settings-panel__description">Последовательность этапов обработки заказа</p>
+                        </div>
 
                         <div class="card-body">
 
-                            <ul class="list-group">
+                            <ul class="list-group settings-list">
 
                                 <li class="list-group-item">
                                     Новый
@@ -451,28 +472,64 @@
                 </div>
 
                 <!-- Нумерация -->
-                <div class="tab-pane fade"
+                <div class="tab-pane fade <%= activeSettingsTab === 'invoice' ? 'show active' : '' %>"
                     id="invoice">
 
-                    <div class="card shadow-sm">
+                    <div class="card shadow-sm border-0 settings-panel">
+
+                        <div class="card-header settings-panel__header">
+                            <h5 class="settings-panel__title"><i class="bi bi-receipt me-2"></i>Нумерация чеков</h5>
+                            <p class="settings-panel__description">Префикс будет добавлен перед номером каждого чека</p>
+                        </div>
 
                         <div class="card-body">
 
-                            <label class="form-label">
-
-                                Префикс чека
-
-                            </label>
-
-                            <input
-                                type="text"
-                                class="form-control"
-                                value="INV">
+                            <div class="settings-field">
+                                <label class="form-label">Префикс чека</label>
+                                <input type="text" class="form-control" value="INV" aria-describedby="invoice-prefix-help">
+                                <div id="invoice-prefix-help" class="form-text">Например: INV-2026-0001</div>
+                            </div>
 
                         </div>
 
                     </div>
 
+                </div>
+
+                <!-- Локализация -->
+                <div class="tab-pane fade <%= activeSettingsTab === 'language' ? 'show active' : '' %>" id="language">
+                    <div class="card shadow-sm border-0 settings-panel">
+                        <div class="card-header settings-panel__header">
+                            <h5 class="settings-panel__title"><i class="bi bi-translate me-2"></i>Локализация</h5>
+                            <p class="settings-panel__description">Язык интерфейса и региональные параметры</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="settings-field">
+                                <label class="form-label">Язык интерфейса</label>
+                                <div class="settings-choice-group">
+                                    <a href="/lang/ru" class="btn <%= lang === 'ru' ? 'btn-primary' : 'btn-outline-secondary' %>">Русский</a>
+                                    <a href="/lang/uk" class="btn <%= lang === 'uk' ? 'btn-primary' : 'btn-outline-secondary' %>">Українська</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Права доступа -->
+                <div class="tab-pane fade <%= activeSettingsTab === 'security' ? 'show active' : '' %>" id="security">
+                    <div class="card shadow-sm border-0 settings-panel">
+                        <div class="card-header settings-panel__header">
+                            <h5 class="settings-panel__title"><i class="bi bi-shield-lock me-2"></i>Права доступа</h5>
+                            <p class="settings-panel__description">Роли определяют, какие разделы доступны сотрудникам</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="settings-permissions">
+                                <div><span class="employee-role role-admin">Администратор</span><span>Полный доступ к настройкам и данным компании</span></div>
+                                <div><span class="employee-role role-manager">Менеджер</span><span>Работа с заказами, товарами и клиентами</span></div>
+                                <div><span class="employee-role role-seller">Продавец</span><span>Оформление продаж и работа с кассой</span></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>

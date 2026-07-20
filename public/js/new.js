@@ -7,6 +7,7 @@ let receipts = [];
 let activeReceiptId = null; 
 let receiptCounter = 1; 
 let currentReceiptNum = 1; 
+let heldReceipts = [];
 
 // =========================================================
 // 1. ПОИСК И ВЫБОР ТОВАРОВ
@@ -758,6 +759,162 @@ async function saveInvoice() {
 }
 
 // =========================================================
+// 7. ОТЛОЖЕННЫЕ ЧЕКИ
+// =========================================================
+
+function escapeHtml(value) {
+    return String(value || '').replace(/[&<>'"]/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[character]));
+}
+
+function updateHeldReceiptsCount() {
+    const count = document.getElementById('held-receipts-count');
+    if (count) count.textContent = heldReceipts.length;
+}
+
+function renderHeldReceipts() {
+    const container = document.getElementById('held-receipts-list');
+    if (!container) return;
+
+    if (!heldReceipts.length) {
+        container.innerHTML = '<div class="p-5 text-center text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Нет отложенных чеков</div>';
+        return;
+    }
+
+    container.innerHTML = heldReceipts.map(receipt => {
+        const items = Array.isArray(receipt.items) ? receipt.items : [];
+        const total = items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 0), 0)
+            * (1 - (Number(receipt.discount_percent) || 0) / 100);
+        const date = receipt.updated_at ? new Date(receipt.updated_at).toLocaleString('ru-RU') : '';
+
+        return `
+            <div class="p-3 border-bottom">
+                <div class="d-flex justify-content-between gap-3 mb-1">
+                    <strong>${escapeHtml(receipt.customer_name || 'Основной покупатель')}</strong>
+                    <span class="text-primary fw-bold text-nowrap">${total.toFixed(2)} ₴</span>
+                </div>
+                <div class="small text-muted mb-3">${items.length} поз. · ${escapeHtml(date)}</div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="restoreHeldReceipt(${Number(receipt.id)})">Продолжить</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="discardHeldReceipt(${Number(receipt.id)})">Отменить</button>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+async function loadHeldReceipts() {
+    const container = document.getElementById('held-receipts-list');
+
+    try {
+        const response = await fetch('/sales/held');
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+
+        heldReceipts = result.receipts || [];
+        updateHeldReceiptsCount();
+        renderHeldReceipts();
+    } catch (error) {
+        if (container) container.innerHTML = '<div class="p-4 text-center text-danger">Не удалось загрузить отложенные чеки.</div>';
+    }
+}
+
+async function holdInvoice() {
+    saveCurrentUIToState();
+
+    const activeReceipt = receipts.find(receipt => receipt.id === activeReceiptId);
+    if (!activeReceipt || !activeReceipt.items.length) {
+        alert('Добавьте товары в чек, прежде чем откладывать его.');
+        return;
+    }
+
+    const button = document.getElementById('holdInvoice');
+    if (button) button.disabled = true;
+
+    try {
+        const response = await fetch('/sales/held', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customer_id: activeReceipt.customer.id || null,
+                customer_name: activeReceipt.customer.name || 'Основной покупатель',
+                items: activeReceipt.items,
+                payment_method: activeReceipt.paymentMethod,
+                cash_received: activeReceipt.cashReceived,
+                discount_percent: activeReceipt.discountPercent,
+                comment: activeReceipt.comment || null
+            })
+        });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error);
+
+        closeReceipt(null, activeReceiptId, true);
+        await loadHeldReceipts();
+        document.getElementById('product-search')?.focus();
+    } catch (error) {
+        alert(error.message || 'Не удалось отложить чек.');
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function removeHeldReceipt(id) {
+    const response = await fetch(`/sales/held/${id}`, { method: 'DELETE' });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+}
+
+async function restoreHeldReceipt(id) {
+    const heldReceipt = heldReceipts.find(receipt => Number(receipt.id) === Number(id));
+    if (!heldReceipt) return;
+
+    try {
+        await removeHeldReceipt(id);
+
+        const nextNumber = receipts.length
+            ? Math.max(...receipts.map(receipt => Number(receipt.num) || 0)) + 1
+            : currentReceiptNum;
+        const restoredReceipt = {
+            id: `receipt_${receiptCounter++}`,
+            num: nextNumber,
+            customer: {
+                id: heldReceipt.customer_id || '',
+                name: heldReceipt.customer_name || 'Основной покупатель'
+            },
+            items: Array.isArray(heldReceipt.items) ? heldReceipt.items : [],
+            paymentMethod: heldReceipt.payment_method || 'cash',
+            cashReceived: heldReceipt.cash_received || '',
+            discountPercent: Number(heldReceipt.discount_percent) || 0,
+            comment: heldReceipt.comment || ''
+        };
+
+        receipts.push(restoredReceipt);
+        activeReceiptId = restoredReceipt.id;
+        renderReceiptTabs();
+        loadReceiptToUI(activeReceiptId);
+        await loadHeldReceipts();
+        bootstrap.Modal.getInstance(document.getElementById('heldReceiptsModal'))?.hide();
+    } catch (error) {
+        alert(error.message || 'Не удалось восстановить чек.');
+    }
+}
+
+async function discardHeldReceipt(id) {
+    if (!confirm('Отменить отложенный чек? Товары не будут списаны.')) return;
+
+    try {
+        await removeHeldReceipt(id);
+        await loadHeldReceipts();
+    } catch (error) {
+        alert(error.message || 'Не удалось отменить отложенный чек.');
+    }
+}
+
+// =========================================================
 // 7. СКАНИРОВАНИЕ И ГОРЯЧИЕ КЛАВИШИ (ОБНОВЛЕННАЯ ЛОГИКА)
 // =========================================================
 
@@ -959,6 +1116,7 @@ document.addEventListener('click', function(e) {
 // Инициализация интерфейса
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('add-receipt-btn')?.addEventListener('click', createNewReceipt);
+    document.getElementById('held-receipts-btn')?.addEventListener('click', loadHeldReceipts);
     document.getElementById('discount')?.addEventListener('input', calculateTotals); 
     document.getElementById('cash')?.addEventListener('input', calculateTotals);
     
@@ -971,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     createNewReceipt();
+    loadHeldReceipts();
 });
 
 // Копирование названия по клику на ячейку
@@ -1019,3 +1178,27 @@ function applyMarkup() {
     renderItemsTable(current.items);
     calculateTotals();
 }
+
+function syncReceiptTableHeight() {
+    const tableScroll = document.getElementById('receipt-items-scroll');
+    const paymentPanel = document.getElementById('payment-panel');
+    if (!tableScroll || !paymentPanel) return;
+
+    if (window.innerWidth <= 768) {
+        tableScroll.style.height = '';
+        return;
+    }
+
+    tableScroll.style.height = `${Math.max(360, Math.round(paymentPanel.getBoundingClientRect().height))}px`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const paymentPanel = document.getElementById('payment-panel');
+
+    syncReceiptTableHeight();
+    window.addEventListener('resize', syncReceiptTableHeight);
+
+    if (paymentPanel && typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(syncReceiptTableHeight).observe(paymentPanel);
+    }
+});
