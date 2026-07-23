@@ -93,8 +93,9 @@ async function loadLatestSales() {
 
             // Рендерим строку таблицы строго по новой верстке
             const rowHtml = `
-                <tr class="invoice-row" 
-                    data-url="/sale/${sale.id}"
+                <tr class="invoice-row"
+                    data-id="${sale.id}"
+                    data-url="/sales/${sale.id}"
                     data-invoice="${sale.invoice_number}"
                     data-customer="${sale.customer_name || ''}"
                     data-total="${sale.total}"
@@ -295,31 +296,29 @@ function openReceiptInNewTab(invoiceNumber, receiptData) {
 // Запоминаем открытый чек
 // =========================================
 
-document.querySelectorAll('.invoice-row').forEach(row => {
+document.addEventListener('click', (e) => {
+    const row = e.target.closest('#salesTable .invoice-row');
+    if (!row) return;
 
-    row.addEventListener('click', function (e) {
-
-        // Всегда запоминаем выбранный чек
-        sessionStorage.setItem('selectedSaleId', this.dataset.id);
-
-        document.querySelectorAll('.invoice-row.active-row').forEach(activeRow => {
-            activeRow.classList.remove('active-row');
-        });
-        this.classList.add('active-row');
-
-        // Ctrl + ЛКМ или Cmd + ЛКМ (macOS)
-        if (e.ctrlKey || e.metaKey) {
-
-            window.open(this.dataset.url, '_blank');
-            return;
-
+    const openInNewTab = e.ctrlKey || e.metaKey;
+    if (openInNewTab) {
+        const newTab = window.open(row.dataset.url, '_blank');
+        if (newTab) {
+            newTab.opener = null;
+            newTab.focus();
         }
+    }
 
-        // Обычный переход
-        window.location.href = this.dataset.url;
+    sessionStorage.setItem('selectedSaleId', row.dataset.id);
 
+    document.querySelectorAll('.invoice-row.active-row').forEach(activeRow => {
+        activeRow.classList.remove('active-row');
     });
+    row.classList.add('active-row');
 
+    if (openInNewTab) return;
+
+    window.location.assign(row.dataset.url);
 });
 
 

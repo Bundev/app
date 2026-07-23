@@ -110,5 +110,5 @@
 
 
 .table-hover > tbody > tr.active-row > * {
-    background-color: var(--bs-table-hover-bg) !important;
+    background-color: #cfe2ff !important;
 }

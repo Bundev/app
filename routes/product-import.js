@@ -131,10 +131,24 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
                         req.body.store_id
                     );
 
+            const markupBelow100 = Number(req.body.markup_below_100);
+            const markupFrom100 = Number(req.body.markup_from_100);
+
             if (!storeId) {
 
                 return res.status(400).send(
                     'Магазин пользователя не найден'
+                );
+
+            }
+
+            if (
+                !Number.isFinite(markupBelow100) || markupBelow100 < 0 ||
+                !Number.isFinite(markupFrom100) || markupFrom100 < 0
+            ) {
+
+                return res.status(400).send(
+                    'Наценка должна быть числом не меньше 0'
                 );
 
             }
@@ -144,7 +158,9 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
                     db,
                     req.file.path,
                     storeId,
-                    req.session.user.company_id
+                    req.session.user.company_id,
+                    markupBelow100,
+                    markupFrom100
                 );
 
 

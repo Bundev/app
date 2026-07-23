@@ -1,6 +1,13 @@
 const XLSX = require('xlsx');
 
-module.exports = async (db, filePath, storeId, companyId) => {
+module.exports = async (
+    db,
+    filePath,
+    storeId,
+    companyId,
+    markupBelow100,
+    markupFrom100
+) => {
     const workbook = XLSX.readFile(filePath);
     const sheet = workbook.Sheets['TDSheet'];
     
@@ -129,17 +136,16 @@ module.exports = async (db, filePath, storeId, companyId) => {
             const catKey = product.category ? product.category.trim().toLowerCase() : null;
             const categoryId = catKey ? categoryMap.get(catKey) || null : null;
 
-            // Расчет розничной цены
-            let salePrice;
-            if ([87, 88, 90, 91].includes(categoryId)) {
-                salePrice = Math.round(product.purchase_price);
-            } else {
-                salePrice = Math.round(
-                    product.purchase_price > 100
-                        ? product.purchase_price * 1.15
-                        : product.purchase_price * 1.30
-                );
-            }
+            // Для специальных категорий цена продажи равна закупочной.
+            // Для остальных применяется наценка, зависящая от закупочной цены.
+            const markupPercent = product.purchase_price < 100
+                ? markupBelow100
+                : markupFrom100;
+            const salePrice = [87, 88, 90, 91].includes(categoryId)
+                ? Math.round(product.purchase_price * 100) / 100
+                : Math.round(
+                    product.purchase_price * (1 + markupPercent / 100) * 100
+                ) / 100;
 
             if (dbProduct) {
                 // Проверяем изменения
