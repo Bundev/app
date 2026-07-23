@@ -302,6 +302,11 @@ document.querySelectorAll('.invoice-row').forEach(row => {
         // Всегда запоминаем выбранный чек
         sessionStorage.setItem('selectedSaleId', this.dataset.id);
 
+        document.querySelectorAll('.invoice-row.active-row').forEach(activeRow => {
+            activeRow.classList.remove('active-row');
+        });
+        this.classList.add('active-row');
+
         // Ctrl + ЛКМ или Cmd + ЛКМ (macOS)
         if (e.ctrlKey || e.metaKey) {
 
