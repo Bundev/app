@@ -131,16 +131,7 @@ async function loadLatestSales() {
                         ${statusBadge}
                     </td>
 
-                    <td class="pe-3 text-end">
-                        <div class="btn-group shadow-sm">
-                            <a href="/sale/${sale.id}" class="btn btn-sm btn-outline-secondary border-end-0" title="Просмотр" target="_blank">
-                                <i class="bi bi-eye text-primary"></i>
-                            </a>
-                            <a href="/sales/print/${sale.id}" class="btn btn-sm btn-outline-secondary" title="Печать" target="_blank">
-                                <i class="bi bi-printer text-success"></i>
-                            </a>
-                        </div>
-                    </td>
+                    
                 </tr>
             `;
 
