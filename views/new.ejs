@@ -136,25 +136,35 @@
                         <div class="col-6">
                             <label class="form-label small fw-semibold text-muted" title="[Ctrl+D]">Скидка %</label>
                             <div class="input-group input-group-lg">
-                                <input type="number" id="discount" class="form-control" min="0" max="100" placeholder="0">
+                                <input type="number" id="discount" class="form-control" min="0" max="100" step="0.01" placeholder="0.00">
                             </div>
                         </div>
                     </div>
-<div class="row g-2 mb-4">
-    
-    <div class="col-6">
-        <label class="form-label">📈 Наценка</label>
-        <input
-            type="number"
-            id="markup"
-            class="form-control"
-            value="0"
-            min="0"
-            step="0.01"
-            placeholder="%"
-            oninput="applyMarkup()">
-    </div>
-</div>
+                    <div class="row g-2 mb-4">
+                        
+                        <div class="col-6">
+                            <label class="form-label">📈 Наценка</label>
+                            <input
+                                type="number"
+                                id="markup"
+                                class="form-control"
+                                value=""
+                                min="0"
+                                step="0.01"
+                                placeholder="%"
+                                oninput="applyMarkup()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">💸 Сумма скидки</label>
+                            <input
+                                type="number"
+                                id="discountAmount"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00">
+                        </div>
+                    </div>
                     <div class="card">
                         <div class="card-header">ОСТАТКИ НА СКЛАДАХ</div>
                         <div class="card-body">

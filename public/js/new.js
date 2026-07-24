@@ -8,6 +8,7 @@ let activeReceiptId = null;
 let receiptCounter = 1; 
 let currentReceiptNum = 1; 
 let heldReceipts = [];
+let discountInputMode = 'percent';
 
 // =========================================================
 // 1. ПОИСК И ВЫБОР ТОВАРОВ
@@ -339,16 +340,45 @@ function calculateTotals() {
         subtotal += (parseFloat(i.qty) || 0) * (parseFloat(i.price) || 0); 
     });
     
-    const discountPercent = parseInt(document.getElementById('discount')?.value) || 0; 
-    const discountSum = subtotal * (discountPercent / 100); 
-    const total = subtotal - discountSum;
-    
+    const discountPercentRaw = document.getElementById('discount')?.value?.trim();
+    const discountPercentInput = parseFloat(discountPercentRaw);
+    const discountAmountInputRaw = document.getElementById('discountAmount')?.value;
+    const discountAmountInput = parseFloat(discountAmountInputRaw);
+    let discountPercent = Number.isFinite(discountPercentInput) ? discountPercentInput : 0;
+    let discountAmount = 0;
+    let shouldShowAmount = false;
+
+    if (discountInputMode === 'amount') {
+        if (Number.isFinite(discountAmountInput)) {
+            discountAmount = Math.max(0, discountAmountInput);
+            discountPercent = subtotal > 0 ? (discountAmount / subtotal) * 100 : 0;
+            if (document.getElementById('discount')) document.getElementById('discount').value = discountPercent.toFixed(2);
+            shouldShowAmount = true;
+        } else {
+            discountAmount = 0;
+            if (document.getElementById('discount')) document.getElementById('discount').value = '';
+            if (document.getElementById('discountAmount')) document.getElementById('discountAmount').value = '';
+        }
+    } else {
+        discountInputMode = 'percent';
+        if (discountPercentRaw !== '' && Number.isFinite(discountPercentInput)) {
+            discountPercent = Math.min(100, Math.max(0, discountPercent));
+            discountAmount = subtotal * (discountPercent / 100);
+            shouldShowAmount = true;
+        } else {
+            discountPercent = 0;
+            discountAmount = 0;
+        }
+        if (document.getElementById('discountAmount')) document.getElementById('discountAmount').value = shouldShowAmount ? discountAmount.toFixed(2) : '';
+    }
+
+    const total = subtotal - discountAmount;
     const cashReceived = parseFloat(document.getElementById('cash')?.value) || 0; 
     const change = cashReceived > total ? cashReceived - total : 0;
     
     if(document.getElementById('subtotal-sum')) document.getElementById('subtotal-sum').innerText = subtotal.toFixed(2) + ' ₴'; 
-    if(document.getElementById('discount-label')) document.getElementById('discount-label').innerText = discountPercent;
-    if(document.getElementById('discount-sum')) document.getElementById('discount-sum').innerText = discountSum.toFixed(2) + ' ₴'; 
+    if(document.getElementById('discount-label')) document.getElementById('discount-label').innerText = discountPercent.toFixed(2);
+    if(document.getElementById('discount-sum')) document.getElementById('discount-sum').innerText = discountAmount.toFixed(2) + ' ₴'; 
     if(document.getElementById('total-sum')) document.getElementById('total-sum').innerText = total.toFixed(2) + ' ₴'; 
     if(document.getElementById('change')) document.getElementById('change').innerText = change.toFixed(2) + ' ₴';
     
@@ -413,6 +443,7 @@ function createNewReceipt() {
         paymentMethod: 'cash', 
         cashReceived: '', 
         discountPercent: 0,
+        discountAmount: 0,
         comment: ''
     };
     
@@ -480,7 +511,8 @@ function saveCurrentUIToState() {
     current.customer.id = document.getElementById('customer_id')?.value || ''; 
     current.customer.name = document.getElementById('customer_name')?.value || 'Основной покупатель';
     current.cashReceived = document.getElementById('cash')?.value || '';
-    current.discountPercent = parseInt(document.getElementById('discount')?.value) || 0; 
+    current.discountPercent = parseFloat(document.getElementById('discount')?.value) || 0; 
+    current.discountAmount = parseFloat(document.getElementById('discountAmount')?.value) || 0;
     current.comment = document.getElementById('invoice_comment')?.value || '';
 
     const paymentSelect = document.getElementById('payment-method');
@@ -505,6 +537,8 @@ function loadReceiptToUI(id) {
     if (document.getElementById('customer_name')) document.getElementById('customer_name').value = current.customer.name;
     if (document.getElementById('cash')) document.getElementById('cash').value = current.cashReceived;
     if (document.getElementById('discount')) document.getElementById('discount').value = current.discountPercent || '';
+    if (document.getElementById('discountAmount')) document.getElementById('discountAmount').value = current.discountAmount || '';
+    discountInputMode = 'percent';
     if (document.getElementById('invoice_comment')) document.getElementById('invoice_comment').value = current.comment || '';
 
     // Старый селект (если он есть)
@@ -712,7 +746,11 @@ async function saveInvoice() {
     let subtotal = 0;
     activeReceipt.items.forEach(i => subtotal += (Number(i.price) || 0) * (Number(i.qty) || 0));
     const discountPercent = Number(activeReceipt.discountPercent) || 0;
-    const discountAmount = subtotal * discountPercent / 100;
+    let discountAmount = Number(activeReceipt.discountAmount);
+    if (!Number.isFinite(discountAmount) || discountAmount < 0) {
+        discountAmount = subtotal * discountPercent / 100;
+    }
+    discountAmount = Math.max(0, discountAmount);
 
     const saveBtn = document.querySelector('button[onclick="saveInvoice()"]');
     if (saveBtn) saveBtn.disabled = true;
@@ -1117,7 +1155,8 @@ document.addEventListener('click', function(e) {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('add-receipt-btn')?.addEventListener('click', createNewReceipt);
     document.getElementById('held-receipts-btn')?.addEventListener('click', loadHeldReceipts);
-    document.getElementById('discount')?.addEventListener('input', calculateTotals); 
+    document.getElementById('discount')?.addEventListener('input', () => { discountInputMode = 'percent'; calculateTotals(); }); 
+    document.getElementById('discountAmount')?.addEventListener('input', () => { discountInputMode = 'amount'; calculateTotals(); }); 
     document.getElementById('cash')?.addEventListener('input', calculateTotals);
     
     document.querySelectorAll('.fast-cash-btn').forEach(btn => { 
