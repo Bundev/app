@@ -7,11 +7,6 @@ const configs = {
         database: "u891612247_crm"
     },
     2: {
-        user: "u891612247_bundev",
-        password: "R?O09@g6",
-        database: "u891612247_crm_clon"
-    },
-    3: {
         user: "u891612247_bundev22",
         password: "8Aj6vAt&",
         database: "u891612247_crm_test"

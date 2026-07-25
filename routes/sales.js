@@ -795,13 +795,15 @@ router.post('/save', auth, async (req, res) => {
             ]
         );
 
-        let totalAfterPercent = 0;
+        // `discount_amount` is the total discount for the receipt.  It already
+        // represents `discount_percent` when the discount was entered as a
+        // percentage, so it must be applied only once to sale items.
+        let subtotalBeforeDiscount = 0;
 
         for (const item of items) {
             const subtotal = Number(item.price) * Number(item.quantity);
 
-            totalAfterPercent +=
-                subtotal * (1 - Number(discount_percent || 0) / 100);
+            subtotalBeforeDiscount += subtotal;
         }
 
         const saleId = saleResult.insertId;
@@ -848,19 +850,16 @@ router.post('/save', auth, async (req, res) => {
             // itemsTextForTelegram += `    🔹 Продажа: ${item.price} ₴ | Сумма: ${subtotal} ₴\n`;
             itemsTextForTelegram += `    🔸 Продажа: ${purchasePrice} ₴ | Сумма: ${subtotalPurchase} ₴\n`; //закупочная цена
             itemIndex++;
-            const subtotalAfterPercent =
-                subtotal * (1 - Number(discount_percent || 0) / 100);
-
             const share =
-                totalAfterPercent > 0
-                    ? subtotalAfterPercent / totalAfterPercent
+                subtotalBeforeDiscount > 0
+                    ? subtotal / subtotalBeforeDiscount
                     : 0;
 
             const itemDiscount =
                 Number(discount_amount || 0) * share;
 
             const finalSubtotal =
-                subtotalAfterPercent - itemDiscount;
+                subtotal - itemDiscount;
             await connection.execute(
                 `
                 INSERT INTO sale_items

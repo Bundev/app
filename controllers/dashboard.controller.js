@@ -106,9 +106,10 @@ LEFT JOIN (
 
 WHERE
     s.company_id = ?
+    AND s.user_id = ?
     AND DATE(s.created_at) = CURDATE()
     AND s.status IN ('completed', 'partial_return', 'returned')
-`, [companyId]);
+`, [companyId, userId]);
         // 6. Топ 10 товаров текущего пользователя за последние 7 дней
         const [topProducts] = await db.query(
             `
