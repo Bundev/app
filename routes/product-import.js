@@ -71,14 +71,20 @@ router.post('/import/preview',auth, uploadImport.single('excel'), async (req, re
         
 
         const sheet =
-            workbook.Sheets[
-                workbook.SheetNames[0]
-            ];
+            workbook.Sheets['TDSheet'] ||
+            workbook.Sheets[workbook.SheetNames[0]];
+
+        if (!sheet) {
+            return res.status(400).json({
+                success: false,
+                error: 'Лист импорта не найден'
+            });
+        }
 
         const rows =
             XLSX.utils.sheet_to_json(
                 sheet,
-                { header: 1 }
+                { range: 6, header: 1 }
             );
 
         

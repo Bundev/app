@@ -16,7 +16,7 @@ module.exports = async (
     }
 
     const data = XLSX.utils.sheet_to_json(sheet, {
-        range: 3,
+        range: 6,
         header: 1
     });
 
