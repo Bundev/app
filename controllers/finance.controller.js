@@ -1,4 +1,5 @@
 const financeService = require('../services/finance.service');
+const page = require('../helpers/page');
 
 exports.cash = async (req, res) => {
 
@@ -9,7 +10,12 @@ exports.cash = async (req, res) => {
 
         res.render(
             'finance-cash',
-            data
+            {
+                ...data,
+                ...page(req, 'finance-cash', [
+                    { title: 'Касса и Финансы' }
+                ])
+            }
         );
 
     } catch (error) {

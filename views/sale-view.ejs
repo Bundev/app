@@ -104,28 +104,6 @@
             </a>
         </li>
 
-        <li>
-            <a class="dropdown-item"
-               href="/sales/waybill/<%= sale.id %>"
-               target="_blank">
-
-                <i class="bi bi-file-earmark-spreadsheet me-2 text-warning"></i>
-                Расходная накладная
-
-            </a>
-        </li>
-
-        <li>
-            <a class="dropdown-item"
-               href="/sales/labels/<%= sale.id %>"
-               target="_blank">
-
-                <i class="bi bi-upc-scan me-2 text-info"></i>
-                Этикетки / ценники
-
-            </a>
-        </li>
-
     </ul>
 
 </div>
@@ -346,6 +324,7 @@
                         <th>Дата</th>
                         <th>Сумма</th>
                         <th>Кассир</th>
+                        <th></th>
                     </tr>
 
                 </thead>
@@ -380,6 +359,14 @@
 
                         <td>
                             <%= item.user_name %>
+                        </td>
+
+                        <td class="text-end">
+                            <a href="/return/<%= item.id %>"
+                               class="btn btn-sm btn-outline-warning"
+                               title="Открыть возврат">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
                         </td>
 
                     </tr>

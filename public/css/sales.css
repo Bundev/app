@@ -112,3 +112,40 @@
 .table-hover > tbody > tr.active-row > * {
     background-color: #cfe2ff !important;
 }
+
+.sale-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 126px;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sale-status i {
+    font-size: 14px;
+}
+
+.sale-status--completed {
+    color: #18794e;
+    background: #ecfdf3;
+    border-color: #b7efcf;
+}
+
+.sale-status--partial {
+    color: #9a5b08;
+    background: #fff8e6;
+    border-color: #f5d999;
+}
+
+.sale-status--returned {
+    color: #b4233c;
+    background: #fff1f3;
+    border-color: #fec7d0;
+}

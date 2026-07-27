@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Товарный чек <%= sale.invoice_number %></title>
+    <style>
+        @page { size: A4; margin: 16mm; }
+        body { max-width: 800px; margin: 24px auto; color: #111; font: 14px/1.4 Arial, sans-serif; }
+        .toolbar { margin-bottom: 20px; }
+        .toolbar button { padding: 8px 14px; cursor: pointer; }
+        .header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #222; padding-bottom: 14px; }
+        h1 { margin: 0; font-size: 24px; }
+        table { width: 100%; margin-top: 22px; border-collapse: collapse; }
+        th, td { padding: 9px; border: 1px solid #bbb; }
+        th { background: #f1f1f1; }
+        .right { text-align: right; }
+        .total { margin-top: 18px; margin-left: auto; width: 260px; font-size: 18px; font-weight: bold; }
+        @media print { body { margin: 0; max-width: none; } .toolbar { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="toolbar"><button type="button" onclick="window.print()">Печать</button></div>
+    <header class="header">
+        <div><h1>Товарный чек</h1><div>№ <strong><%= sale.invoice_number %></strong> от <%= new Date(sale.created_at).toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' }) %></div></div>
+        <div><strong><%= sale.store_name || 'Магазин' %></strong><% if (sale.store_address) { %><div><%= sale.store_address %></div><% } %><% if (sale.store_phone) { %><div>Тел.: <%= sale.store_phone %></div><% } %></div>
+    </header>
+    <div style="margin-top: 16px;">Покупатель: <strong><%= sale.customer_name || 'Основной покупатель' %></strong></div>
+    <table>
+        <thead><tr><th>№</th><th>Артикул</th><th>Товар</th><th class="right">Кол-во</th><th class="right">Цена, ₴</th><th class="right">Сумма, ₴</th></tr></thead>
+        <tbody><% items.forEach((item, index) => { %><tr><td><%= index + 1 %></td><td><%= item.sku || '—' %></td><td><%= item.name %></td><td class="right"><%= Number(item.quantity) %></td><td class="right"><%= Number(item.price).toFixed(2) %></td><td class="right"><%= Number(item.subtotal).toFixed(2) %></td></tr><% }) %></tbody>
+    </table>
+    <% if (Number(sale.discount_amount) > 0) { %><div class="total">Скидка: -<%= Number(sale.discount_amount).toFixed(2) %> ₴</div><% } %>
+    <div class="total">Итого: <%= Number(sale.total).toFixed(2) %> ₴</div>
+    <div style="margin-top: 32px;">Кассир: <strong><%= sale.user_name || '—' %></strong></div>
+</body>
+</html>

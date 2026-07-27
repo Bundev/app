@@ -5,6 +5,7 @@ const db = require('../config/db');
 const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
 const uploadImport = require('../config/upload-import');
+const page = require('../helpers/page');
 
 const importProducts = require('../import/importProducts');
 // const XLSX = require('xlsx');
@@ -31,29 +32,10 @@ router.get('/import',auth,requireAdmin,async (req, res) => {
                 activeMenu: 'products',
                 stores,
                 user: req.session.user,
-                script: [
-                    {
-                        src: 'products_import.js'
-                    }
-                ],
-                style: [
-                    {
-                        href: 'products_import.css'
-                    }
-                ],
-                breadcrumbs: [
-                    {
-                        title: req.__('title.dashboard'),
-                        url: '/'
-                    },
-                    {
-                        title: req.__('title.products'),
-                        url: '/products'
-                    },
-                    {
-                        title: req.__('title.products_import')
-                    }
-                ]
+                ...page(req, 'products_import', [
+                    { title: req.__('title.products'), url: '/products' },
+                    { title: req.__('title.products_import') }
+                ])
                 
             }
         );

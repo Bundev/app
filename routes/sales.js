@@ -14,7 +14,12 @@ router.get('/', auth, async (req, res) => {
                 s.*,
                 c.name AS customer_name,
                 u.name AS user_name,
-                st.name AS store_name
+                st.name AS store_name,
+                (
+                    SELECT COUNT(*)
+                    FROM sale_items si
+                    WHERE si.sale_id = s.id
+                ) AS item_count
             FROM sales s
 
             LEFT JOIN customers c
@@ -79,7 +84,12 @@ router.get('/latest', auth, async (req, res) => {
                 s.total,
                 s.status,
                 s.created_at,
-                c.name AS customer_name
+                c.name AS customer_name,
+                (
+                    SELECT COUNT(*)
+                    FROM sale_items si
+                    WHERE si.sale_id = s.id
+                ) AS item_count
             FROM sales s
             LEFT JOIN customers c
                 ON c.id = s.customer_id
@@ -221,6 +231,91 @@ router.delete('/held/:id', auth, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, error: 'Не удалось удалить отложенный чек.' });
+    }
+});
+
+async function getSaleForPrint(req, saleId) {
+    const params = [saleId, req.session.user.company_id];
+    const userFilter = req.session.user.role === 'admin'
+        ? ''
+        : ' AND s.user_id = ?';
+
+    if (userFilter) {
+        params.push(req.session.user.id);
+    }
+
+    const [[sale]] = await db.query(
+        `
+        SELECT
+            s.*,
+            c.name AS customer_name,
+            u.name AS user_name,
+            st.name AS store_name,
+            st.address AS store_address,
+            st.phone AS store_phone
+        FROM sales s
+        LEFT JOIN customers c ON c.id = s.customer_id
+        LEFT JOIN user u ON u.id = s.user_id
+        LEFT JOIN stores st ON st.id = s.store_id
+        WHERE s.id = ? AND s.company_id = ?${userFilter}
+        `,
+        params
+    );
+
+    if (!sale) {
+        return null;
+    }
+
+    const [items] = await db.query(
+        `
+        SELECT si.*, p.name, p.sku
+        FROM sale_items si
+        JOIN products p ON p.id = si.product_id
+        WHERE si.sale_id = ?
+        ORDER BY si.id
+        `,
+        [saleId]
+    );
+
+    return { sale, items };
+}
+
+router.get('/print/:width/:id', auth, async (req, res) => {
+    const width = Number(req.params.width);
+
+    if (![58, 80].includes(width)) {
+        return res.status(404).send('Формат печати не найден');
+    }
+
+    try {
+        const receipt = await getSaleForPrint(req, req.params.id);
+
+        if (!receipt) {
+            return res.status(404).send('Чек не найден');
+        }
+
+        return res.render('sale-print-cash', {
+            ...receipt,
+            printWidth: width
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Не удалось подготовить чек к печати');
+    }
+});
+
+router.get('/receipt/:id', auth, async (req, res) => {
+    try {
+        const receipt = await getSaleForPrint(req, req.params.id);
+
+        if (!receipt) {
+            return res.status(404).send('Чек не найден');
+        }
+
+        return res.render('sale-print-receipt', receipt);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send('Не удалось подготовить чек к печати');
     }
 });
 

@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const page = require('../helpers/page');
 
 exports.index = async (req, res) => {
 
@@ -54,25 +55,9 @@ exports.index = async (req, res) => {
         companyError: req.session.companyError || null,
         storeSuccess: req.session.storeSuccess || null,
         storeError: req.session.storeError || null,
-        script: [
-            {
-                src: 'settings.js'
-            }
-        ],
-        style: [
-            {
-                href: 'settings.css'
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.settings')
-            }
-        ]
+        ...page(req, 'settings', [
+            { title: req.__('title.settings') }
+        ])
     });
 
     delete req.session.companySuccess;

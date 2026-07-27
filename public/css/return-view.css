@@ -1,0 +1,13 @@
+.return-info-card {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.return-total {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.return-total span {
+    color: #dc3545;
+    margin-left: 12px;
+}

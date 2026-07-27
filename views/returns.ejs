@@ -1,0 +1,97 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+
+<div class="col content">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-arrow-counterclockwise me-2"></i>Возвраты</h2>
+            <div class="text-muted">Оформленные возвраты по чекам</div>
+        </div>
+        <a href="/sales" class="btn btn-outline-secondary">
+            <i class="bi bi-receipt me-1"></i>К продажам
+        </a>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm returns-summary">
+                <div class="card-body">
+                    <div class="text-muted small">Количество возвратов</div>
+                    <div class="fs-3 fw-bold"><%= returns.length %></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm returns-summary">
+                <div class="card-body">
+                    <div class="text-muted small">Сумма возвратов</div>
+                    <div class="fs-3 fw-bold text-danger"><%= Number(total).toFixed(2) %> ₴</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input id="filterReturn" type="search" class="form-control" placeholder="№ возврата или чека">
+                </div>
+                <div class="col-md-3">
+                    <input id="filterReturnCustomer" type="search" class="form-control" placeholder="Покупатель">
+                </div>
+                <div class="col-md-2">
+                    <input id="filterReturnFrom" type="date" class="form-control" aria-label="Дата с">
+                </div>
+                <div class="col-md-2">
+                    <input id="filterReturnTo" type="date" class="form-control" aria-label="Дата по">
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button id="resetReturnFilters" type="button" class="btn btn-outline-secondary" title="Сбросить фильтры"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-3">Возврат</th>
+                        <th>Чек</th>
+                        <th>Дата</th>
+                        <th>Клиент</th>
+                        <th>Магазин</th>
+                        <th>Кассир</th>
+                        <th class="text-end pe-3">Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (!returns.length) { %>
+                        <tr><td colspan="7" class="py-5 text-center text-muted">Возвратов пока нет.</td></tr>
+                    <% } %>
+                    <% returns.forEach(item => { %>
+                        <tr class="returns-row"
+                            data-url="/return/<%= item.id %>"
+                            data-number="<%= item.return_number || item.id %>"
+                            data-invoice="<%= item.invoice_number %>"
+                            data-customer="<%= item.customer_name || '' %>"
+                            data-date="<%= new Date(item.created_at).toISOString().slice(0, 10) %>">
+                            <td class="ps-3"><span class="badge bg-warning-subtle text-warning-emphasis border">№ <%= item.return_number || item.id %></span></td>
+                            <td>№ <%= item.invoice_number %></td>
+                            <td><%= new Date(item.created_at).toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
+                            <td><%= item.customer_name || 'Розничный покупатель' %></td>
+                            <td><%= item.store_name || '—' %></td>
+                            <td><%= item.user_name || '—' %></td>
+                            <td class="text-end pe-3 fw-bold text-danger">-<%= Number(item.total).toFixed(2) %> ₴</td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('blocks/footer') -%>

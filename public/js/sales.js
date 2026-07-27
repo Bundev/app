@@ -76,18 +76,18 @@ async function loadLatestSales() {
             let statusBadge = '';
             if (sale.status === 'returned') {
                 statusBadge = `
-                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 w-100 py-1.5">
-                        ↩️ Полный возврат
+                    <span class="sale-status sale-status--returned">
+                        <i class="bi bi-arrow-return-left"></i>Полный возврат
                     </span>`;
             } else if (sale.status === 'partial_return') {
                 statusBadge = `
-                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-50 w-100 py-1.5">
-                        ⚠️ Частичный возврат
+                    <span class="sale-status sale-status--partial">
+                        <i class="bi bi-arrow-return-left"></i>Частичный возврат
                     </span>`;
             } else {
                 statusBadge = `
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 w-100 py-1.5">
-                        📦 Продажа
+                    <span class="sale-status sale-status--completed">
+                        <i class="bi bi-check2-circle"></i>Продажа
                     </span>`;
             }
 
@@ -109,18 +109,22 @@ async function loadLatestSales() {
                     </td>
 
                     <td>
-                        <div class="fw-semibold text-dark">
+                        <span class="fw-semibold text-dark">
                             ${new Date(sale.created_at).toLocaleDateString('ru-RU')}
-                        </div>
-                        <div class="text-muted small">
-                            <i class="bi bi-clock me-1" style="font-size: 11px;"></i>${new Date(sale.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' })}
-                        </div>
+                            <i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i>${new Date(sale.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' })}
+                        </span>
                     </td>
 
                     <td>
                         <div class="fw-medium text-dark">
                             <i class="bi bi-person text-muted me-1"></i>${sale.customer_name || 'Розничный покупатель'}
                         </div>
+                    </td>
+
+                    <td class="text-center">
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-box-seam me-1"></i>${Number(sale.item_count || 0)}
+                        </span>
                     </td>
 
                     <td class="text-end fw-bold text-dark">

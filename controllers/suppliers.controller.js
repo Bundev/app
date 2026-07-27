@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const page = require('../helpers/page');
 
 // ======================================================
 // Список поставщиков
@@ -24,15 +25,9 @@ exports.index = async (req, res) => {
             titleKey: 'title.suppliers',
             activeMenu: 'suppliers',
             suppliers,
-            breadcrumbs: [
-                {
-                    title: req.__('title.dashboard'),
-                    url: '/'
-                },
-                {
-                    title: 'Поставщики'
-                }
-            ]
+            ...page(req, 'suppliers', [
+                { title: 'Поставщики' }
+            ])
         });
 
     } catch (error) {

@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
+const page = require('../helpers/page');
 
 router.get('/new', auth, (req, res) => {
 
@@ -13,29 +14,10 @@ router.get('/new', auth, (req, res) => {
     res.render('store-add', {
         titleKey: 'title.stores',
         activeMenu: 'settings',
-        script: [
-            {
-                src: 'store-add.js',
-            }
-        ],
-        style: [
-            {
-                href: 'store-add.css',
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.settings'),
-                url: '/settings'
-            },
-            {
-                title: req.__('title.store-add')
-            }
-        ]
+        ...page(req, 'store-add', [
+            { title: req.__('title.settings'), url: '/settings' },
+            { title: req.__('title.store-add') }
+        ])
     });
 
 });
@@ -135,19 +117,10 @@ router.get('/:id/edit', auth, requireAdmin, async (req, res) => {
             activeMenu: 'settings',
             store: stores[0],
             error: formError,
-            breadcrumbs: [
-                {
-                    title: req.__('title.dashboard'),
-                    url: '/'
-                },
-                {
-                    title: req.__('title.settings'),
-                    url: '/settings?tab=stores'
-                },
-                {
-                    title: 'Редактирование магазина'
-                }
-            ]
+            ...page(req, 'store-edit', [
+                { title: req.__('title.settings'), url: '/settings?tab=stores' },
+                { title: 'Редактирование магазина' }
+            ])
         });
 
     } catch (error) {

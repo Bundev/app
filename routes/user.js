@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/db');
 const uploadUser = require('../config/uploadUser');
 const auth = require('../middleware/auth');
+const page = require('../helpers/page');
 
 const requireAdmin = require('../middleware/requireAdmin');
 
@@ -26,29 +27,10 @@ router.get('/new', auth, async (req, res) => {
         titleKey: 'title.user_new',
         activeMenu: 'settings',
         stores,
-        script: [
-            {
-                src: 'user_new.js'
-            }
-        ],
-        style: [
-            {
-                href: 'user_new.css'
-            }
-        ],
-         breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.settings'),
-                url: '/settings'
-            },
-            {
-                title: req.__('title.user_new'), 
-            }
-        ]
+        ...page(req, 'user_new', [
+            { title: req.__('title.settings'), url: '/settings' },
+            { title: req.__('title.user_new') }
+        ])
 
     });
 
@@ -222,29 +204,10 @@ router.get('/stores/:id', auth, async (req, res) => {
 
         titleKey: 'title.user_new',
         activeMenu: 'settings',
-        script: [
-            {
-                src: 'user_new.js'
-            }
-        ],
-        style: [
-            {
-                href: 'user_new.css'
-            }
-        ],
-         breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.settings'),
-                url: '/settings'
-            },
-            {
-                title: req.__('title.user_new'), 
-            }
-        ]
+        ...page(req, 'user_new', [
+            { title: req.__('title.settings'), url: '/settings' },
+            { title: req.__('title.user_new') }
+        ])
 
     });
 
@@ -458,30 +421,10 @@ router.get('/:id', auth, async (req, res) => {
         activeMenu: 'settings',
         user_st,
         stores,
-        script: [
-            {
-                src: 'user.js'
-            }
-        ],
-        style: [
-            {
-                href: 'user.css'
-            }
-        ],
-        breadcrumbs: [
-            {
-                title: req.__('title.dashboard'),
-                url: '/'
-            },
-            {
-                title: req.__('title.settings'),
-                url: '/settings'
-            },
-            {
-                title: req.__('title.user'),
-                
-            }
-        ]
+        ...page(req, 'user', [
+            { title: req.__('title.settings'), url: '/settings' },
+            { title: req.__('title.user') }
+        ])
     });
 
 });

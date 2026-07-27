@@ -1,0 +1,11 @@
+.returns-row {
+    cursor: pointer;
+}
+
+.returns-row:hover {
+    background-color: rgba(255, 193, 7, 0.08);
+}
+
+.returns-summary {
+    min-height: 100%;
+}
