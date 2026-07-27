@@ -4,7 +4,7 @@ const db = require('../config/db');
 const auth = require('../middleware/auth');
 
 // Роут создает новую ктегорию
-router.post('/categories/ajax-create', auth, async (req, res) => {
+router.post(['/ajax-create', '/categories/ajax-create'], auth, async (req, res) => {
 
     const { name } = req.body;
 

@@ -218,11 +218,22 @@
                         data-barcode="<%= product.barcode || '' %>"
                         data-category="<%= product.category_name || '' %>">
 
-                        <td >
+                        <td
+                            class="sku-cell"
+                            data-id="<%= product.id %>"
+                            data-sku="<%= product.sku || '' %>"
+                            title="Нажмите, чтобы изменить артикул">
 
-                            <code>
-                                <%= product.sku || '-' %>
-                            </code>
+                            <button
+                                type="button"
+                                class="sku-value"
+                                aria-label="Изменить артикул товара <%= product.name %>">
+
+                                <code>
+                                    <%= product.sku || 'Добавить' %>
+                                </code>
+
+                            </button>
 
                         </td>
                         <td class="barcode-cell text-center"
@@ -235,7 +246,7 @@
 
                                 <% } else { %>
 
-                                    <i class="bi bi-upc-scan barcode-icon"></i>
+                                    Штрихкод
 
                                 <% } %>
                             </code>
@@ -246,19 +257,34 @@
 
                             <div class="d-flex flex-column">
 
-                                <span class="fw-semibold product-name">
+                                <button
+                                    type="button"
+                                    class="editable-value editable-text"
+                                    data-id="<%= product.id %>"
+                                    data-field="name"
+                                    data-value="<%= product.name %>"
+                                    data-unit="<%= product.unit %>"
+                                    aria-label="Изменить название товара">
 
-                                    <%= product.name %>, <%= product.unit%>
+                                    <span class="fw-semibold product-name">
+                                        <%= product.name %>, <%= product.unit%>
+                                    </span>
 
-                                </span>
+                                </button>
 
                                 <div class="mt-1">
 
-                                    <span class="badge bg-light text-dark border">
+                                    <button
+                                        type="button"
+                                        class="editable-value editable-category badge bg-light text-dark border"
+                                        data-id="<%= product.id %>"
+                                        data-field="category_id"
+                                        data-value="<%= product.category_id || '' %>"
+                                        aria-label="Изменить категорию товара">
 
                                         <%= product.category_name || 'Без категории' %>
 
-                                    </span>
+                                    </button>
 
                                 </div>
 
@@ -268,22 +294,42 @@
 
                         <td>
 
-                            <div class="fw-bold text-success">
+                            <button
+                                type="button"
+                                class="editable-value editable-number fw-bold text-success"
+                                data-id="<%= product.id %>"
+                                data-field="sale_price"
+                                data-value="<%= product.sale_price %>"
+                                aria-label="Изменить цену продажи">
 
                                 <%= product.sale_price %> ₴
 
-                            </div>
+                            </button>
 
-                            <small class="text-muted">
+                            <button
+                                type="button"
+                                class="editable-value editable-number small text-muted"
+                                data-id="<%= product.id %>"
+                                data-field="purchase_price"
+                                data-value="<%= product.purchase_price %>"
+                                aria-label="Изменить закупочную цену">
 
                                 Закупка:
                                 <%= product.purchase_price %> ₴
 
-                            </small>
+                            </button>
 
                         </td>
 
                         <td>
+
+                            <button
+                                type="button"
+                                class="editable-value editable-number stock-value"
+                                data-id="<%= product.id %>"
+                                data-field="quantity"
+                                data-value="<%= product.quantity %>"
+                                aria-label="Изменить остаток">
 
                             <% if (product.quantity <= 0) { %>
 
@@ -310,6 +356,8 @@
                                 </span>
 
                             <% } %>
+
+                            </button>
 
                         </td>
 
@@ -367,4 +415,30 @@
 
     </div>
 </div>
+
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stockModalTitle">Изменить остаток</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3" id="stockProductName"></p>
+                <div id="stockStoresList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveStockButton">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.productCategories = <%- JSON.stringify(categories.map(category => ({
+        id: category.id,
+        name: category.name
+    }))).replace(/</g, '\\u003c') %>;
+</script>
 <%- include('blocks/footer') -%>

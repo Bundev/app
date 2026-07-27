@@ -63,3 +63,73 @@ code {
     font-size:40px;
     color:#0d6efd;
 }
+
+.sku-cell {
+    min-width: 120px;
+}
+
+.sku-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 2px 4px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.sku-value:hover,
+.sku-value:focus-visible {
+    background: #e7f1ff;
+    outline: none;
+}
+
+.sku-input {
+    min-width: 110px;
+}
+
+.editable-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.editable-value:hover,
+.editable-value:focus-visible {
+    outline: none;
+}
+
+.editable-category {
+    padding: 3px 6px;
+}
+
+.editable-category:hover,
+.editable-category:focus-visible {
+    text-decoration: none;
+}
+
+.editable-input {
+    min-width: 110px;
+}
+
+.category-inline-editor {
+    position: relative;
+    min-width: 190px;
+}
+
+.category-inline-list {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    max-height: 180px;
+    overflow-y: auto;
+}

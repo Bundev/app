@@ -9,3 +9,37 @@
 .returns-summary {
     min-height: 100%;
 }
+
+.returns-table-wrapper {
+    max-height: 450px;
+    overflow: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+}
+
+.returns-table-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.returns-list-table {
+    min-width: 980px;
+    font-size: 13px;
+}
+
+.returns-list-table thead th {
+    padding: 9px 10px;
+    white-space: nowrap;
+}
+
+.returns-list-table tbody td {
+    padding: 8px 10px;
+    white-space: nowrap;
+}
+
+.returns-list-table .badge {
+    font-size: 11px;
+}

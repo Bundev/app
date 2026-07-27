@@ -1,41 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
     const filterInvoice = document.getElementById('filterInvoice');
     const filterCustomer = document.getElementById('filterCustomer');
+    const filterCashier = document.getElementById('filterCashier');
+    const filterStore = document.getElementById('filterStore');
+    const filterItems = document.getElementById('filterItems');
     const filterAmount = document.getElementById('filterAmount');
     const filterStatus = document.getElementById('filterStatus');
-    const dateFrom = document.getElementById('dateFrom');
-    const dateTo = document.getElementById('dateTo');
+    const filterDate = document.getElementById('filterDate');
 
     function filterSales() {
         const invoice = (filterInvoice.value || '').toLowerCase().trim();
         const customer = (filterCustomer.value || '').toLowerCase().trim();
+        const cashier = (filterCashier.value || '').toLowerCase().trim();
+        const store = (filterStore.value || '').toLowerCase().trim();
+        const items = filterItems.value ? Number(filterItems.value) : null;
         const amount = filterAmount.value ? Number(filterAmount.value) : null;
         const status = filterStatus.value;
-        const from = dateFrom.value;
-        const to = dateTo.value;
+        const date = filterDate.value;
 
         // Фильтруем только строки внутри tbody, чтобы не зацепить шапку таблицы
         document.querySelectorAll('#salesTable .invoice-row').forEach(row => {
             // Безопасное приведение к строке через || '' на случай null в базе данных
             const rowInvoice = (row.dataset.invoice || '').toLowerCase();
             const rowCustomer = (row.dataset.customer || '').toLowerCase();
+            const rowCashier = (row.dataset.cashier || '').toLowerCase();
+            const rowStore = (row.dataset.store || '').toLowerCase();
+            const rowItems = Number(row.dataset.items || 0);
             const rowAmount = Number(row.dataset.total || 0);
             const rowStatus = row.dataset.status || '';
             const rowDate = row.dataset.date || '';
 
             // 1. Фильтр по датам
-            let dateMatch = true;
-            if (from) dateMatch = rowDate >= from;
-            if (to)   dateMatch = dateMatch && (rowDate <= to);
+            const dateMatch = !date || rowDate === date;
 
             // 2. Проверка остальных условий
             const invoiceMatch  = rowInvoice.includes(invoice);
             const customerMatch = rowCustomer.includes(customer);
+            const cashierMatch  = rowCashier.includes(cashier);
+            const storeMatch    = rowStore.includes(store);
+            const itemsMatch    = items === null || rowItems >= items;
             const amountMatch   = amount === null || rowAmount >= amount;
             const statusMatch   = !status || rowStatus === status;
 
             // Итоговый результат видимости строки
-            if (invoiceMatch && customerMatch && amountMatch && statusMatch && dateMatch) {
+            if (
+                invoiceMatch && customerMatch && cashierMatch && storeMatch &&
+                itemsMatch && amountMatch && statusMatch && dateMatch
+            ) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
@@ -46,10 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Слушатели событий
     filterInvoice.addEventListener('input', filterSales);
     filterCustomer.addEventListener('input', filterSales);
+    filterCashier.addEventListener('input', filterSales);
+    filterStore.addEventListener('input', filterSales);
+    filterItems.addEventListener('input', filterSales);
     filterAmount.addEventListener('input', filterSales);
     filterStatus.addEventListener('change', filterSales);
-    dateFrom.addEventListener('change', filterSales);
-    dateTo.addEventListener('change', filterSales);
+    filterDate.addEventListener('change', filterSales);
 });
 
 
@@ -98,6 +111,9 @@ async function loadLatestSales() {
                     data-url="/sales/${sale.id}"
                     data-invoice="${sale.invoice_number}"
                     data-customer="${sale.customer_name || ''}"
+                    data-cashier="${sale.user_name || ''}"
+                    data-store="${sale.store_name || ''}"
+                    data-items="${sale.item_count || 0}"
                     data-total="${sale.total}"
                     data-status="${sale.status}"
                     data-date="${new Date(sale.created_at).toISOString().split('T')[0]}">
@@ -119,6 +135,18 @@ async function loadLatestSales() {
                         <div class="fw-medium text-dark">
                             <i class="bi bi-person text-muted me-1"></i>${sale.customer_name || 'Розничный покупатель'}
                         </div>
+                    </td>
+
+                    <td>
+                        <span class="text-muted">
+                            <i class="bi bi-person-badge me-1"></i>${sale.user_name || 'Не указан'}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="text-muted">
+                            <i class="bi bi-shop me-1"></i>${sale.store_name || 'Не указан'}
+                        </span>
                     </td>
 
                     <td class="text-center">

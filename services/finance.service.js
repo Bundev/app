@@ -115,6 +115,35 @@ exports.getCashData = async (req) => {
             [companyId]
         );
 
+        // Валовая маржа: сумма продаж минус закупочная стоимость, с учетом возвратов.
+        const [[marginTotals]] = await db.query(
+            `
+            SELECT COALESCE(SUM(
+                (si.final_subtotal - (si.purchase_price * si.quantity))
+                - COALESCE(returned.margin, 0)
+            ), 0) AS margin
+            FROM sale_items si
+            INNER JOIN sales s ON s.id = si.sale_id
+            LEFT JOIN (
+                SELECT
+                    sri.sale_item_id,
+                    SUM(
+                        ((si2.final_subtotal / NULLIF(si2.quantity, 0)) - si2.purchase_price)
+                        * sri.quantity
+                    ) AS margin
+                FROM sale_return_items sri
+                INNER JOIN sale_items si2 ON si2.id = sri.sale_item_id
+                GROUP BY sri.sale_item_id
+            ) returned ON returned.sale_item_id = si.id
+            WHERE s.company_id = ?
+              ${filterS}
+              AND s.status IN ('completed', 'partial_return', 'returned')
+            `,
+            [companyId]
+        );
+
+        const margin = Number(marginTotals.margin || 0);
+
         // Вычисляем чистый баланс кассы организации (Продажи + Транзакции - Возвраты)
         const cashBalance = Number(salesTotals.sales_cash || 0) + Number(transTotals.trans_cash || 0) - Number(returnsTotals.returns_cash || 0);
         const cardBalance = Number(salesTotals.sales_card || 0) + Number(transTotals.trans_card || 0) - Number(returnsTotals.returns_card || 0);
@@ -136,10 +165,34 @@ exports.getCashData = async (req) => {
                 
                 (SELECT COALESCE(SUM(s.total), 0) FROM sales s WHERE s.user_id = u.id AND s.payment_method = 'transfer' ${filterS}) +
                 (SELECT COALESCE(SUM(CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END), 0) FROM transactions t WHERE t.user_id = u.id AND t.payment_method = 'transfer' ${filterT}) -
-                (SELECT COALESCE(SUM(sr.total), 0) FROM sale_returns sr INNER JOIN sales s ON s.id = sr.sale_id WHERE sr.user_id = u.id AND s.payment_method = 'transfer' ${filterSR}) AS employee_transfer
+                (SELECT COALESCE(SUM(sr.total), 0) FROM sale_returns sr INNER JOIN sales s ON s.id = sr.sale_id WHERE sr.user_id = u.id AND s.payment_method = 'transfer' ${filterSR}) AS employee_transfer,
+
+                (
+                    SELECT COALESCE(SUM(
+                        (si.final_subtotal - (si.purchase_price * si.quantity))
+                        - COALESCE(returned.margin, 0)
+                    ), 0)
+                    FROM sale_items si
+                    INNER JOIN sales s ON s.id = si.sale_id
+                    LEFT JOIN (
+                        SELECT
+                            sri.sale_item_id,
+                            SUM(
+                                ((si2.final_subtotal / NULLIF(si2.quantity, 0)) - si2.purchase_price)
+                                * sri.quantity
+                            ) AS margin
+                        FROM sale_return_items sri
+                        INNER JOIN sale_items si2 ON si2.id = sri.sale_item_id
+                        GROUP BY sri.sale_item_id
+                    ) returned ON returned.sale_item_id = si.id
+                    WHERE s.user_id = u.id
+                      AND s.company_id = ?
+                      ${filterS}
+                      AND s.status IN ('completed', 'partial_return', 'returned')
+                ) AS employee_margin
             FROM user u WHERE u.company_id = ? ORDER BY u.name ASC
             `,
-            [companyId]
+            [companyId, companyId]
         );
 
         // 5. ДИНАМИЧЕСКИЙ КОНСТРУКТОР ДЛЯ ИСТОРИИ ОПЕРАЦИЙ
@@ -211,6 +264,7 @@ exports.getCashData = async (req) => {
             cardBalance,
             transferBalance,
             totalBalance,
+            margin,
             employeeCashes,
             currentUser,
             history,

@@ -55,16 +55,16 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+        <div class="table-responsive returns-table-wrapper">
+            <table class="table table-hover align-middle mb-0 returns-list-table">
                 <thead class="table-light text-muted small text-uppercase">
                     <tr>
-                        <th class="ps-3">Возврат</th>
-                        <th>Чек</th>
-                        <th>Дата</th>
+                        <th class="ps-3" style="width: 120px;">Возврат</th>
+                        <th style="width: 120px;">Чек</th>
+                        <th style="width: 170px;">Дата / Время</th>
                         <th>Клиент</th>
-                        <th>Магазин</th>
-                        <th>Кассир</th>
+                        <th style="width: 160px;">Кассир</th>
+                        <th style="width: 160px;">Магазин</th>
                         <th class="text-end pe-3">Сумма</th>
                     </tr>
                 </thead>
@@ -79,12 +79,33 @@
                             data-invoice="<%= item.invoice_number %>"
                             data-customer="<%= item.customer_name || '' %>"
                             data-date="<%= new Date(item.created_at).toISOString().slice(0, 10) %>">
-                            <td class="ps-3"><span class="badge bg-warning-subtle text-warning-emphasis border">№ <%= item.return_number || item.id %></span></td>
-                            <td>№ <%= item.invoice_number %></td>
-                            <td><%= new Date(item.created_at).toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
-                            <td><%= item.customer_name || 'Розничный покупатель' %></td>
-                            <td><%= item.store_name || '—' %></td>
-                            <td><%= item.user_name || '—' %></td>
+                            <td class="ps-3">
+                                <span class="badge bg-light text-danger border fw-medium px-2 py-1.5">№ <%= item.return_number || item.id %></span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border fw-medium px-2 py-1.5">№ <%= item.invoice_number %></span>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-dark">
+                                    <%= new Date(item.created_at).toLocaleDateString('ru-RU') %>
+                                    <i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i><%= new Date(item.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }) %>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-medium text-dark">
+                                    <i class="bi bi-person text-muted me-1"></i><%= item.customer_name || 'Розничный покупатель' %>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">
+                                    <i class="bi bi-person-badge me-1"></i><%= item.user_name || 'Не указан' %>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-muted">
+                                    <i class="bi bi-shop me-1"></i><%= item.store_name || 'Не указан' %>
+                                </span>
+                            </td>
                             <td class="text-end pe-3 fw-bold text-danger">-<%= Number(item.total).toFixed(2) %> ₴</td>
                         </tr>
                     <% }) %>

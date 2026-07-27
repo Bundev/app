@@ -10,9 +10,9 @@
             </div>
 
 
-            <div class="card border-0 mb-3">
-                <div class="card-body ">
-                    <div class="row g-2 mb-3">
+            <div class="card border-0 mb-3 sales-filters-card">
+                <div class="card-body">
+                    <div class="row g-1 sales-filters">
 
                         <div class="col-md-2">
 
@@ -28,17 +28,9 @@
 
                             <input
                                 type="date"
-                                id="dateFrom"
-                                class="form-control">
-
-                        </div>
-
-                        <div class="col-md-2">
-
-                            <input
-                                type="date"
-                                id="dateTo"
-                                class="form-control">
+                                id="filterDate"
+                                class="form-control"
+                                aria-label="Дата продажи">
 
                         </div>
 
@@ -58,7 +50,7 @@
                                 type="number"
                                 id="filterAmount"
                                 class="form-control"
-                                placeholder="Сумма">
+                                placeholder="Сумма от">
 
                         </div>
 
@@ -86,6 +78,37 @@
 
                         </div>
 
+                        <div class="col-md-2">
+
+                            <input
+                                type="text"
+                                id="filterCashier"
+                                class="form-control"
+                                placeholder="Кассир">
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <input
+                                type="text"
+                                id="filterStore"
+                                class="form-control"
+                                placeholder="Магазин">
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <input
+                                type="number"
+                                id="filterItems"
+                                class="form-control"
+                                min="0"
+                                placeholder="Позиций от">
+
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -95,12 +118,14 @@
 
                 <div class="table-wrapper border-0 ">
 
-<table class="table table-hover align-middle mb-0">
+<table class="table table-hover align-middle mb-0 sales-list-table">
     <thead class="table-light text-muted small fw-bold text-uppercase">
         <tr>
             <th class="ps-3" style="width: 120px;">Чек</th>
             <th style="width: 160px;">Дата / Время</th>
             <th>Клиент</th>
+            <th style="width: 170px;">Кассир</th>
+            <th style="width: 160px;">Магазин</th>
             <th class="text-center" style="width: 100px;">Позиций</th>
             <th class="text-end" style="width: 140px;">Сумма</th>
             <th class="text-center" style="width: 150px;">Статус</th>
@@ -114,6 +139,9 @@
                 data-url="/sales/<%= sale.id %>"
                 data-invoice="<%= sale.invoice_number %>"
                 data-customer="<%= sale.customer_name || '' %>"
+                data-cashier="<%= sale.user_name || '' %>"
+                data-store="<%= sale.store_name || '' %>"
+                data-items="<%= sale.item_count || 0 %>"
                 data-total="<%= sale.total %>"
                 data-status="<%= sale.status %>"
                 data-date="<%= new Date(sale.created_at).toISOString().split('T')[0] %>">
@@ -135,6 +163,18 @@
                     <div class="fw-medium text-dark">
                         <i class="bi bi-person text-muted me-1"></i><%= sale.customer_name || 'Розничный покупатель' %>
                     </div>
+                </td>
+
+                <td>
+                    <span class="text-muted">
+                        <i class="bi bi-person-badge me-1"></i><%= sale.user_name || 'Не указан' %>
+                    </span>
+                </td>
+
+                <td>
+                    <span class="text-muted">
+                        <i class="bi bi-shop me-1"></i><%= sale.store_name || 'Не указан' %>
+                    </span>
                 </td>
 
                 <td class="text-center">

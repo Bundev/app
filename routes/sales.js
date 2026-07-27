@@ -77,7 +77,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/latest', auth, async (req, res) => {
     try {
 
-        const [sales] = await db.query(`
+        let sql = `
             SELECT
                 s.id,
                 s.invoice_number,
@@ -85,6 +85,8 @@ router.get('/latest', auth, async (req, res) => {
                 s.status,
                 s.created_at,
                 c.name AS customer_name,
+                u.name AS user_name,
+                st.name AS store_name,
                 (
                     SELECT COUNT(*)
                     FROM sale_items si
@@ -93,9 +95,22 @@ router.get('/latest', auth, async (req, res) => {
             FROM sales s
             LEFT JOIN customers c
                 ON c.id = s.customer_id
-            ORDER BY s.id DESC
-            LIMIT 10
-        `);
+            LEFT JOIN user u
+                ON u.id = s.user_id
+            LEFT JOIN stores st
+                ON st.id = s.store_id
+            WHERE s.company_id = ?
+        `;
+        const params = [req.session.user.company_id];
+
+        if (req.session.user.role !== 'admin') {
+            sql += ` AND s.user_id = ?`;
+            params.push(req.session.user.id);
+        }
+
+        sql += ` ORDER BY s.id DESC LIMIT 10`;
+
+        const [sales] = await db.query(sql, params);
 
         res.json(sales);
 

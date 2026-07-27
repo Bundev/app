@@ -80,7 +80,7 @@
 
     max-height: 450px;
 
-    overflow-y: auto;
+    overflow: auto;
 
     border: 1px solid #dee2e6;
 
@@ -104,7 +104,51 @@
 
 .invoice-row{
     cursor: pointer;
-    
+}
+
+.sales-list-table {
+    font-size: 13px;
+}
+
+.sales-list-table thead th {
+    padding: 9px 10px;
+    white-space: nowrap;
+}
+
+.sales-list-table tbody td {
+    padding: 8px 10px;
+    white-space: nowrap;
+}
+
+.sales-list-table .badge {
+    font-size: 11px;
+}
+
+.sales-list-table .sale-status {
+    min-width: 108px;
+    padding: 5px 8px;
+    font-size: 11px;
+}
+
+.sales-list-table .sale-status i {
+    font-size: 12px;
+}
+
+.sales-filters-card .card-body {
+    padding: 10px;
+}
+
+.sales-filters .form-control,
+.sales-filters .form-select {
+    min-height: 34px;
+    padding: 5px 9px;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .sales-filters-card .card-body {
+        padding: 8px;
+    }
 }
 
 

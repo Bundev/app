@@ -599,6 +599,389 @@ router.post('/barcode/:id',auth, async (req, res) => {
     }
 );
 
+router.post('/sku/:id', auth, async (req, res) => {
+
+    try {
+
+        const sku = String(req.body.sku || '').trim() || null;
+
+        const [result] = await db.execute(
+            `
+            UPDATE products p
+            SET sku = ?
+            WHERE p.id = ?
+              AND (
+                  p.company_id = ?
+                  OR EXISTS (
+                      SELECT 1
+                      FROM product_stores ps
+                      INNER JOIN stores s ON s.id = ps.store_id
+                      WHERE ps.product_id = p.id AND s.company_id = ?
+                  )
+              )
+            `,
+            [
+                sku,
+                req.params.id,
+                req.session.user.company_id,
+                req.session.user.company_id
+            ]
+        );
+
+        if (!result.affectedRows) {
+            return res.status(404).json({
+                success: false,
+                message: 'Товар не найден'
+            });
+        }
+
+        res.json({
+            success: true,
+            sku
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Не удалось сохранить артикул'
+        });
+    }
+});
+
+router.post('/quick-edit/:id', auth, async (req, res) => {
+
+    const editableFields = new Set([
+        'name',
+        'category_id',
+        'purchase_price',
+        'sale_price',
+        'quantity'
+    ]);
+
+    const { field } = req.body;
+
+    if (!editableFields.has(field)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Недопустимое поле для редактирования'
+        });
+    }
+
+    try {
+
+        const productId = Number(req.params.id);
+        const companyId = req.session.user.company_id;
+        const [[product]] = await db.execute(
+            `
+            SELECT p.id
+            FROM products p
+            WHERE p.id = ?
+              AND (
+                  p.company_id = ?
+                  OR EXISTS (
+                      SELECT 1
+                      FROM product_stores ps
+                      INNER JOIN stores s ON s.id = ps.store_id
+                      WHERE ps.product_id = p.id AND s.company_id = ?
+                  )
+              )
+            `,
+            [productId, companyId, companyId]
+        );
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Товар не найден'
+            });
+        }
+
+        if (field === 'quantity') {
+
+            const quantity = Number(req.body.value);
+
+            if (!Number.isFinite(quantity) || quantity < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Остаток должен быть числом не меньше нуля'
+                });
+            }
+
+            const [stocks] = await db.execute(
+                `
+                SELECT ps.store_id, ps.quantity
+                FROM product_stores ps
+                INNER JOIN stores s ON s.id = ps.store_id
+                WHERE ps.product_id = ? AND s.company_id = ?
+                ORDER BY ps.store_id
+                `,
+                [productId, companyId]
+            );
+
+            if (!stocks.length) {
+
+                const [[store]] = await db.execute(
+                    `SELECT id FROM stores WHERE company_id = ? ORDER BY id LIMIT 1`,
+                    [companyId]
+                );
+
+                if (!store) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Сначала создайте склад'
+                    });
+                }
+
+                await db.execute(
+                    `INSERT INTO product_stores (product_id, store_id, quantity, location) VALUES (?, ?, ?, '')`,
+                    [productId, store.id, quantity]
+                );
+
+            } else {
+
+                let remaining = quantity;
+
+                for (const stock of stocks) {
+
+                    const nextQuantity = Math.min(Number(stock.quantity), remaining);
+
+                    await db.execute(
+                        `UPDATE product_stores SET quantity = ? WHERE product_id = ? AND store_id = ?`,
+                        [nextQuantity, productId, stock.store_id]
+                    );
+
+                    remaining -= nextQuantity;
+                }
+
+                if (remaining > 0) {
+                    await db.execute(
+                        `UPDATE product_stores SET quantity = quantity + ? WHERE product_id = ? AND store_id = ?`,
+                        [remaining, productId, stocks[0].store_id]
+                    );
+                }
+            }
+
+            return res.json({ success: true, value: quantity });
+        }
+
+        let value = req.body.value;
+
+        if (field === 'name') {
+
+            value = String(value || '').trim();
+
+            if (!value) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Название не может быть пустым'
+                });
+            }
+        }
+
+        if (field === 'purchase_price' || field === 'sale_price') {
+
+            value = Number(value);
+
+            if (!Number.isFinite(value) || value < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Цена должна быть числом не меньше нуля'
+                });
+            }
+        }
+
+        if (field === 'category_id') {
+
+            value = value ? Number(value) : null;
+
+            if (value !== null) {
+
+                const [[category]] = await db.execute(
+                    `SELECT id FROM categories WHERE id = ? AND company_id = ?`,
+                    [value, companyId]
+                );
+
+                if (!category) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Категория не найдена'
+                    });
+                }
+            }
+        }
+
+        await db.execute(
+            `UPDATE products SET ${field} = ? WHERE id = ?`,
+            [value, productId]
+        );
+
+        res.json({ success: true, value });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Не удалось сохранить изменения'
+        });
+    }
+});
+
+router.get('/stocks/:id', auth, async (req, res) => {
+
+    try {
+
+        const productId = Number(req.params.id);
+        const companyId = req.session.user.company_id;
+        const [[product]] = await db.execute(
+            `
+            SELECT p.id
+            FROM products p
+            WHERE p.id = ?
+              AND (
+                  p.company_id = ?
+                  OR EXISTS (
+                      SELECT 1
+                      FROM product_stores ps
+                      INNER JOIN stores s ON s.id = ps.store_id
+                      WHERE ps.product_id = p.id AND s.company_id = ?
+                  )
+              )
+            `,
+            [productId, companyId, companyId]
+        );
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Товар не найден'
+            });
+        }
+
+        const [stores] = await db.execute(
+            `
+            SELECT
+                s.id,
+                s.name,
+                COALESCE(ps.quantity, 0) AS quantity
+            FROM stores s
+            LEFT JOIN product_stores ps
+                ON ps.store_id = s.id AND ps.product_id = ?
+            WHERE s.company_id = ?
+            ORDER BY s.name
+            `,
+            [productId, companyId]
+        );
+
+        res.json({ success: true, stores });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Не удалось загрузить остатки'
+        });
+    }
+});
+
+router.post('/stocks/:id', auth, async (req, res) => {
+
+    try {
+
+        const productId = Number(req.params.id);
+        const companyId = req.session.user.company_id;
+        const requestedStocks = req.body.stocks;
+
+        if (!requestedStocks || typeof requestedStocks !== 'object') {
+            return res.status(400).json({
+                success: false,
+                message: 'Передайте остатки по магазинам'
+            });
+        }
+
+        const [[product]] = await db.execute(
+            `
+            SELECT p.id
+            FROM products p
+            WHERE p.id = ?
+              AND (
+                  p.company_id = ?
+                  OR EXISTS (
+                      SELECT 1
+                      FROM product_stores ps
+                      INNER JOIN stores s ON s.id = ps.store_id
+                      WHERE ps.product_id = p.id AND s.company_id = ?
+                  )
+              )
+            `,
+            [productId, companyId, companyId]
+        );
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Товар не найден'
+            });
+        }
+
+        const [stores] = await db.execute(
+            `SELECT id FROM stores WHERE company_id = ?`,
+            [companyId]
+        );
+
+        const stockUpdates = [];
+        let totalQuantity = 0;
+
+        for (const store of stores) {
+
+            const quantity = Number(requestedStocks[store.id]);
+
+            if (!Number.isFinite(quantity) || quantity < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Остаток каждого магазина должен быть числом не меньше нуля'
+                });
+            }
+
+            stockUpdates.push({
+                storeId: store.id,
+                quantity
+            });
+
+            totalQuantity += quantity;
+        }
+
+        for (const stock of stockUpdates) {
+
+            await db.execute(
+                `
+                INSERT INTO product_stores (product_id, store_id, quantity, location)
+                VALUES (?, ?, ?, '')
+                ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)
+                `,
+                [productId, stock.storeId, stock.quantity]
+            );
+        }
+
+        res.json({ success: true, totalQuantity });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Не удалось сохранить остатки'
+        });
+    }
+});
+
 router.get('/label/:id',auth, async (req, res) => {
 
         const [[product]] =
