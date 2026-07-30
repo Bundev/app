@@ -143,11 +143,13 @@ router.put('/:id', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
     try {
         const customerId = req.params.id;
+        const companyId = req.session.user.company_id;
 
-        // Временно убираем фильтр по company_id, чтобы проверить связь
         const [[customer]] = await db.query(
-            'SELECT * FROM customers WHERE id = ?',
-            [customerId]
+            `SELECT id, name, phone, email, discount_percentage, comment
+             FROM customers
+             WHERE id = ? AND company_id = ? AND status = 'active'`,
+            [customerId, companyId]
         );
 
         if (!customer) {

@@ -1,85 +1,235 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<div class="col content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800 fw-bold">🛒 Журнал закупок</h1>
-        <a href="/purchases/add" class="btn btn-primary btn-sm px-3 py-2 rounded-2 shadow-sm fw-medium">
-            <i class="bi bi-file-earmark-plus me-1"></i> Создать закупку
-        </a>
-    </div>
 
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light border-bottom text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                        <tr>
-                            <th class="ps-4 py-3 fw-bold" style="width: 130px;">Дата</th>
-                            <th class="py-3 fw-bold">Накладная</th>
-                            <th class="py-3 fw-bold">Поставщик</th>
-                            <th class="py-3 fw-bold">Склад поступления</th>
-                            <th class="py-3 fw-bold text-end" style="width: 150px;">Сумма</th>
-                            <th class="py-3 fw-bold text-center" style="width: 140px;">Статус</th>
-                            <th class="pe-4 py-3 fw-bold text-end" style="width: 100px;">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (purchases.length === 0) { %>
+<%
+    const purchaseList = Array.isArray(purchases) ? purchases : [];
+    const receivedPurchases = purchaseList.filter(purchase => purchase.status === 'received').length;
+    const purchasesTotal = purchaseList.reduce((sum, purchase) => {
+        const amount = Number(purchase.total_amount);
+        return sum + (Number.isFinite(amount) ? amount : 0);
+    }, 0);
+    const formatMoney = value => Number(value || 0).toLocaleString('ru-RU', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    const purchaseStatusMap = {
+        received: { key: 'received', label: 'Проведено', icon: 'bi-check-circle-fill' },
+        draft: { key: 'draft', label: 'Черновик', icon: 'bi-clock-fill' },
+        cancelled: { key: 'cancelled', label: 'Отменено', icon: 'bi-x-circle-fill' }
+    };
+%>
+
+<main class="col content purchases-page">
+    <div class="purchases-shell">
+        <header class="purchases-header" aria-labelledby="purchasesTitle">
+            <div>
+                <div class="purchases-eyebrow">
+                    <i class="bi bi-cart-check-fill" aria-hidden="true"></i>
+                    Склад · поступления
+                </div>
+                <h1 id="purchasesTitle">Закупки</h1>
+                <p>Контролируйте приходные накладные, поставщиков и поступление товаров на склады.</p>
+            </div>
+
+            <a href="/purchases/add" class="btn purchases-primary-action">
+                <i class="bi bi-file-earmark-plus-fill" aria-hidden="true"></i>
+                Создать закупку
+            </a>
+        </header>
+
+        <section class="purchases-metrics" aria-label="Сводка по закупкам">
+            <article class="purchases-metric">
+                <span class="purchases-metric-icon purchases-metric-icon--primary">
+                    <i class="bi bi-receipt" aria-hidden="true"></i>
+                </span>
+                <span class="purchases-metric-copy">
+                    <span>Всего документов</span>
+                    <strong><%= purchaseList.length %></strong>
+                </span>
+            </article>
+
+            <article class="purchases-metric">
+                <span class="purchases-metric-icon purchases-metric-icon--success">
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                </span>
+                <span class="purchases-metric-copy">
+                    <span>Проведено</span>
+                    <strong><%= receivedPurchases %></strong>
+                </span>
+            </article>
+
+            <article class="purchases-metric purchases-metric--amount">
+                <span class="purchases-metric-icon purchases-metric-icon--warning">
+                    <i class="bi bi-cash-stack" aria-hidden="true"></i>
+                </span>
+                <span class="purchases-metric-copy">
+                    <span>Сумма закупок</span>
+                    <strong><%= formatMoney(purchasesTotal) %> ₴</strong>
+                </span>
+            </article>
+        </section>
+
+        <section class="purchases-list-card" aria-labelledby="purchasesListTitle">
+            <div class="purchases-list-heading">
+                <div>
+                    <h2 id="purchasesListTitle">Журнал закупок</h2>
+                    <p id="purchasesVisibleCount" aria-live="polite">
+                        Показано <%= purchaseList.length %> из <%= purchaseList.length %>
+                    </p>
+                </div>
+                <span class="purchases-total-badge">
+                    <i class="bi bi-journal-check" aria-hidden="true"></i>
+                    <%= purchaseList.length %>
+                </span>
+            </div>
+
+            <% if (purchaseList.length > 0) { %>
+                <div class="purchases-toolbar" role="search">
+                    <div class="purchases-search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <label class="visually-hidden" for="purchaseSearch">Поиск закупок</label>
+                        <input
+                            type="search"
+                            id="purchaseSearch"
+                            class="form-control"
+                            placeholder="Накладная, поставщик, склад или дата"
+                            autocomplete="off"
+                            aria-controls="purchasesTableBody"
+                        >
+                    </div>
+
+                    <div class="purchases-filter">
+                        <label class="visually-hidden" for="purchaseStatusFilter">Фильтр по статусу</label>
+                        <select id="purchaseStatusFilter" class="form-select" aria-controls="purchasesTableBody">
+                            <option value="all">Все статусы</option>
+                            <option value="received">Проведено</option>
+                            <option value="draft">Черновики</option>
+                            <option value="cancelled">Отменено</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="purchaseFiltersReset" class="btn purchases-reset" disabled>
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                        Сбросить
+                    </button>
+                </div>
+
+                <div class="purchases-table-wrap" id="purchasesTableWrap">
+                    <table class="table purchases-table">
+                        <caption class="visually-hidden">Закупки текущей компании</caption>
+                        <colgroup>
+                            <col class="purchases-col-document">
+                            <col class="purchases-col-supplier">
+                            <col class="purchases-col-store">
+                            <col class="purchases-col-total">
+                            <col class="purchases-col-status">
+                            <col class="purchases-col-actions">
+                        </colgroup>
+                        <thead>
                             <tr>
-                                <td colspan="7" class="text-center py-5">
-                                    <div class="text-muted opacity-25 mb-3">
-                                        <i class="bi bi-receipt" style="font-size: 3.5rem;"></i>
-                                    </div>
-                                    <h5 class="text-secondary fw-semibold mb-1">Накладных еще нет</h5>
-                                    <p class="text-muted small mb-0">Создайте первую закупку, чтобы оприходовать товары на склад.</p>
-                                </td>
+                                <th scope="col">Документ</th>
+                                <th scope="col">Поставщик</th>
+                                <th scope="col">Склад</th>
+                                <th scope="col" class="text-end">Сумма</th>
+                                <th scope="col">Статус</th>
+                                <th scope="col" class="text-end">Действия</th>
                             </tr>
-                        <% } else { %>
-                            <% purchases.forEach(item => { %>
-                                <tr class="border-bottom-0">
-                                    <td class="ps-4 text-secondary small"><%= item.formatted_date %></td>
-                                    
-                                    <td class="fw-bold text-dark">№ <%= item.number %></td>
-                                    
-                                    <td class="fw-semibold text-gray-700"><%= item.supplier_name || '—' %></td>
-                                    
-                                    <td>
-                                        <span class="badge bg-light text-dark border p-2 rounded-2 fw-normal" style="font-size: 0.8rem;">
-                                            🏢 <%= item.store_name || 'Не указан' %>
+                        </thead>
+                        <tbody id="purchasesTableBody">
+                            <% purchaseList.forEach(purchase => { %>
+                                <%
+                                    const purchaseStatus = purchaseStatusMap[purchase.status] || {
+                                        key: 'other',
+                                        label: 'Не проведено',
+                                        icon: 'bi-clock-fill'
+                                    };
+                                    const documentNumber = String(purchase.number || purchase.id || '—');
+                                %>
+                                <tr class="purchase-row" data-status="<%= purchaseStatus.key %>">
+                                    <td class="purchase-cell purchase-cell--document" data-label="Документ">
+                                        <span class="purchase-document-icon" aria-hidden="true">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </span>
+                                        <span class="purchase-document-copy">
+                                            <a href="/purchases/view/<%= purchase.id %>">№ <%= documentNumber %></a>
+                                            <span>
+                                                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                                                <%= purchase.formatted_date || 'Дата не указана' %>
+                                            </span>
                                         </span>
                                     </td>
-                                    
-                                    <td class="text-end fw-bold text-dark">
-                                        <%= Number(item.total_amount).toFixed(2) %> <span class="text-success">₴</span>
-                                    </td>
-                                    
-                                    <td class="text-center">
-                                        <% if (item.status === 'received') { %>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1.5 rounded-2 small fw-semibold" style="font-size: 0.75rem;">
-                                                Проведено
+
+                                    <td class="purchase-cell purchase-cell--supplier" data-label="Поставщик">
+                                        <% if (purchase.supplier_name) { %>
+                                            <span class="purchase-party">
+                                                <i class="bi bi-truck" aria-hidden="true"></i>
+                                                <span><%= purchase.supplier_name %></span>
                                             </span>
                                         <% } else { %>
-                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1.5 rounded-2 small fw-semibold" style="font-size: 0.75rem;">
-                                                Черновик
-                                            </span>
+                                            <span class="purchase-empty-value">Не указан</span>
                                         <% } %>
                                     </td>
-                                    
-                                    <td class="pe-4 text-end">
-                                        <div class="btn-group btn-group-sm bg-white border rounded-2 shadow-sm">
-                                            <a href="/purchases/view/<%= item.id %>" class="btn btn-link text-secondary p-2 border-0" title="Просмотр накладной">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </div>
+
+                                    <td class="purchase-cell purchase-cell--store" data-label="Склад">
+                                        <span class="purchase-store-badge">
+                                            <i class="bi bi-building" aria-hidden="true"></i>
+                                            <span><%= purchase.store_name || 'Не указан' %></span>
+                                        </span>
+                                    </td>
+
+                                    <td class="purchase-cell purchase-cell--total" data-label="Сумма">
+                                        <strong><%= formatMoney(purchase.total_amount) %> ₴</strong>
+                                    </td>
+
+                                    <td class="purchase-cell purchase-cell--status" data-label="Статус">
+                                        <span class="purchase-status purchase-status--<%= purchaseStatus.key %>">
+                                            <i class="bi <%= purchaseStatus.icon %>" aria-hidden="true"></i>
+                                            <%= purchaseStatus.label %>
+                                        </span>
+                                    </td>
+
+                                    <td class="purchase-cell purchase-cell--actions" data-label="Действия">
+                                        <a
+                                            href="/purchases/view/<%= purchase.id %>"
+                                            class="btn purchase-view-btn"
+                                            aria-label="Открыть накладную № <%= documentNumber %>"
+                                            title="Открыть накладную"
+                                        >
+                                            <i class="bi bi-eye" aria-hidden="true"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             <% }) %>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="purchases-no-results" id="purchasesNoResults" hidden>
+                    <span class="purchases-empty-icon">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </span>
+                    <h3>Закупки не найдены</h3>
+                    <p>Измените запрос или сбросьте выбранный фильтр.</p>
+                    <button type="button" class="btn purchases-secondary-action" data-reset-purchase-filters>
+                        Сбросить фильтры
+                    </button>
+                </div>
+            <% } else { %>
+                <div class="purchases-empty">
+                    <span class="purchases-empty-icon">
+                        <i class="bi bi-receipt" aria-hidden="true"></i>
+                    </span>
+                    <h3>Закупок пока нет</h3>
+                    <p>Создайте первую приходную накладную, чтобы оприходовать товары на склад.</p>
+                    <a href="/purchases/add" class="btn purchases-secondary-action">
+                        <i class="bi bi-file-earmark-plus" aria-hidden="true"></i>
+                        Создать закупку
+                    </a>
+                </div>
+            <% } %>
+        </section>
     </div>
-</div>
+</main>
+
 <%- include('blocks/footer') -%>

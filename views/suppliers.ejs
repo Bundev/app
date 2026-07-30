@@ -2,103 +2,463 @@
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
 
-<div class="col content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800 fw-bold">🚚 Справочник поставщиков</h1>
-        <button type="button" class="btn btn-primary btn-sm px-3 py-2 rounded-2 shadow-sm fw-medium" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-            <i class="bi bi-plus-lg me-1"></i> Добавить поставщика
-        </button>
-    </div>
+<%
+    const supplierList = Array.isArray(suppliers) ? suppliers : [];
+    const suppliersWithContacts = supplierList.filter(supplier => supplier.phone || supplier.email).length;
+    const suppliersWithAddress = supplierList.filter(supplier => supplier.address).length;
+%>
 
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light border-bottom text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                        <tr>
-                            <th class="ps-4 py-3 fw-bold">Название</th>
-                            <th class="py-3 fw-bold">Телефон</th>
-                            <th class="py-3 fw-bold">Email</th>
-                            <th class="py-3 fw-bold">Адрес</th>
-                            <th class="pe-4 py-3 fw-bold text-end" style="width: 120px;">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (suppliers.length === 0) { %>
+<main class="col content suppliers-page">
+    <div class="suppliers-shell">
+        <header class="suppliers-header" aria-labelledby="suppliersTitle">
+            <div>
+                <div class="suppliers-eyebrow">
+                    <i class="bi bi-box-seam-fill" aria-hidden="true"></i>
+                    Закупки · партнёры
+                </div>
+                <h1 id="suppliersTitle">Поставщики</h1>
+                <p>Управляйте контактами поставщиков и быстро находите партнёра для новой закупки.</p>
+            </div>
+
+            <button
+                type="button"
+                class="btn suppliers-primary-action"
+                data-bs-toggle="modal"
+                data-bs-target="#addSupplierModal"
+            >
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                Добавить поставщика
+            </button>
+        </header>
+
+        <section class="suppliers-metrics" aria-label="Сводка по поставщикам">
+            <article class="suppliers-metric">
+                <span class="suppliers-metric-icon suppliers-metric-icon--primary">
+                    <i class="bi bi-truck" aria-hidden="true"></i>
+                </span>
+                <span class="suppliers-metric-copy">
+                    <span>Всего поставщиков</span>
+                    <strong><%= supplierList.length %></strong>
+                </span>
+            </article>
+
+            <article class="suppliers-metric">
+                <span class="suppliers-metric-icon suppliers-metric-icon--success">
+                    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                </span>
+                <span class="suppliers-metric-copy">
+                    <span>С контактами</span>
+                    <strong><%= suppliersWithContacts %></strong>
+                </span>
+            </article>
+
+            <article class="suppliers-metric">
+                <span class="suppliers-metric-icon suppliers-metric-icon--warning">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                </span>
+                <span class="suppliers-metric-copy">
+                    <span>С адресом</span>
+                    <strong><%= suppliersWithAddress %></strong>
+                </span>
+            </article>
+        </section>
+
+        <section class="suppliers-list-card" aria-labelledby="suppliersListTitle">
+            <div class="suppliers-list-heading">
+                <div>
+                    <h2 id="suppliersListTitle">Список поставщиков</h2>
+                    <p id="suppliersVisibleCount" aria-live="polite">
+                        Показано <%= supplierList.length %> из <%= supplierList.length %>
+                    </p>
+                </div>
+                <span class="suppliers-total-badge">
+                    <i class="bi bi-building-check" aria-hidden="true"></i>
+                    <%= supplierList.length %>
+                </span>
+            </div>
+
+            <% if (supplierList.length > 0) { %>
+                <div class="suppliers-toolbar" role="search">
+                    <div class="suppliers-search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <label class="visually-hidden" for="supplierSearch">Поиск поставщиков</label>
+                        <input
+                            type="search"
+                            id="supplierSearch"
+                            class="form-control"
+                            placeholder="Название, телефон, email или адрес"
+                            autocomplete="off"
+                            aria-controls="suppliersTableBody"
+                        >
+                    </div>
+
+                    <div class="suppliers-filter">
+                        <label class="visually-hidden" for="supplierContactFilter">Фильтр по контактам</label>
+                        <select id="supplierContactFilter" class="form-select" aria-controls="suppliersTableBody">
+                            <option value="all">Все поставщики</option>
+                            <option value="with">С контактами</option>
+                            <option value="without">Без контактов</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="supplierFiltersReset" class="btn suppliers-reset" disabled>
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                        Сбросить
+                    </button>
+                </div>
+
+                <div class="suppliers-table-wrap" id="suppliersTableWrap">
+                    <table class="table suppliers-table">
+                        <caption class="visually-hidden">Активные поставщики компании</caption>
+                        <colgroup>
+                            <col class="suppliers-col-identity">
+                            <col class="suppliers-col-contact">
+                            <col class="suppliers-col-address">
+                            <col class="suppliers-col-actions">
+                        </colgroup>
+                        <thead>
                             <tr>
-                                <td colspan="5" class="text-center py-5">
-                                    <div class="text-muted opacity-25 mb-3">
-                                        <i class="bi bi-truck" style="font-size: 3.5rem;"></i>
-                                    </div>
-                                    <h5 class="text-secondary fw-semibold mb-1">Список поставщиков пуст</h5>
-                                    <p class="text-muted small mb-0">Добавьте первого поставщика, чтобы начать работу с закупками.</p>
-                                </td>
+                                <th scope="col">Поставщик</th>
+                                <th scope="col">Контакты</th>
+                                <th scope="col">Адрес</th>
+                                <th scope="col" class="text-end">Действия</th>
                             </tr>
-                        <% } else { %>
-                            <% suppliers.forEach(supplier => { %>
-                                <tr class="border-bottom-0">
-                                    <td class="ps-4 fw-bold text-dark"><%= supplier.name %></td>
-                                    <td class="text-secondary"><%= supplier.phone || '—' %></td>
-                                    <td>
-                                        <% if(supplier.email) { %>
-                                            <a href="mailto:<%= supplier.email %>" class="text-decoration-none text-primary"><%= supplier.email %></a>
+                        </thead>
+                        <tbody id="suppliersTableBody">
+                            <% supplierList.forEach(supplier => { %>
+                                <%
+                                    const supplierName = String(supplier.name || '').trim() || 'Без названия';
+                                    const initials = supplierName
+                                        .split(/\s+/)
+                                        .filter(Boolean)
+                                        .slice(0, 2)
+                                        .map(part => part.charAt(0))
+                                        .join('')
+                                        .toUpperCase() || '?';
+                                    const hasContacts = Boolean(supplier.phone || supplier.email);
+                                %>
+                                <tr
+                                    class="supplier-row"
+                                    data-contact="<%= hasContacts ? 'with' : 'without' %>"
+                                >
+                                    <td class="supplier-cell supplier-cell--identity" data-label="Поставщик">
+                                        <span class="supplier-avatar" aria-hidden="true"><%= initials %></span>
+                                        <span class="supplier-identity">
+                                            <strong><%= supplierName %></strong>
+                                            <span class="supplier-meta">Поставщик #<%= supplier.id %></span>
+                                        </span>
+                                    </td>
+
+                                    <td class="supplier-cell supplier-cell--contact" data-label="Контакты">
+                                        <% if (hasContacts) { %>
+                                            <span class="supplier-contact-list">
+                                                <% if (supplier.phone) { %>
+                                                    <a href="tel:<%= supplier.phone %>">
+                                                        <i class="bi bi-telephone" aria-hidden="true"></i>
+                                                        <span><%= supplier.phone %></span>
+                                                    </a>
+                                                <% } %>
+                                                <% if (supplier.email) { %>
+                                                    <a href="mailto:<%= supplier.email %>">
+                                                        <i class="bi bi-envelope" aria-hidden="true"></i>
+                                                        <span><%= supplier.email %></span>
+                                                    </a>
+                                                <% } %>
+                                            </span>
                                         <% } else { %>
-                                            <span class="text-muted">—</span>
+                                            <span class="supplier-empty-value">Не указаны</span>
                                         <% } %>
                                     </td>
-                                    <td class="text-muted text-truncate" style="max-width: 250px;"><%= supplier.address || '—' %></td>
-                                    <td class="pe-4 text-end">
-                                        <div class="btn-group btn-group-sm bg-white border rounded-2 shadow-sm">
-                                            <button class="btn btn-link text-secondary p-2 border-0" title="Редактировать">
-                                                <i class="bi bi-pencil"></i>
+
+                                    <td class="supplier-cell supplier-cell--address" data-label="Адрес">
+                                        <% if (supplier.address) { %>
+                                            <span class="supplier-address" title="<%= supplier.address %>">
+                                                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                                <span><%= supplier.address %></span>
+                                            </span>
+                                        <% } else { %>
+                                            <span class="supplier-empty-value">Не указан</span>
+                                        <% } %>
+                                    </td>
+
+                                    <td class="supplier-cell supplier-cell--actions" data-label="Действия">
+                                        <div class="supplier-actions">
+                                            <button
+                                                type="button"
+                                                class="btn supplier-action-btn edit-supplier-btn"
+                                                data-id="<%= supplier.id %>"
+                                                data-name="<%= supplierName %>"
+                                                data-phone="<%= supplier.phone || '' %>"
+                                                data-email="<%= supplier.email || '' %>"
+                                                data-address="<%= supplier.address || '' %>"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editSupplierModal"
+                                                aria-label="Редактировать поставщика <%= supplierName %>"
+                                                title="Редактировать"
+                                            >
+                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
                                             </button>
-                                            <button class="btn btn-link text-danger p-2 border-0" title="Удалить">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+
+                                            <form
+                                                action="/suppliers/archive/<%= supplier.id %>"
+                                                method="POST"
+                                                class="supplier-archive-form"
+                                                data-supplier-name="<%= supplierName %>"
+                                            >
+                                                <button
+                                                    type="submit"
+                                                    class="btn supplier-action-btn supplier-action-btn--archive"
+                                                    aria-label="Архивировать поставщика <%= supplierName %>"
+                                                    title="Архивировать"
+                                                >
+                                                    <i class="bi bi-archive" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
                             <% }) %>
-                        <% } %>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="suppliers-no-results" id="suppliersNoResults" hidden>
+                    <span class="suppliers-empty-icon">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </span>
+                    <h3>Ничего не найдено</h3>
+                    <p>Измените запрос или сбросьте выбранный фильтр.</p>
+                    <button type="button" class="btn suppliers-secondary-action" data-reset-supplier-filters>
+                        Сбросить фильтры
+                    </button>
+                </div>
+            <% } else { %>
+                <div class="suppliers-empty">
+                    <span class="suppliers-empty-icon">
+                        <i class="bi bi-truck" aria-hidden="true"></i>
+                    </span>
+                    <h3>Поставщиков пока нет</h3>
+                    <p>Добавьте первого поставщика, чтобы использовать его при оформлении закупок.</p>
+                    <button
+                        type="button"
+                        class="btn suppliers-secondary-action"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addSupplierModal"
+                    >
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                        Добавить поставщика
+                    </button>
+                </div>
+            <% } %>
+        </section>
+    </div>
+</main>
+
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form action="/suppliers/add" method="POST" class="modal-content supplier-modal supplier-form">
+            <div class="modal-header supplier-modal-header">
+                <div class="supplier-modal-title">
+                    <span class="supplier-modal-icon">
+                        <i class="bi bi-building-add" aria-hidden="true"></i>
+                    </span>
+                    <span>
+                        <span class="supplier-modal-kicker">Новый партнёр</span>
+                        <span class="modal-title" id="addSupplierModalLabel">Добавление поставщика</span>
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-        </div>
+
+            <div class="modal-body supplier-modal-body">
+                <p class="supplier-form-intro">Добавьте основные контакты поставщика. Обязательное поле отмечено звёздочкой.</p>
+
+                <div class="supplier-form-section">
+                    <div class="supplier-form-section-title">
+                        <i class="bi bi-building" aria-hidden="true"></i>
+                        Основная информация
+                    </div>
+                    <div class="supplier-field">
+                        <label class="form-label" for="supplier_name">
+                            Название компании <span aria-hidden="true">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="supplier_name"
+                            name="name"
+                            class="form-control"
+                            maxlength="255"
+                            placeholder="Например, ООО Поставщик"
+                            autocomplete="organization"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="supplier-form-section">
+                    <div class="supplier-form-section-title">
+                        <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                        Контакты и адрес
+                    </div>
+
+                    <div class="supplier-form-grid">
+                        <div class="supplier-field">
+                            <label class="form-label" for="supplier_phone">Телефон</label>
+                            <input
+                                type="tel"
+                                id="supplier_phone"
+                                name="phone"
+                                class="form-control"
+                                maxlength="50"
+                                placeholder="+380 00 000 00 00"
+                                autocomplete="tel"
+                            >
+                        </div>
+
+                        <div class="supplier-field">
+                            <label class="form-label" for="supplier_email">Email</label>
+                            <input
+                                type="email"
+                                id="supplier_email"
+                                name="email"
+                                class="form-control"
+                                maxlength="100"
+                                placeholder="office@example.com"
+                                autocomplete="email"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="supplier-field supplier-field--spaced">
+                        <label class="form-label" for="supplier_address">Фактический адрес</label>
+                        <textarea
+                            id="supplier_address"
+                            name="address"
+                            class="form-control"
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Город, улица, номер здания"
+                            autocomplete="street-address"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer supplier-modal-footer">
+                <button type="button" class="btn supplier-modal-cancel" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" class="btn suppliers-primary-action supplier-submit">
+                    <span class="supplier-submit-label">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>
+                        Сохранить
+                    </span>
+                    <span class="supplier-submit-loading" hidden>
+                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        Сохраняем…
+                    </span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
-<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-3">
-            <form action="/suppliers/add" method="POST">
-                <div class="modal-header border-bottom-0 pt-4 px-4">
-                    <h5 class="modal-title fw-bold text-gray-800">Новый поставщик</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form id="editSupplierForm" action="" method="POST" class="modal-content supplier-modal supplier-form">
+            <div class="modal-header supplier-modal-header">
+                <div class="supplier-modal-title">
+                    <span class="supplier-modal-icon supplier-modal-icon--edit">
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    </span>
+                    <span>
+                        <span class="supplier-modal-kicker">Карточка партнёра</span>
+                        <span class="modal-title" id="editSupplierModalLabel">Редактирование поставщика</span>
+                    </span>
                 </div>
-                <div class="modal-body px-4">
-                    <div class="mb-3">
-                        <label for="name" class="form-label small text-uppercase text-muted fw-bold" style="font-size: 0.75rem;">Название компании *</label>
-                        <input type="text" class="form-control form-control-solid border rounded-2" id="name" name="name" placeholder="ООО Поставщик" required>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body supplier-modal-body">
+                <div class="supplier-form-section">
+                    <div class="supplier-form-section-title">
+                        <i class="bi bi-building" aria-hidden="true"></i>
+                        Основная информация
                     </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label small text-uppercase text-muted fw-bold" style="font-size: 0.75rem;">Телефон</label>
-                        <input type="text" class="form-control border rounded-2" id="phone" name="phone" placeholder="+380...">
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label small text-uppercase text-muted fw-bold" style="font-size: 0.75rem;">Email</label>
-                        <input type="email" class="form-control border rounded-2" id="email" name="email" placeholder="example@mail.com">
-                    </div>
-                    <div class="mb-3">
-                        <label for="address" class="form-label small text-uppercase text-muted fw-bold" style="font-size: 0.75rem;">Фактический адрес</label>
-                        <textarea class="form-control border rounded-2" id="address" name="address" rows="2" placeholder="Город, улица..."></textarea>
+                    <div class="supplier-field">
+                        <label class="form-label" for="edit_supplier_name">
+                            Название компании <span aria-hidden="true">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="edit_supplier_name"
+                            name="name"
+                            class="form-control"
+                            maxlength="255"
+                            autocomplete="organization"
+                            required
+                        >
                     </div>
                 </div>
-                <div class="modal-footer border-top-0 pb-4 px-4">
-                    <button type="button" class="btn btn-light btn-sm px-3 rounded-2" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-3 rounded-2">Сохранить</button>
+
+                <div class="supplier-form-section">
+                    <div class="supplier-form-section-title">
+                        <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                        Контакты и адрес
+                    </div>
+
+                    <div class="supplier-form-grid">
+                        <div class="supplier-field">
+                            <label class="form-label" for="edit_supplier_phone">Телефон</label>
+                            <input
+                                type="tel"
+                                id="edit_supplier_phone"
+                                name="phone"
+                                class="form-control"
+                                maxlength="50"
+                                autocomplete="tel"
+                            >
+                        </div>
+
+                        <div class="supplier-field">
+                            <label class="form-label" for="edit_supplier_email">Email</label>
+                            <input
+                                type="email"
+                                id="edit_supplier_email"
+                                name="email"
+                                class="form-control"
+                                maxlength="100"
+                                autocomplete="email"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="supplier-field supplier-field--spaced">
+                        <label class="form-label" for="edit_supplier_address">Фактический адрес</label>
+                        <textarea
+                            id="edit_supplier_address"
+                            name="address"
+                            class="form-control"
+                            rows="3"
+                            maxlength="1000"
+                            autocomplete="street-address"
+                        ></textarea>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="modal-footer supplier-modal-footer">
+                <button type="button" class="btn supplier-modal-cancel" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" class="btn suppliers-primary-action supplier-submit">
+                    <span class="supplier-submit-label">
+                        <i class="bi bi-check-lg" aria-hidden="true"></i>
+                        Сохранить изменения
+                    </span>
+                    <span class="supplier-submit-loading" hidden>
+                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        Сохраняем…
+                    </span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

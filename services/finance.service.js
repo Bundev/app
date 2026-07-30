@@ -306,7 +306,7 @@ exports.getCashData = async (req) => {
 
         let finalHistorySql = 'SELECT NULL FROM dual WHERE 1=0';
         if (queries.length > 0) {
-            finalHistorySql = queries.join(' UNION ALL ') + ' ORDER BY created_at DESC LIMIT 50';
+            finalHistorySql = queries.join(' UNION ALL ') + ' ORDER BY created_at DESC';
         }
 
         const [history] = await db.query(finalHistorySql, params);

@@ -1,117 +1,315 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<div class="col content">
 
-    <div class="card shadow-sm">
-
-        <div class="card-header">
-
-            Импорт товаров из Excel
-
-        </div>
-
-        <div class="card-body">
-
-            <form id="importForm" action="/products/import"
-                method="POST"
-                enctype="multipart/form-data">
-            <div class="row mb-3">
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        Магазин
-                    </label>
-
-                    <select
-                        name="store_id"
-                        id="store_id"
-                        class="form-select">
-
-                        <% stores.forEach(store => { %>
-
-                            <option
-                                value="<%= store.id %>">
-
-                                <%= store.name %>
-
-                            </option>
-
-                        <% }) %>
-
-                    </select>
-
+<div class="col content products-import-page">
+    <div class="products-import-shell">
+        <header class="products-import-header">
+            <div>
+                <div class="products-import-eyebrow">
+                    <i class="bi bi-box-seam"></i>
+                    Массовое обновление склада
                 </div>
-
-                <div class="col-md-4">
-
-                    <label for="markup_below_100" class="form-label">
-                        Наценка до 100 грн, %
-                    </label>
-
-                    <input
-                        type="number"
-                        name="markup_below_100"
-                        id="markup_below_100"
-                        class="form-control"
-                        value="30"
-                        min="0"
-                        step="0.01"
-                        required>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <label for="markup_from_100" class="form-label">
-                        Наценка от 100 грн, %
-                    </label>
-
-                    <input
-                        type="number"
-                        name="markup_from_100"
-                        id="markup_from_100"
-                        class="form-control"
-                        value="15"
-                        min="0"
-                        step="0.01"
-                        required>
-
-                </div>
-
+                <h1>Импорт товаров из Excel</h1>
+                <p>
+                    Загрузите файл, задайте правила наценки и проверьте данные
+                    перед добавлением товаров на склад.
+                </p>
             </div>
-                <input
-                    type="file"
-                    id="excelFile"
-                    name="excel"
-                    accept=".xlsx,.xls">
 
-                <button
-                    type="button"
-                    id="previewBtn"
-                    class="btn btn-primary">
+            <a href="/products" class="btn btn-light products-import-back">
+                <i class="bi bi-arrow-left"></i>
+                Вернуться на склад
+            </a>
+        </header>
 
-                    Предпросмотр
+        <nav class="products-import-steps" aria-label="Этапы импорта">
+            <div
+                class="products-import-step is-active"
+                data-import-step="1"
+                aria-current="step">
+                <span class="products-import-step-number">1</span>
+                <span class="products-import-step-copy">
+                    <strong>Excel-файл</strong>
+                    <small>Выберите документ</small>
+                </span>
+            </div>
 
-                </button>
+            <div class="products-import-step" data-import-step="2">
+                <span class="products-import-step-number">2</span>
+                <span class="products-import-step-copy">
+                    <strong>Параметры</strong>
+                    <small>Магазин и наценка</small>
+                </span>
+            </div>
 
-            </form>
+            <div class="products-import-step" data-import-step="3">
+                <span class="products-import-step-number">3</span>
+                <span class="products-import-step-copy">
+                    <strong>Проверка</strong>
+                    <small>Предпросмотр и импорт</small>
+                </span>
+            </div>
+        </nav>
 
-        <div id="preview"></div>
+        <form
+            id="importForm"
+            action="/products/import"
+            method="POST"
+            enctype="multipart/form-data">
 
-        <button
-            type="button"
-            id="startImport"
-            class="btn btn-success d-none">
+            <div class="row g-4 align-items-start">
+                <div class="col-xl-7">
+                    <section class="card products-import-card">
+                        <div class="card-header products-import-card-header">
+                            <div class="products-import-section-title">
+                                <span class="products-import-section-icon">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
+                                </span>
+                                <div>
+                                    <h2>Выберите Excel-файл</h2>
+                                    <p>Поддерживаются форматы XLSX и XLS</p>
+                                </div>
+                            </div>
+                            <span class="products-import-required">Обязательно</span>
+                        </div>
 
-            Импортировать
+                        <div class="card-body products-import-upload-body">
+                            <input
+                                type="file"
+                                id="excelFile"
+                                name="excel"
+                                class="visually-hidden"
+                                accept=".xlsx,.xls"
+                                required>
 
-        </button>
+                            <label
+                                for="excelFile"
+                                class="products-import-dropzone"
+                                id="importDropzone"
+                                role="button"
+                                tabindex="0">
 
-        </div>
+                                <span class="products-import-dropzone-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </span>
+                                <strong>Перетащите Excel-файл сюда</strong>
+                                <span>
+                                    или
+                                    <span class="products-import-browse">выберите на компьютере</span>
+                                </span>
+                                <small>Перед импортом вы увидите первые 20 строк</small>
+                            </label>
 
+                            <div
+                                class="products-import-file d-none"
+                                id="selectedFile"
+                                aria-live="polite">
+
+                                <span class="products-import-file-icon">
+                                    <i class="bi bi-file-earmark-excel"></i>
+                                </span>
+                                <span class="products-import-file-info">
+                                    <strong id="selectedFileName"></strong>
+                                    <small id="selectedFileSize"></small>
+                                </span>
+                                <button
+                                    type="button"
+                                    class="btn products-import-file-remove"
+                                    id="removeFile"
+                                    aria-label="Удалить выбранный файл"
+                                    title="Удалить файл">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section
+                        class="card products-import-card products-import-preview-card d-none"
+                        id="previewSection"
+                        aria-labelledby="previewTitle">
+
+                        <div class="card-header products-import-card-header">
+                            <div class="products-import-section-title">
+                                <span class="products-import-section-icon products-import-section-icon-success">
+                                    <i class="bi bi-table"></i>
+                                </span>
+                                <div>
+                                    <h2 id="previewTitle" tabindex="-1">Предпросмотр данных</h2>
+                                    <p id="previewMeta">Проверьте строки перед импортом</p>
+                                </div>
+                            </div>
+                            <span class="products-import-preview-ready">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Файл прочитан
+                            </span>
+                        </div>
+
+                        <div class="products-import-preview" id="preview"></div>
+                    </section>
+                </div>
+
+                <div class="col-xl-5">
+                    <section class="card products-import-card">
+                        <div class="card-header products-import-card-header">
+                            <div class="products-import-section-title">
+                                <span class="products-import-section-icon">
+                                    <i class="bi bi-sliders"></i>
+                                </span>
+                                <div>
+                                    <h2>Параметры импорта</h2>
+                                    <p>Куда загрузить товар и как рассчитать цены</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body products-import-settings">
+                            <div class="products-import-field">
+                                <label for="store_id" class="form-label">
+                                    Магазин
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="products-import-control">
+                                    <i class="bi bi-shop"></i>
+                                    <select
+                                        name="store_id"
+                                        id="store_id"
+                                        class="form-select"
+                                        required
+                                        <%= stores.length ? '' : 'disabled' %>>
+
+                                        <option value="" selected disabled>
+                                            Выберите магазин
+                                        </option>
+
+                                        <% stores.forEach(store => { %>
+                                            <option value="<%= store.id %>">
+                                                <%= store.name %>
+                                            </option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <% if (!stores.length) { %>
+                                    <div class="products-import-field-error">
+                                        Нет активных магазинов. Сначала создайте магазин.
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <div class="products-import-price-rule">
+                                <span class="products-import-price-rule-icon">
+                                    <i class="bi bi-tags"></i>
+                                </span>
+                                <div>
+                                    <strong>Правило расчёта цены</strong>
+                                    <span>
+                                        Наценка выбирается по закупочной стоимости товара.
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label for="markup_below_100" class="form-label">
+                                        Наценка до 100 грн
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group products-import-percent">
+                                        <input
+                                            type="number"
+                                            name="markup_below_100"
+                                            id="markup_below_100"
+                                            class="form-control"
+                                            placeholder="Наценка"
+                                            min="0"
+                                            step="0.01"
+                                            inputmode="decimal"
+                                            required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <label for="markup_from_100" class="form-label">
+                                        Наценка от 100 грн
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group products-import-percent">
+                                        <input
+                                            type="number"
+                                            name="markup_from_100"
+                                            id="markup_from_100"
+                                            class="form-control"
+                                            placeholder="Наценка"
+                                            min="0"
+                                            step="0.01"
+                                            inputmode="decimal"
+                                            required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside class="products-import-note">
+                        <span class="products-import-note-icon">
+                            <i class="bi bi-info-circle"></i>
+                        </span>
+                        <div>
+                            <strong>Что произойдёт при импорте</strong>
+                            <ul>
+                                <li>Новые товары и категории будут созданы автоматически.</li>
+                                <li>Совпавшие товары получат новые цены и остатки.</li>
+                                <li>Для импорта используется лист <code>TDSheet</code>.</li>
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <div
+                class="products-import-message d-none"
+                id="importMessage"
+                role="alert"
+                tabindex="-1"
+                aria-live="assertive"></div>
+
+            <div class="products-import-actions">
+                <div class="products-import-action-copy">
+                    <span class="products-import-action-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </span>
+                    <span>
+                        <strong id="importActionTitle">Сначала проверьте файл</strong>
+                        <small id="importActionHint">
+                            Импорт станет доступен после успешного предпросмотра.
+                        </small>
+                    </span>
+                </div>
+
+                <div class="products-import-action-buttons">
+                    <button
+                        type="button"
+                        id="previewBtn"
+                        class="btn btn-outline-primary products-import-action-button"
+                        <%= stores.length ? '' : 'disabled' %>>
+                        <i class="bi bi-eye"></i>
+                        <span>Предпросмотр</span>
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="startImport"
+                        class="btn btn-success products-import-action-button d-none">
+                        <i class="bi bi-cloud-check"></i>
+                        <span>Импортировать товары</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
-
 </div>
+
 <%- include('blocks/footer') -%>

@@ -1,189 +1,524 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<div class="col content">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">База клиентов</h1>
-            <p class="text-muted small mb-0">Всего зарегистрировано: <%= customers.length %> клиентов</p>
-        </div>
-        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
-            <i class="bi bi-person-plus-fill me-2"></i>+ Новый client
-        </button>
-    </div>
+<%
+    const customerList = Array.isArray(customers) ? customers : [];
+    const customersWithContacts = customerList.filter(customer => customer.phone || customer.email).length;
+    const customersWithDiscount = customerList.filter(customer => Number(customer.discount_percentage || 0) > 0).length;
+%>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="font-size: 14px;">
-                    <thead class="table-light text-uppercase fs-7 text-muted fw-bold">
-                        <tr>
-                            <th class="ps-4" style="width: 80px;">ID</th>
-                            <th>ФИО / Название</th>
-                            <th>Телефон</th>
-                            <th>Email</th>
-                            <th>Скидка</th>
-                            <th>Примечание</th>
-                            <th class="pe-4 text-end" style="width: 120px;">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (customers.length === 0) { %>
+<main class="col content customers-page">
+    <div class="customers-shell">
+        <header class="customers-header" aria-labelledby="customersTitle">
+            <div>
+                <div class="customers-eyebrow">
+                    <i class="bi bi-people-fill" aria-hidden="true"></i>
+                    Клиентская база
+                </div>
+                <h1 id="customersTitle">Клиенты</h1>
+                <p>Храните контакты, персональные скидки и важные примечания в одном месте.</p>
+            </div>
+
+            <button
+                type="button"
+                class="btn customers-primary-action"
+                data-bs-toggle="modal"
+                data-bs-target="#addCustomerModal"
+            >
+                <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
+                Добавить клиента
+            </button>
+        </header>
+
+        <section class="customers-metrics" aria-label="Сводка по клиентам">
+            <article class="customers-metric">
+                <span class="customers-metric-icon customers-metric-icon--primary">
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                </span>
+                <span class="customers-metric-copy">
+                    <span>Всего клиентов</span>
+                    <strong><%= customerList.length %></strong>
+                </span>
+            </article>
+
+            <article class="customers-metric">
+                <span class="customers-metric-icon customers-metric-icon--success">
+                    <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+                </span>
+                <span class="customers-metric-copy">
+                    <span>С контактами</span>
+                    <strong><%= customersWithContacts %></strong>
+                </span>
+            </article>
+
+            <article class="customers-metric">
+                <span class="customers-metric-icon customers-metric-icon--warning">
+                    <i class="bi bi-percent" aria-hidden="true"></i>
+                </span>
+                <span class="customers-metric-copy">
+                    <span>Со скидкой</span>
+                    <strong><%= customersWithDiscount %></strong>
+                </span>
+            </article>
+        </section>
+
+        <section class="customers-list-card" aria-labelledby="customersListTitle">
+            <div class="customers-list-heading">
+                <div>
+                    <h2 id="customersListTitle">Список клиентов</h2>
+                    <p id="customersVisibleCount" aria-live="polite">
+                        Показано <%= customerList.length %> из <%= customerList.length %>
+                    </p>
+                </div>
+                <span class="customers-total-badge">
+                    <i class="bi bi-person-check" aria-hidden="true"></i>
+                    <%= customerList.length %>
+                </span>
+            </div>
+
+            <% if (customerList.length > 0) { %>
+                <div class="customers-toolbar" role="search">
+                    <div class="customers-search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <label class="visually-hidden" for="customerSearch">Поиск клиентов</label>
+                        <input
+                            type="search"
+                            id="customerSearch"
+                            class="form-control"
+                            placeholder="Имя, телефон, email или примечание"
+                            autocomplete="off"
+                            aria-controls="customersTableBody"
+                        >
+                    </div>
+
+                    <div class="customers-filter">
+                        <label class="visually-hidden" for="customerDiscountFilter">Фильтр по скидке</label>
+                        <select id="customerDiscountFilter" class="form-select" aria-controls="customersTableBody">
+                            <option value="all">Все скидки</option>
+                            <option value="with">Со скидкой</option>
+                            <option value="without">Без скидки</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="customerFiltersReset" class="btn customers-reset" disabled>
+                        <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                        Сбросить
+                    </button>
+                </div>
+
+                <div class="customers-table-wrap" id="customersTableWrap">
+                    <table class="table customers-table">
+                        <caption class="visually-hidden">Активные клиенты компании</caption>
+                        <colgroup>
+                            <col class="customers-col-identity">
+                            <col class="customers-col-contact">
+                            <col class="customers-col-discount">
+                            <col class="customers-col-comment">
+                            <col class="customers-col-actions">
+                        </colgroup>
+                        <thead>
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">Клиенты еще не добавлены</td>
+                                <th scope="col">Клиент</th>
+                                <th scope="col">Контакты</th>
+                                <th scope="col">Скидка</th>
+                                <th scope="col">Примечание</th>
+                                <th scope="col" class="text-end">Действия</th>
                             </tr>
-                        <% } else { %>
-                            <% customers.forEach(customer => { %>
-                                <tr>
-                                    <td class="ps-4 text-muted">#<%= customer.id %></td>
-                                    <td>
-                                        <div class="fw-bold text-dark"><%= customer.name %></div>
-                                        <div class="text-muted" style="font-size: 11px;">
-                                            Создан: <%= customer.created_at ? new Date(customer.created_at).toLocaleDateString('ru-RU') : '—' %>
-                                        </div>
-                                    </td>
-                                    <td class="fw-medium"><%= customer.phone || '—' %></td>
-                                    <td><%= customer.email || '—' %></td>
-                                    <td>
-                                        <span class="badge bg-info text-dark fw-bold">
-                                            <%= Number(customer.discount_percentage).toFixed(1) %>%
+                        </thead>
+                        <tbody id="customersTableBody">
+                            <% customerList.forEach(customer => { %>
+                                <%
+                                    const customerName = String(customer.name || '').trim() || 'Без имени';
+                                    const initials = customerName
+                                        .split(/\s+/)
+                                        .filter(Boolean)
+                                        .slice(0, 2)
+                                        .map(part => part.charAt(0))
+                                        .join('')
+                                        .toUpperCase() || '?';
+                                    const rawDiscount = Number(customer.discount_percentage || 0);
+                                    const discount = Number.isFinite(rawDiscount) ? rawDiscount : 0;
+                                    const discountLabel = discount.toLocaleString('ru-RU', {
+                                        minimumFractionDigits: 0,
+                                        maximumFractionDigits: 2
+                                    });
+                                    const createdDate = customer.created_at
+                                        ? new Date(customer.created_at).toLocaleDateString('ru-RU')
+                                        : 'дата не указана';
+                                %>
+                                <tr
+                                    class="customer-row"
+                                    data-discount="<%= discount > 0 ? 'with' : 'without' %>"
+                                >
+                                    <td class="customer-cell customer-cell--identity" data-label="Клиент">
+                                        <span class="customer-avatar" aria-hidden="true"><%= initials %></span>
+                                        <span class="customer-identity">
+                                            <strong><%= customerName %></strong>
+                                            <span class="customer-meta">
+                                                <span>#<%= customer.id %></span>
+                                                <span aria-hidden="true">•</span>
+                                                <span><%= createdDate %></span>
+                                            </span>
                                         </span>
                                     </td>
-                                    <td class="text-muted" style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        <%= customer.comment || '—' %>
+
+                                    <td class="customer-cell customer-cell--contact" data-label="Контакты">
+                                        <% if (customer.phone || customer.email) { %>
+                                            <span class="customer-contact-list">
+                                                <% if (customer.phone) { %>
+                                                    <a href="tel:<%= customer.phone %>">
+                                                        <i class="bi bi-telephone" aria-hidden="true"></i>
+                                                        <span><%= customer.phone %></span>
+                                                    </a>
+                                                <% } %>
+                                                <% if (customer.email) { %>
+                                                    <a href="mailto:<%= customer.email %>">
+                                                        <i class="bi bi-envelope" aria-hidden="true"></i>
+                                                        <span><%= customer.email %></span>
+                                                    </a>
+                                                <% } %>
+                                            </span>
+                                        <% } else { %>
+                                            <span class="customer-empty-value">Не указаны</span>
+                                        <% } %>
                                     </td>
-                                    <td class="pe-4 text-end">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-outline-primary border-0 edit-customer-btn" data-id="<%= customer.id %>" title="Редактировать">
-                                                <i class="bi bi-pencil-square"></i>
+
+                                    <td class="customer-cell customer-cell--discount" data-label="Скидка">
+                                        <span class="customer-discount <%= discount > 0 ? 'is-active' : '' %>">
+                                            <%= discountLabel %>%
+                                        </span>
+                                    </td>
+
+                                    <td class="customer-cell customer-cell--comment" data-label="Примечание">
+                                        <% if (customer.comment) { %>
+                                            <span class="customer-comment" title="<%= customer.comment %>"><%= customer.comment %></span>
+                                        <% } else { %>
+                                            <span class="customer-empty-value">Без примечания</span>
+                                        <% } %>
+                                    </td>
+
+                                    <td class="customer-cell customer-cell--actions" data-label="Действия">
+                                        <div class="customer-actions">
+                                            <button
+                                                type="button"
+                                                class="btn customer-action-btn edit-customer-btn"
+                                                data-id="<%= customer.id %>"
+                                                aria-label="Редактировать клиента <%= customerName %>"
+                                                title="Редактировать"
+                                            >
+                                                <i class="bi bi-pencil-square customer-action-icon" aria-hidden="true"></i>
+                                                <span class="spinner-border spinner-border-sm customer-action-spinner" aria-hidden="true" hidden></span>
                                             </button>
-                                            
-                                            <% if (customer.id !== 1) { %>
-                                                <a href="/customers/archive/<%= customer.id %>" class="btn btn-sm btn-outline-warning border-0" onclick="return confirm('Вы уверены, что хотите перенести этого клиента в архив?')" title="Архивировать">
-                                                    <i class="bi bi-archive"></i>
-                                                </a>
+
+                                            <% if (Number(customer.id) !== 1) { %>
+                                                <form
+                                                    action="/customers/archive/<%= customer.id %>"
+                                                    method="POST"
+                                                    class="customer-archive-form"
+                                                    data-customer-name="<%= customerName %>"
+                                                >
+                                                    <button
+                                                        type="submit"
+                                                        class="btn customer-action-btn customer-action-btn--archive"
+                                                        aria-label="Архивировать клиента <%= customerName %>"
+                                                        title="Архивировать"
+                                                    >
+                                                        <i class="bi bi-archive" aria-hidden="true"></i>
+                                                    </button>
+                                                </form>
                                             <% } %>
                                         </div>
                                     </td>
                                 </tr>
                             <% }) %>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="customers-no-results" id="customersNoResults" hidden>
+                    <span class="customers-empty-icon">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </span>
+                    <h3>Ничего не найдено</h3>
+                    <p>Измените запрос или сбросьте выбранные фильтры.</p>
+                    <button type="button" class="btn customers-secondary-action" data-reset-customer-filters>
+                        Сбросить фильтры
+                    </button>
+                </div>
+            <% } else { %>
+                <div class="customers-empty">
+                    <span class="customers-empty-icon">
+                        <i class="bi bi-people" aria-hidden="true"></i>
+                    </span>
+                    <h3>Клиентов пока нет</h3>
+                    <p>Добавьте первого клиента, чтобы сохранять его контакты и персональную скидку.</p>
+                    <button
+                        type="button"
+                        class="btn customers-secondary-action"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addCustomerModal"
+                    >
+                        <i class="bi bi-person-plus" aria-hidden="true"></i>
+                        Добавить клиента
+                    </button>
+                </div>
+            <% } %>
+        </section>
     </div>
-</div>
+</main>
 
 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold" id="addCustomerModalLabel">Новый клиент</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content customer-modal">
+            <div class="modal-header customer-modal-header">
+                <div class="customer-modal-title">
+                    <span class="customer-modal-icon">
+                        <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
+                    </span>
+                    <span>
+                        <span class="customer-modal-kicker">Новая запись</span>
+                        <span class="modal-title" id="addCustomerModalLabel">Добавление клиента</span>
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            <form action="/customers/add" method="POST">
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">ФИО / Название компании *</label>
-                        <input type="text" name="name" class="form-control" placeholder="Иванов Иван" required autocomplete="off">
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Номер телефона</label>
-                            <input type="text" name="phone" class="form-control" placeholder="+380..." autocomplete="off">
+
+            <form action="/customers/add" method="POST" class="customer-form">
+                <div class="modal-body customer-modal-body">
+                    <p class="customer-form-intro">Укажите основные данные клиента. Обязательное поле отмечено звёздочкой.</p>
+
+                    <div class="customer-form-section">
+                        <div class="customer-form-section-title">
+                            <i class="bi bi-person" aria-hidden="true"></i>
+                            Основная информация
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Персональная скидка (%)</label>
-                            <input type="number" name="discount_percentage" class="form-control" min="0" max="100" step="0.01" placeholder="0.00" value="0">
+
+                        <div class="customer-field">
+                            <label class="form-label" for="customer_name">ФИО или название <span aria-hidden="true">*</span></label>
+                            <input
+                                type="text"
+                                id="customer_name"
+                                name="name"
+                                class="form-control"
+                                maxlength="255"
+                                placeholder="Например, Иван Иванов"
+                                autocomplete="name"
+                                required
+                            >
+                        </div>
+
+                        <div class="customer-form-grid">
+                            <div class="customer-field">
+                                <label class="form-label" for="customer_phone">Телефон</label>
+                                <input
+                                    type="tel"
+                                    id="customer_phone"
+                                    name="phone"
+                                    class="form-control"
+                                    maxlength="50"
+                                    placeholder="+380 00 000 00 00"
+                                    autocomplete="tel"
+                                >
+                            </div>
+
+                            <div class="customer-field">
+                                <label class="form-label" for="customer_discount">Персональная скидка</label>
+                                <div class="input-group">
+                                    <input
+                                        type="number"
+                                        id="customer_discount"
+                                        name="discount_percentage"
+                                        class="form-control"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        value="0"
+                                        inputmode="decimal"
+                                        aria-describedby="customerDiscountSuffix"
+                                    >
+                                    <span class="input-group-text" id="customerDiscountSuffix">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="customer-field">
+                            <label class="form-label" for="customer_email">Email</label>
+                            <input
+                                type="email"
+                                id="customer_email"
+                                name="email"
+                                class="form-control"
+                                maxlength="255"
+                                placeholder="client@example.com"
+                                autocomplete="email"
+                            >
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="client@example.com" autocomplete="off">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Комментарий / Примечание</label>
-                        <textarea name="comment" class="form-control" rows="3" placeholder="Особые условия доставки, контакты руководства..."></textarea>
+                    <div class="customer-form-section">
+                        <div class="customer-form-section-title">
+                            <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                            Примечание
+                        </div>
+                        <div class="customer-field">
+                            <label class="form-label" for="customer_comment">Комментарий</label>
+                            <textarea
+                                id="customer_comment"
+                                name="comment"
+                                class="form-control"
+                                rows="3"
+                                maxlength="2000"
+                                placeholder="Особые условия, предпочтения или дополнительный контакт"
+                            ></textarea>
+                            <span class="customer-field-help">Эта информация будет видна сотрудникам вашей компании.</span>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-top-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary px-4">Сохранить</button>
+
+                <div class="modal-footer customer-modal-footer">
+                    <button type="button" class="btn customer-modal-cancel" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn customers-primary-action customer-submit">
+                        <span class="customer-submit-label">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                            Сохранить
+                        </span>
+                        <span class="customer-submit-loading" hidden>
+                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                            Сохраняем…
+                        </span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold">Редактировать клиента</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content customer-modal">
+            <div class="modal-header customer-modal-header">
+                <div class="customer-modal-title">
+                    <span class="customer-modal-icon customer-modal-icon--edit">
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                    </span>
+                    <span>
+                        <span class="customer-modal-kicker">Карточка клиента</span>
+                        <span class="modal-title" id="editCustomerModalLabel">Редактирование клиента</span>
+                    </span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            <form id="editCustomerForm" action="" method="POST">
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">ФИО / Название *</label>
-                        <input type="text" id="edit_name" name="name" class="form-control" required autocomplete="off">
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Номер телефона</label>
-                            <input type="text" id="edit_phone" name="phone" class="form-control" autocomplete="off">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Персональная скидка (%)</label>
-                            <input type="number" id="edit_discount" name="discount_percentage" class="form-control" min="0" max="100" step="0.01">
-                        </div>
+
+            <form id="editCustomerForm" action="" method="POST" class="customer-form" aria-busy="false">
+                <div class="modal-body customer-modal-body">
+                    <div class="customer-edit-loading" id="editCustomerLoading" role="status" hidden>
+                        <span class="spinner-border" aria-hidden="true"></span>
+                        <span>Загружаем данные клиента…</span>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Email</label>
-                        <input type="email" id="edit_email" name="email" class="form-control" autocomplete="off">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Комментарий</label>
-                        <textarea id="edit_comment" name="comment" class="form-control" rows="3"></textarea>
-                    </div>
+                    <div class="alert alert-danger customer-edit-error" id="editCustomerError" role="alert" hidden></div>
+
+                    <fieldset id="editCustomerFields" disabled>
+                        <div class="customer-form-section">
+                            <div class="customer-form-section-title">
+                                <i class="bi bi-person" aria-hidden="true"></i>
+                                Основная информация
+                            </div>
+
+                            <div class="customer-field">
+                                <label class="form-label" for="edit_name">ФИО или название <span aria-hidden="true">*</span></label>
+                                <input
+                                    type="text"
+                                    id="edit_name"
+                                    name="name"
+                                    class="form-control"
+                                    maxlength="255"
+                                    autocomplete="name"
+                                    required
+                                >
+                            </div>
+
+                            <div class="customer-form-grid">
+                                <div class="customer-field">
+                                    <label class="form-label" for="edit_phone">Телефон</label>
+                                    <input
+                                        type="tel"
+                                        id="edit_phone"
+                                        name="phone"
+                                        class="form-control"
+                                        maxlength="50"
+                                        autocomplete="tel"
+                                    >
+                                </div>
+
+                                <div class="customer-field">
+                                    <label class="form-label" for="edit_discount">Персональная скидка</label>
+                                    <div class="input-group">
+                                        <input
+                                            type="number"
+                                            id="edit_discount"
+                                            name="discount_percentage"
+                                            class="form-control"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                            inputmode="decimal"
+                                            aria-describedby="editCustomerDiscountSuffix"
+                                        >
+                                        <span class="input-group-text" id="editCustomerDiscountSuffix">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="customer-field">
+                                <label class="form-label" for="edit_email">Email</label>
+                                <input
+                                    type="email"
+                                    id="edit_email"
+                                    name="email"
+                                    class="form-control"
+                                    maxlength="255"
+                                    autocomplete="email"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="customer-form-section">
+                            <div class="customer-form-section-title">
+                                <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                                Примечание
+                            </div>
+                            <div class="customer-field">
+                                <label class="form-label" for="edit_comment">Комментарий</label>
+                                <textarea
+                                    id="edit_comment"
+                                    name="comment"
+                                    class="form-control"
+                                    rows="3"
+                                    maxlength="2000"
+                                ></textarea>
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
-                <div class="modal-footer bg-light border-top-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-success px-4">Сохранить изменения</button>
+
+                <div class="modal-footer customer-modal-footer">
+                    <button type="button" class="btn customer-modal-cancel" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn customers-primary-action customer-submit" id="editCustomerSubmit" disabled>
+                        <span class="customer-submit-label">
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                            Сохранить изменения
+                        </span>
+                        <span class="customer-submit-loading" hidden>
+                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                            Сохраняем…
+                        </span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-<script>
-document.querySelectorAll('.edit-customer-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        try {
-            const res = await fetch(`/api/customers/${id}`);
-            if (!res.ok) return alert('Не удалось получить данные клиента');
-            const customer = await res.json();
 
-            // Заполняем поля формы данными из БД
-            document.getElementById('editCustomerForm').action = `/customers/edit/${id}`;
-            document.getElementById('edit_name').value = customer.name || '';
-            document.getElementById('edit_phone').value = customer.phone || '';
-            document.getElementById('edit_discount').value = customer.discount_percentage || 0;
-            document.getElementById('edit_email').value = customer.email || '';
-            document.getElementById('edit_comment').value = customer.comment || '';
-
-            // Показываем модалку
-            const editModal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
-            editModal.show();
-        } catch (err) {
-            console.error(err);
-        }
-    });
-});
-</script>
 <%- include('blocks/footer') -%>

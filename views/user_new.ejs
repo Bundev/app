@@ -1,255 +1,276 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
+
 <div class="col content">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h5 class="mb-1">
+                    <i class="bi bi-person-plus me-2"></i>Добавление сотрудника
+                </h5>
+                <div class="small text-muted">
+                    Заполните личные данные, доступ и рабочую информацию
+                </div>
+            </div>
 
-        <div class="card-header">
-
-            👤 Новый сотрудник
-
+            <a href="/settings?tab=users" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Вернуться к сотрудникам
+            </a>
         </div>
 
         <div class="card-body">
+            <form
+                method="POST"
+                action="/user/new"
+                enctype="multipart/form-data">
 
-            <form method="POST" action="/user/new" enctype="multipart/form-data">
-                <div class="row">
-
+                <div class="row g-3">
                     <div class="col-lg-8">
-
                         <div class="card shadow-sm border-0 mb-3">
-
                             <div class="card-header bg-white">
-
-                                <h5 class="mb-0">
-                                    👤 Личные данные
-                                </h5>
-
+                                <h6 class="mb-0">
+                                    <i class="bi bi-person me-2"></i>Личные данные
+                                </h6>
                             </div>
 
                             <div class="card-body">
-
                                 <div class="row">
-
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            ФИО
+                                        <label for="employee-name" class="form-label">
+                                            ФИО <span class="text-danger">*</span>
                                         </label>
-
                                         <input
+                                            id="employee-name"
                                             type="text"
                                             name="name"
-                                            class="form-control">
-
+                                            class="form-control"
+                                            maxlength="100"
+                                            autocomplete="name"
+                                            required>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            Email
-                                        </label>
-
+                                        <label for="employee-email" class="form-label">Email</label>
                                         <input
+                                            id="employee-email"
                                             type="email"
                                             name="email"
-                                            class="form-control">
-
+                                            class="form-control"
+                                            maxlength="255"
+                                            autocomplete="email">
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            Телефон
-                                        </label>
-
+                                        <label for="employee-phone" class="form-label">Телефон</label>
                                         <input
-                                            type="text"
+                                            id="employee-phone"
+                                            type="tel"
                                             name="phone"
-                                            class="form-control">
-
+                                            class="form-control"
+                                            maxlength="20"
+                                            autocomplete="tel">
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
+                                        <label for="employee-birth-date" class="form-label">
                                             Дата рождения
                                         </label>
-
                                         <input
+                                            id="employee-birth-date"
                                             type="date"
                                             name="birth_date"
-                                            class="form-control">
-
+                                            class="form-control"
+                                            autocomplete="bday">
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </div>
 
                         <div class="card shadow-sm border-0">
-
                             <div class="card-header bg-white">
-
-                                <h5 class="mb-0">
-                                    💼 Рабочая информация
-                                </h5>
-
+                                <h6 class="mb-0">
+                                    <i class="bi bi-briefcase me-2"></i>Рабочая информация
+                                </h6>
                             </div>
 
                             <div class="card-body">
-
                                 <div class="row">
-
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            Логин
+                                        <label for="employee-login" class="form-label">
+                                            Логин <span class="text-danger">*</span>
                                         </label>
-
                                         <input
+                                            id="employee-login"
                                             type="text"
                                             name="login"
-                                            class="form-control">
-
+                                            class="form-control"
+                                            maxlength="100"
+                                            autocomplete="username"
+                                            required>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            Пароль
+                                        <label for="employee-password" class="form-label">
+                                            Пароль <span class="text-danger">*</span>
                                         </label>
-
                                         <input
+                                            id="employee-password"
                                             type="password"
                                             name="password"
-                                            class="form-control">
-
+                                            class="form-control"
+                                            minlength="6"
+                                            maxlength="72"
+                                            autocomplete="new-password"
+                                            required>
+                                        <div class="form-text">
+                                            Не менее 6 символов.
+                                        </div>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            Роль
+                                        <label for="employee-role" class="form-label">
+                                            Роль <span class="text-danger">*</span>
                                         </label>
-
                                         <select
+                                            id="employee-role"
                                             name="role"
-                                            class="form-select">
-
-                                            <option value="seller">
-                                                Продавец
-                                            </option>
-
-                                            <option value="manager">
-                                                Менеджер
-                                            </option>
-
-                                            <option value="admin">
-                                                Администратор
-                                            </option>
-
+                                            class="form-select"
+                                            required>
+                                            <option value="seller" selected>Продавец</option>
+                                            <option value="manager">Менеджер</option>
+                                            <option value="admin">Администратор</option>
                                         </select>
-
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-
-                                        <label class="form-label">
-                                            Зарплата
-                                        </label>
-
+                                        <label for="employee-position" class="form-label">Должность</label>
                                         <input
-                                            type="number"
-                                            name="salary"
-                                            class="form-control">
-
+                                            id="employee-position"
+                                            type="text"
+                                            name="position"
+                                            class="form-control"
+                                            maxlength="100">
                                     </div>
 
+                                    <div class="col-md-6 mb-3">
+                                        <label for="employee-salary" class="form-label">Зарплата</label>
+                                        <div class="input-group">
+                                            <input
+                                                id="employee-salary"
+                                                type="number"
+                                                name="salary"
+                                                class="form-control"
+                                                min="0"
+                                                max="99999999.99"
+                                                step="0.01"
+                                                inputmode="decimal">
+                                            <span class="input-group-text">₴</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="employee-hire-date" class="form-label">
+                                            Дата приёма
+                                        </label>
+                                        <input
+                                            id="employee-hire-date"
+                                            type="date"
+                                            name="hire_date"
+                                            class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="employee-notes" class="form-label">Заметки</label>
+                                        <textarea
+                                            id="employee-notes"
+                                            name="notes"
+                                            class="form-control"
+                                            rows="4"
+                                            maxlength="10000"></textarea>
+                                    </div>
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
 
                     <div class="col-lg-4">
-
                         <div class="card shadow-sm border-0 mb-3">
-
                             <div class="card-body text-center">
-
                                 <img
+                                    id="employee-avatar-preview"
                                     src="/img/default-avatar.png"
+                                    alt="Аватар нового сотрудника"
                                     class="rounded-circle border mb-3"
-                                    width="120">
+                                    width="120"
+                                    height="120"
+                                    style="object-fit: cover;">
 
+                                <label for="employee-avatar" class="form-label d-block text-start">
+                                    Аватар
+                                </label>
                                 <input
+                                    id="employee-avatar"
                                     type="file"
                                     name="avatar"
-                                    class="form-control">
-
+                                    class="form-control"
+                                    accept="image/jpeg,image/png,image/webp">
+                                <div class="form-text text-start">
+                                    JPG, PNG или WEBP, не более 5 МБ.
+                                </div>
                             </div>
-
                         </div>
 
-                        <div class="card shadow-sm border-0">
-
+                        <div class="card shadow-sm border-0 mb-3">
                             <div class="card-header bg-white">
-
-                                🏪 Магазин
-
+                                <i class="bi bi-shop me-2"></i>Магазин
                             </div>
 
                             <div class="card-body">
-
+                                <% if (stores.length) { %>
+                                <label for="employee-store" class="form-label">
+                                    Назначить сотрудника
+                                    <span class="text-danger">*</span>
+                                </label>
                                 <select
+                                    id="employee-store"
                                     name="store_id"
-                                    class="form-select">
-
+                                    class="form-select"
+                                    required>
+                                    <option value="" selected disabled>
+                                        Выберите магазин
+                                    </option>
                                     <% stores.forEach(store => { %>
-
-                                        <option value="<%= store.id %>">
-
-                                            <%= store.name %>
-
-                                        </option>
-
+                                    <option value="<%= store.id %>">
+                                        <%= store.name %>
+                                    </option>
                                     <% }) %>
-
                                 </select>
-
+                                <% } else { %>
+                                <div class="alert alert-warning mb-0">
+                                    Нет активных магазинов. Создайте или активируйте магазин
+                                    перед добавлением сотрудника.
+                                </div>
+                                <% } %>
                             </div>
-
                         </div>
 
-                        <button
-                            type="submit"
-                            class="btn btn-success btn-lg w-100 mt-3">
-
-                            💾 Сохранить сотрудника
-
-                        </button>
-
+                        <div class="d-grid gap-2">
+                            <button
+                                type="submit"
+                                class="btn btn-success btn-lg"
+                                <%= stores.length ? '' : 'disabled' %>>
+                                <i class="bi bi-person-check me-1"></i>Создать сотрудника
+                            </button>
+                            <a href="/settings?tab=users" class="btn btn-outline-secondary">
+                                Отмена
+                            </a>
+                        </div>
                     </div>
-
                 </div>
-                  
-
-
-                
-
-                
-                
-
             </form>
-
         </div>
-
     </div>
-
 </div>
+
 <%- include('blocks/footer') -%>

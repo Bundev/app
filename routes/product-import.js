@@ -43,56 +43,59 @@ router.get('/import',auth,requireAdmin,async (req, res) => {
 
     }
 );
-router.post('/import/preview',auth, uploadImport.single('excel'), async (req, res) => {
+router.post(
+    '/import/preview',
+    auth,
+    requireAdmin,
+    uploadImport.single('excel'),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Выберите Excel-файл'
+                });
+            }
 
-    try{
-        
-        const XLSX = require('xlsx');
-        const workbook =
-            XLSX.readFile(req.file.path);
+            const XLSX = require('xlsx');
+            const workbook = XLSX.readFile(req.file.path);
+            const sheet = workbook.Sheets['TDSheet'];
 
-        
+            if (!sheet) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'В файле не найден обязательный лист TDSheet'
+                });
+            }
 
-        const sheet =
-            workbook.Sheets['TDSheet'] ||
-            workbook.Sheets[workbook.SheetNames[0]];
-
-        if (!sheet) {
-            return res.status(400).json({
-                success: false,
-                error: 'Лист импорта не найден'
-            });
-        }
-
-        const rows =
-            XLSX.utils.sheet_to_json(
+            const rows = XLSX.utils.sheet_to_json(
                 sheet,
                 { range: 6, header: 1 }
             );
+            const previewRows = rows.slice(0, 20);
 
-        
+            return res.json({
+                success: true,
+                rows: previewRows,
+                totalRows: rows.length
+            });
+        } catch (error) {
+            console.error(error);
 
-        res.json({
-            success: true,
-            rows: rows.slice(0, 20)
-        });
-    }finally {
-
+            return res.status(400).json({
+                success: false,
+                error: 'Не удалось прочитать Excel-файл'
+            });
+        } finally {
             const fs = require('fs');
 
             if (
                 req.file &&
                 fs.existsSync(req.file.path)
             ) {
-
-                fs.unlinkSync(
-                    req.file.path
-                );
-
+                fs.unlinkSync(req.file.path);
             }
-
         }
-
     }
 );
 
@@ -101,14 +104,36 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
         
         try {
 
+            if (!req.file) {
+
+                return res.status(400).send(
+                    'Выберите Excel-файл'
+                );
+
+            }
 
             const storeId =
                     Number(
                         req.body.store_id
                     );
 
-            const markupBelow100 = Number(req.body.markup_below_100);
-            const markupFrom100 = Number(req.body.markup_from_100);
+            const markupBelow100Value = String(
+                req.body.markup_below_100 ?? ''
+            ).trim();
+            const markupFrom100Value = String(
+                req.body.markup_from_100 ?? ''
+            ).trim();
+
+            if (!markupBelow100Value || !markupFrom100Value) {
+
+                return res.status(400).send(
+                    'Обе наценки обязательны для заполнения'
+                );
+
+            }
+
+            const markupBelow100 = Number(markupBelow100Value);
+            const markupFrom100 = Number(markupFrom100Value);
 
             if (!Number.isSafeInteger(storeId) || storeId <= 0) {
 

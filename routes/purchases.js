@@ -2,14 +2,17 @@ const express = require('express');
 const router = express.Router();
 
 const auth = require('../middleware/auth');
+const requireAdmin = require('../middleware/requireAdmin');
 const purchasesController = require('../controllers/purchases.controller');
 
-router.get('/', auth, purchasesController.index);
+router.use(auth, requireAdmin);
 
-router.get('/add', auth, purchasesController.showAdd);
+router.get('/', purchasesController.index);
 
-router.post('/add', auth, purchasesController.store);
+router.get('/add', purchasesController.showAdd);
 
-router.get('/view/:id', auth, purchasesController.view);
+router.post('/add', purchasesController.store);
+
+router.get('/view/:id', purchasesController.view);
 
 module.exports = router;

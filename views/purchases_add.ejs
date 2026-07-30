@@ -1,304 +1,324 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<div class="col content">
-    <!-- Заголовок и навигация назад -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800 fw-bold">📝 Новая закупка товаров</h1>
-        <a href="/purchases" class="btn btn-light btn-sm border rounded-2 fw-medium">
-            <i class="bi bi-arrow-left me-1"></i> Назад в журнал
-        </a>
-    </div>
 
-    <!-- Форма создания закупки -->
-    <form action="/purchases/add" method="POST">
-        <div class="row g-4">
-            
-            <!-- Левая колонка: Параметры документа -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-3 p-4">
-                    <h5 class="fw-bold text-dark mb-3">Параметры документа</h5>
-                    
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase text-muted fw-bold">Номер накладной *</label>
-                        <input type="text" name="number" class="form-control rounded-2" placeholder="Например, ПР-001" required>
-                    </div>
+<%
+    const supplierList = Array.isArray(suppliers) ? suppliers : [];
+    const storeList = Array.isArray(stores) ? stores : [];
+    const productList = Array.isArray(products) ? products : [];
+    const purchaseToday = typeof today !== 'undefined' && today
+        ? today
+        : new Date().toISOString().slice(0, 10);
+    const canCreatePurchase = supplierList.length > 0 && storeList.length > 0 && productList.length > 0;
+    const productCatalog = productList.map(product => ({
+        id: Number(product.id),
+        name: String(product.name || ''),
+        sku: product.sku ? String(product.sku) : '',
+        unit: product.unit ? String(product.unit) : '',
+        purchasePrice: Number(product.purchase_price || 0)
+    }));
+    const productCatalogJson = JSON.stringify(productCatalog)
+        .replace(/&/g, '\\u0026')
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029');
+%>
 
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase text-muted fw-bold">Дата закупки *</label>
-                        <input type="date" name="date" class="form-control rounded-2" value="2026-07-01" required>
-                    </div>
+<main class="col content purchase-add-page">
+    <div class="purchase-add-shell">
+        <header class="purchase-add-header" aria-labelledby="purchaseAddTitle">
+            <div>
+                <div class="purchase-add-eyebrow">
+                    <i class="bi bi-cart-plus-fill" aria-hidden="true"></i>
+                    Новое поступление
+                </div>
+                <h1 id="purchaseAddTitle">Новая закупка</h1>
+                <p>Заполните реквизиты накладной и добавьте товары, которые поступают на выбранный склад.</p>
+            </div>
 
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase text-muted fw-bold">Поставщик *</label>
-                        <select name="supplier_id" class="form-select rounded-2" required>
-                            <option value="" disabled selected>Выберите поставщика...</option>
-                            <% suppliers.forEach(sup => { %>
-                                <option value="<%= sup.id %>"><%= sup.name %></option>
-                            <% }) %>
-                        </select>
-                    </div>
+            <a href="/purchases" class="btn purchase-add-back">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                К журналу
+            </a>
+        </header>
 
-                    <div class="mb-3">
-                        <label class="form-label small text-uppercase text-muted fw-bold">Склад поступления *</label>
-                        <select name="store_id" class="form-select rounded-2" required>
-                            <option value="" disabled selected>Выберите склад...</option>
-                            <% stores.forEach(store => { %>
-                                <option value="<%= store.id %>">🏢 <%= store.name %></option>
-                            <% }) %>
-                        </select>
+        <% if (!canCreatePurchase) { %>
+            <section class="purchase-prerequisites" role="alert">
+                <span class="purchase-prerequisites-icon">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                </span>
+                <div>
+                    <h2>Перед созданием закупки нужна настройка</h2>
+                    <p>Добавьте недостающие данные, затем вернитесь к этой форме.</p>
+                    <div class="purchase-prerequisites-links">
+                        <% if (supplierList.length === 0) { %>
+                            <a href="/suppliers">
+                                <i class="bi bi-truck" aria-hidden="true"></i>
+                                Добавить поставщика
+                            </a>
+                        <% } %>
+                        <% if (storeList.length === 0) { %>
+                            <a href="/stores/new">
+                                <i class="bi bi-building-add" aria-hidden="true"></i>
+                                Добавить склад
+                            </a>
+                        <% } %>
+                        <% if (productList.length === 0) { %>
+                            <a href="/products/add">
+                                <i class="bi bi-box-seam" aria-hidden="true"></i>
+                                Добавить товар
+                            </a>
+                        <% } %>
                     </div>
                 </div>
-            </div>
-            <!-- Правая колонка: Таблица состава закупки с фиксированной версткой -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-3 mt-1" style="overflow: visible;">
-                    <div class="card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                        <h5 class="fw-bold text-dark mb-0">Состав накладной</h5>
-                        <button type="button" class="btn btn-outline-primary btn-sm rounded-2" onclick="addRow()">
-                            <i class="bi bi-plus-circle me-1"></i> Добавить товар
-                        </button>
-                    </div>
-                    
-                    <!-- Убрали table-responsive, который обрезал и ломал разметку, добавили overflow: visible -->
-                    <div class="card-body p-0" style="overflow: visible;">
-                        <table class="table align-middle mb-0" id="itemsTable" style="table-layout: fixed; width: 100%;">
-                            <thead class="table-light text-secondary text-uppercase" style="font-size: 0.75rem;">
-                                <tr>
-                                    <!-- Жестко задаем ширину каждой колонки в процентах -->
-                                    <th class="ps-4 py-3" style="width: 45%;">Товар (Поиск по названию)</th>
-                                    <th class="py-3" style="width: 15%;">Кол-во</th>
-                                    <th class="py-3" style="width: 20%;">Цена закупки</th>
-                                    <th class="py-3 text-end" style="width: 15%;">Сумма</th>
-                                    <th class="pe-4 py-3 text-end" style="width: 5%;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Первая строка -->
-                                <tr class="item-row">
-                                    <td class="ps-4 position-relative" style="overflow: visible;">
-                                        <div class="dropdown product-dropdown position-relative">
-                                            <!-- Добавили padding-right, чтобы текст не перекрывал крестик -->
-                                            <input type="text" class="form-control form-control-sm rounded-2 product-search" style="padding-right: 30px;" placeholder="Начните вводить название..." onfocus="showDropdown(this)" oninput="filterProducts(this)" onblur="hideDropdown(this)" autocomplete="off" required>
-                                            
-                                            <!-- КНОПКА-КРЕСТИК -->
-                                            <i class="bi bi-x-circle-fill text-muted position-absolute top-50 translate-middle-y end-0 me-2 clear-input-btn" style="cursor: pointer; display: none; z-index: 5; font-size: 0.9rem;" onclick="clearProductInput(this)"></i>
-                                            
-                                            <input type="hidden" name="items[0][product_id]" class="product-id-hidden" required>
-                                            
-                                            <ul class="dropdown-menu w-100 product-options-list shadow border-light" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto; font-size: 0.85rem; margin-top: 2px;">
-                                                <% products.forEach(prod => { %>
-                                                    <li>
-                                                        <a class="dropdown-item py-2 text-wrap" href="#" data-id="<%= prod.id %>" data-price="<%= prod.purchase_price %>" onclick="selectProduct(this, event)">
-                                                            <%= prod.name %>
-                                                        </a>
-                                                    </li>
-                                                <% }) %>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="items[0][quantity]" class="form-control form-control-sm rounded-2 quantity-input" value="1" min="1" step="any" oninput="calculateTotal()" required>
-                                    </td>
-                                    <td>
-                                        <div class="input-group input-group-sm rounded-2 overflow-hidden">
-                                            <input type="number" name="items[0][price]" class="form-control price-input" value="0.00" min="0" step="0.01" oninput="calculateTotal()" required>
-                                            <span class="input-group-text bg-light text-muted small">₴</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-end fw-bold row-total text-dark">0.00 ₴</td>
-                                    <td class="pe-4 text-end">
-                                        <button type="button" class="btn btn-link text-danger p-1 border-0" onclick="deleteRow(this)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            </section>
+        <% } %>
 
-                    <!-- Итоговый блок -->
-                    <div class="card-footer bg-light border-top-0 p-4 d-flex justify-content-between align-items-center" style="position: relative; z-index: 10;">
-                        <div>
-                            <span class="text-secondary small text-uppercase fw-bold">Итого к оплате:</span>
-                            <h3 class="fw-bold text-dark mb-0 mt-1" id="grandTotal">0.00 ₴</h3>
+        <form action="/purchases/add" method="POST" id="purchaseForm" class="purchase-form">
+            <div class="purchase-add-layout">
+                <aside class="purchase-document-column">
+                    <section class="purchase-form-card" aria-labelledby="purchaseDocumentTitle">
+                        <div class="purchase-card-heading">
+                            <span class="purchase-card-icon">
+                                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                            </span>
+                            <span>
+                                <h2 id="purchaseDocumentTitle">Параметры документа</h2>
+                                <p>Основные реквизиты закупки</p>
+                            </span>
                         </div>
-                        <button type="submit" class="btn btn-success px-4 py-2 rounded-2 fw-medium shadow-sm">
-                            <i class="bi bi-check-lg me-1"></i> Провести закупку
+
+                        <div class="purchase-field">
+                            <label class="form-label" for="purchase_number">
+                                Номер накладной <span aria-hidden="true">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="purchase_number"
+                                name="number"
+                                class="form-control"
+                                maxlength="50"
+                                placeholder="Например, ПР-001"
+                                autocomplete="off"
+                                required
+                            >
+                        </div>
+
+                        <div class="purchase-field">
+                            <label class="form-label" for="purchase_date">
+                                Дата закупки <span aria-hidden="true">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                id="purchase_date"
+                                name="date"
+                                class="form-control"
+                                value="<%= purchaseToday %>"
+                                required
+                            >
+                        </div>
+
+                        <div class="purchase-field">
+                            <label class="form-label" for="purchase_supplier">
+                                Поставщик <span aria-hidden="true">*</span>
+                            </label>
+                            <select
+                                id="purchase_supplier"
+                                name="supplier_id"
+                                class="form-select"
+                                required
+                                <%= supplierList.length === 0 ? 'disabled' : '' %>
+                            >
+                                <option value="" selected>Выберите поставщика</option>
+                                <% supplierList.forEach(supplier => { %>
+                                    <option value="<%= supplier.id %>"><%= supplier.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="purchase-field">
+                            <label class="form-label" for="purchase_store">
+                                Склад поступления <span aria-hidden="true">*</span>
+                            </label>
+                            <select
+                                id="purchase_store"
+                                name="store_id"
+                                class="form-select"
+                                required
+                                <%= storeList.length === 0 ? 'disabled' : '' %>
+                            >
+                                <option value="" selected>Выберите склад</option>
+                                <% storeList.forEach(store => { %>
+                                    <option value="<%= store.id %>"><%= store.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </section>
+
+                    <section class="purchase-flow-note" aria-label="Что произойдёт после сохранения">
+                        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                        <div>
+                            <strong>После проведения</strong>
+                            <span>Количество товаров будет увеличено на выбранном складе.</span>
+                        </div>
+                    </section>
+                </aside>
+
+                <section class="purchase-items-card" aria-labelledby="purchaseCompositionTitle">
+                    <div class="purchase-items-card-header">
+                        <div class="purchase-card-heading">
+                            <span class="purchase-card-icon purchase-card-icon--success">
+                                <i class="bi bi-boxes" aria-hidden="true"></i>
+                            </span>
+                            <span>
+                                <h2 id="purchaseCompositionTitle">Состав накладной</h2>
+                                <p><span id="purchaseItemCount" aria-live="polite">0</span> выбранных позиций</p>
+                            </span>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn purchase-add-item"
+                            id="addPurchaseItem"
+                            <%= productList.length === 0 ? 'disabled' : '' %>
+                        >
+                            <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                            Добавить товар
                         </button>
                     </div>
 
-                </div>
+                    <div class="purchase-items-columns" aria-hidden="true">
+                        <span>№</span>
+                        <span>Товар</span>
+                        <span>Количество</span>
+                        <span>Цена закупки</span>
+                        <span>Сумма</span>
+                        <span></span>
+                    </div>
+
+                    <div class="purchase-items-list" id="purchaseItemsList"></div>
+
+                    <noscript>
+                        <div class="purchase-script-warning">
+                            Для добавления товаров включите JavaScript в браузере.
+                        </div>
+                    </noscript>
+
+                    <footer class="purchase-items-footer">
+                        <div class="purchase-grand-total">
+                            <span>Итого к оплате</span>
+                            <strong id="purchaseGrandTotal" aria-live="polite">0,00 ₴</strong>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn purchase-submit"
+                            id="purchaseSubmit"
+                            <%= canCreatePurchase ? '' : 'disabled' %>
+                        >
+                            <span class="purchase-submit-label">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                                Провести закупку
+                            </span>
+                            <span class="purchase-submit-loading" hidden>
+                                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                Проводим…
+                            </span>
+                        </button>
+                    </footer>
+                </section>
             </div>
+        </form>
+    </div>
+</main>
 
+<template id="purchaseItemTemplate">
+    <article class="purchase-item-row">
+        <div class="purchase-item-number">
+            <span class="purchase-row-number">1</span>
         </div>
-    </form>
-</div>
 
-<script>
-    let rowIndex = 1;
-
-    // Показываем выпадающий список при фокусе
-     
-    function showDropdown(input) {
-        // Закрываем другие списки
-        document.querySelectorAll('.product-options-list').forEach(el => el.classList.remove('show'));
-        
-        const menu = input.closest('.product-dropdown').querySelector('.product-options-list');
-        menu.classList.add('show');
-        
-        // Сбрасываем фильтр (показываем все элементы)
-        menu.querySelectorAll('li').forEach(li => li.style.display = '');
-    }
-
-    // Фильтруем элементы списка "на лету" + управляем видимостью крестика
-    function filterProducts(input) {
-        const filter = input.value.toLowerCase();
-        const dropdown = input.closest('.product-dropdown');
-        const menu = dropdown.querySelector('.product-options-list');
-        const items = menu.querySelectorAll('.dropdown-item');
-        const clearBtn = dropdown.querySelector('.clear-input-btn');
-        
-        // Показываем крестик, если есть текст
-        clearBtn.style.display = input.value.length > 0 ? 'block' : 'none';
-        
-        menu.classList.add('show');
-        
-        items.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            if (text.includes(filter)) {
-                item.closest('li').style.display = '';
-            } else {
-                item.closest('li').style.display = 'none';
-            }
-        });
-    }
-
-    // Обработчик выбора товара
-    function selectProduct(element, event) {
-        event.preventDefault();
-        
-        const id = element.getAttribute('data-id');
-        const price = element.getAttribute('data-price');
-        const name = element.textContent.trim();
-        
-        const row = element.closest('.item-row');
-        const dropdown = element.closest('.product-dropdown');
-        
-        dropdown.querySelector('.product-search').value = name;
-        dropdown.querySelector('.product-id-hidden').value = id;
-        
-        // Показываем крестик при выборе
-        dropdown.querySelector('.clear-input-btn').style.display = 'block';
-        
-        row.querySelector('.price-input').value = Number(price).toFixed(2);
-        
-        dropdown.querySelector('.product-options-list').classList.remove('show');
-        calculateTotal();
-    }
-
-    // НОВАЯ ФУНКЦИЯ: Очистка инпута по клику на крестик
-    function clearProductInput(btnElement) {
-        const dropdown = btnElement.closest('.product-dropdown');
-        const row = btnElement.closest('.item-row');
-        const input = dropdown.querySelector('.product-search');
-        
-        input.value = ''; // Очищаем текст
-        dropdown.querySelector('.product-id-hidden').value = ''; // Сбрасываем ID
-        btnElement.style.display = 'none'; // Прячем сам крестик
-        
-        row.querySelector('.price-input').value = '0.00'; // Сбрасываем цену
-        
-        calculateTotal(); // Пересчитываем математику таблицы
-    }
-
-    // Закрытие списков при клике в любое другое место экрана
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.product-dropdown')) {
-            document.querySelectorAll('.product-options-list').forEach(el => el.classList.remove('show'));
-        }
-    });
-
-    
-    // Обнови функцию добавления строки в секции <script>
-    function addRow() {
-        const tableBody = document.querySelector('#itemsTable tbody');
-        const newRow = document.createElement('tr');
-        newRow.className = 'item-row border-bottom-0';
-        
-        newRow.innerHTML = `
-            <td class="ps-4 position-relative" style="overflow: visible;">
-                <div class="dropdown product-dropdown position-relative">
-                    <input type="text" class="form-control form-control-sm rounded-2 product-search" style="padding-right: 30px;" placeholder="Начните вводить название..." onfocus="showDropdown(this)" oninput="filterProducts(this)" onblur="hideDropdown(this)" autocomplete="off" required>
-                    
-                    <!-- КРЕСТИК ДЛЯ ДИНАМИЧЕСКИХ СТРОК -->
-                    <i class="bi bi-x-circle-fill text-muted position-absolute top-50 translate-middle-y end-0 me-2 clear-input-btn" style="cursor: pointer; display: none; z-index: 5; font-size: 0.9rem;" onclick="clearProductInput(this)"></i>
-                    
-                    <input type="hidden" name="items[\${rowIndex}][product_id]" class="product-id-hidden" required>
-                    <ul class="dropdown-menu w-100 product-options-list shadow border-light" style="position: absolute; z-index: 1050; max-height: 200px; overflow-y: auto; font-size: 0.85rem; margin-top: 2px;">
-                        <% products.forEach(prod => { %>
-                            <li>
-                                <a class="dropdown-item py-2 text-wrap" href="#" data-id="<%= prod.id %>" data-price="<%= prod.purchase_price %>" onclick="selectProduct(this, event)">
-                                    <%= prod.name %>
-                                </a>
-                            </li>
-                        <% }) %>
-                    </ul>
+        <div class="purchase-item-field purchase-item-field--product">
+            <label class="purchase-mobile-label">Товар</label>
+            <div class="purchase-product-picker">
+                <div class="purchase-product-input-wrap">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input
+                        type="text"
+                        class="form-control purchase-product-search"
+                        placeholder="Название или артикул"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded="false"
+                        required
+                    >
+                    <button
+                        type="button"
+                        class="purchase-product-clear"
+                        aria-label="Очистить выбранный товар"
+                        title="Очистить"
+                        hidden
+                    >
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
                 </div>
-            </td>
-            <td>
-                <input type="number" name="items[\${rowIndex}][quantity]" class="form-control form-control-sm rounded-2 quantity-input" value="1" min="1" step="any" oninput="calculateTotal()" required>
-            </td>
-            <td>
-                <div class="input-group input-group-sm">
-                    <input type="number" name="items[\${rowIndex}][price]" class="form-control rounded-2 price-input" value="0.00" min="0" step="0.01" oninput="calculateTotal()" required>
-                    <span class="input-group-text bg-light text-muted small">₴</span>
-                </div>
-            </td>
-            <td class="text-end fw-bold row-total text-dark">0.00 ₴</td>
-            <td class="pe-4 text-end">
-                <button type="button" class="btn btn-link text-danger p-1 border-0" onclick="deleteRow(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        `;
-        tableBody.appendChild(newRow);
-        rowIndex++;
-    }
+                <input type="hidden" class="purchase-product-id">
+                <div class="purchase-product-options" role="listbox" hidden></div>
+                <span class="purchase-item-error" aria-live="polite"></span>
+            </div>
+        </div>
 
-    function deleteRow(button) {
-        const rows = document.querySelectorAll('.item-row');
-        if (rows.length > 1) {
-            button.closest('.item-row').remove();
-            calculateTotal();
-        }
-    }
+        <div class="purchase-item-field purchase-item-field--quantity">
+            <label class="purchase-mobile-label">Количество</label>
+            <input
+                type="number"
+                class="form-control purchase-quantity"
+                value="1"
+                min="1"
+                max="99999999"
+                step="1"
+                inputmode="numeric"
+                required
+            >
+        </div>
 
-    function calculateTotal() {
-        let grandTotal = 0;
-        const rows = document.querySelectorAll('.item-row');
+        <div class="purchase-item-field purchase-item-field--price">
+            <label class="purchase-mobile-label">Цена закупки</label>
+            <div class="input-group">
+                <input
+                    type="number"
+                    class="form-control purchase-price"
+                    value="0.00"
+                    min="0"
+                    max="99999999.99"
+                    step="0.01"
+                    inputmode="decimal"
+                    required
+                >
+                <span class="input-group-text">₴</span>
+            </div>
+        </div>
 
-        rows.forEach(row => {
-            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
-            const price = parseFloat(row.querySelector('.price-input').value) || 0;
-            const rowTotal = qty * price;
-            
-            row.querySelector('.row-total').textContent = rowTotal.toFixed(2) + ' ₴';
-            grandTotal += rowTotal;
-        });
+        <div class="purchase-item-total">
+            <span class="purchase-mobile-label">Сумма</span>
+            <strong class="purchase-row-total">0,00 ₴</strong>
+        </div>
 
-        document.getElementById('grandTotal').textContent = grandTotal.toFixed(2) + ' ₴';
-    }
+        <div class="purchase-item-actions">
+            <button
+                type="button"
+                class="btn purchase-remove-item"
+                aria-label="Удалить позицию"
+                title="Удалить позицию"
+            >
+                <i class="bi bi-trash" aria-hidden="true"></i>
+            </button>
+        </div>
+    </article>
+</template>
 
-    // Скрываем список при потере фокуса с небольшой задержкой
-    function hideDropdown(input) {
-        setTimeout(() => {
-            const menu = input.closest('.product-dropdown').querySelector('.product-options-list');
-            if (menu) {
-                menu.classList.remove('show');
-            }
-        }, 200); // 200 мс достаточно, чтобы клик по товару успел отработать
-    }
-</script>
+<script type="application/json" id="purchaseProductsData"><%- productCatalogJson %></script>
 
 <%- include('blocks/footer') -%>

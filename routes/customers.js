@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const auth = require('../middleware/auth');
+const requireAdmin = require('../middleware/requireAdmin');
 const page = require('../helpers/page');
 
-
+router.use(auth, requireAdmin);
 
 // 1. ПОЛУЧЕНИЕ КЛИЕНТОВ: Выводим только со статусом 'active'
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
-        const companyId = req.session?.user?.company_id || 1; 
+        const companyId = req.session.user.company_id;
 
         // Добавили условие: status = 'active'
         const [customers] = await db.query(
@@ -32,9 +33,9 @@ router.get('/', auth, async (req, res) => {
 });
 
 // 2. АРХИВАЦИЯ: Меняем статус на 'archived' вместо удаления строки
-router.get('/archive/:id', auth, async (req, res) => {
+router.post('/archive/:id', async (req, res) => {
     try {
-        const companyId = req.session?.user?.company_id || 1;
+        const companyId = req.session.user.company_id;
         const customerId = req.params.id;
 
         // Защита розничного покупателя
@@ -44,7 +45,7 @@ router.get('/archive/:id', auth, async (req, res) => {
 
         // Вместо DELETE делаем UPDATE статуса
         await db.query(
-            "UPDATE customers SET status = 'archived', updated_at = NOW() WHERE id = ? AND company_id = ?",
+            "UPDATE customers SET status = 'archived', updated_at = NOW() WHERE id = ? AND company_id = ? AND status = 'active'",
             [customerId, companyId]
         );
 
@@ -56,10 +57,10 @@ router.get('/archive/:id', auth, async (req, res) => {
 });
 
 // 2. Роут обработки формы создания клиента
-router.post('/add', auth, async (req, res) => {
+router.post('/add', async (req, res) => {
     try {
         const { name, phone, email, discount_percentage, comment } = req.body;
-        const companyId = req.session?.user?.company_id || 1; // Заглушка 1, если сессия еще не настроена
+        const companyId = req.session.user.company_id;
 
         if (!name || name.trim() === '') {
             return res.status(400).send('Имя клиента обязательно для заполнения');
@@ -86,10 +87,10 @@ router.post('/add', auth, async (req, res) => {
     }
 });
 // 2. Обработка формы редактирования (POST-запрос)
-router.post('/edit/:id', auth, async (req, res) => {
+router.post('/edit/:id', async (req, res) => {
     try {
         const { name, phone, email, discount_percentage, comment } = req.body;
-        const companyId = req.session?.user?.company_id || 1;
+        const companyId = req.session.user.company_id;
         const customerId = req.params.id;
 
         if (!name || name.trim() === '') {
