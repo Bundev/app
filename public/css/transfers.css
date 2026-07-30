@@ -1,0 +1,141 @@
+.transfers-page {
+    min-width: 0;
+    padding-bottom: 2rem;
+}
+
+.transfer-new-button {
+    white-space: nowrap;
+}
+
+.transfer-filter-card,
+.transfer-history-card {
+    overflow: hidden;
+    border-radius: .85rem;
+}
+
+.transfer-filter-card .input-group-text,
+.transfer-filter-card .form-control {
+    border-color: #dbe3ee;
+}
+
+.transfer-table-wrap {
+    min-height: 6rem;
+}
+
+.transfer-table {
+    min-width: 1120px;
+}
+
+.transfer-table thead th {
+    padding-top: .85rem;
+    padding-bottom: .85rem;
+    color: #64748b;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .055em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e5eaf0;
+}
+
+.transfer-table tbody td {
+    padding-top: .95rem;
+    padding-bottom: .95rem;
+    color: #475569;
+    border-color: #edf1f5;
+}
+
+.transfer-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.transfer-number {
+    color: #1d4ed8;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.transfer-number:hover {
+    color: #1e40af;
+    text-decoration: underline;
+}
+
+.transfer-date {
+    color: #64748b;
+    font-size: .875rem;
+    white-space: nowrap;
+}
+
+.transfer-store-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 15rem;
+    padding: .4rem .65rem;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: .55rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.transfer-store-badge--source {
+    color: #9a3412;
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.transfer-store-badge--destination {
+    color: #166534;
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.transfer-direction-column,
+.transfer-direction-cell {
+    width: 2.5rem;
+}
+
+.transfer-direction-cell {
+    color: #94a3b8 !important;
+}
+
+.transfer-empty,
+.transfer-filter-empty {
+    padding: 4rem 1.5rem;
+}
+
+.transfer-empty__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+    color: #2563eb;
+    font-size: 1.75rem;
+    background: #dbeafe;
+    border-radius: 50%;
+}
+
+.transfer-filter-empty {
+    color: #64748b;
+}
+
+.transfer-filter-empty i {
+    color: #94a3b8;
+    font-size: 2rem;
+}
+
+@media (max-width: 767.98px) {
+    .transfer-new-button {
+        width: 100%;
+    }
+
+    .transfer-filter-card .col-md-auto {
+        justify-content: space-between;
+    }
+}
+

@@ -22,32 +22,28 @@
                     За вчера
                 </option>
 
-                <option value="week" <%= period === 'week' ? 'selected' : '' %>>
-                    За неделю
+                <option value="current_week" <%= period === 'current_week' ? 'selected' : '' %>>
+                    За текущую неделю
+                </option>
+
+                <option value="previous_week" <%= period === 'previous_week' ? 'selected' : '' %>>
+                    За прошлую неделю
                 </option>
 
                 <option value="current_month" <%= period === 'current_month' ? 'selected' : '' %>>
                     За текущий месяц
                 </option>
 
-                <option value="month" <%= period === 'month' ? 'selected' : '' %>>
-                    За последние 30 дней
-                </option>
-
-                <option value="2months" <%= period === '2months' ? 'selected' : '' %>>
-                    За последние 2 месяца
-                </option>
-
-                <option value="3months" <%= period === '3months' ? 'selected' : '' %>>
-                    За последние 3 месяца
+                <option value="previous_month" <%= period === 'previous_month' ? 'selected' : '' %>>
+                    За прошлый месяц
                 </option>
 
                 <option value="current_year" <%= period === 'current_year' ? 'selected' : '' %>>
                     За текущий год
                 </option>
 
-                <option value="year" <%= period === 'year' ? 'selected' : '' %>>
-                    За последние 12 месяцев
+                <option value="previous_year" <%= period === 'previous_year' ? 'selected' : '' %>>
+                    За прошлый год
                 </option>
 
                 <option value="all" <%= period === 'all' ? 'selected' : '' %>>
@@ -65,8 +61,8 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3 mb-md-0">
+    <div class="row g-3 mb-4 finance-summary">
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm bg-primary text-white h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center">
                     <h6 class="text-uppercase small text-white-50 fw-bold mb-1">Всего в кассе</h6>
@@ -74,7 +70,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3 mb-md-0">
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm bg-white h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-success border-4 rounded-start">
                     <h6 class="text-uppercase small text-muted fw-bold mb-1 text-success">Наличные (💵)</h6>
@@ -82,15 +78,28 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3 mb-md-0">
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm bg-white h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-info border-4 rounded-start">
-                    <h6 class="text-uppercase small text-muted fw-bold mb-1 text-info">БЕЗНАЛИЧНЫЕ / ПЕРЕВОД (🏦)</h6>
-                    <h2 class="mb-0 fw-bold text-dark"><%= Number(transferBalance).toFixed(2) %> ₴</h2>
+                    <h6 class="text-uppercase small text-muted fw-bold mb-1 text-info">Безналичные / переводы (🏦)</h6>
+                    <h2 class="mb-0 fw-bold text-dark"><%= (Number(cardBalance || 0) + Number(transferBalance || 0)).toFixed(2) %> ₴</h2>
+                    <small class="text-muted">
+                        Карта: <%= Number(cardBalance || 0).toFixed(2) %> ₴ ·
+                        Перевод: <%= Number(transferBalance || 0).toFixed(2) %> ₴
+                    </small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3 mb-md-0">
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card border-0 shadow-sm bg-white h-100">
+                <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-secondary border-4 rounded-start">
+                    <h6 class="text-uppercase small text-muted fw-bold mb-1">Себестоимость продаж</h6>
+                    <h2 class="mb-0 fw-bold text-dark"><%= Number(costTotal || 0).toFixed(2) %> ₴</h2>
+                    <small class="text-muted">С учетом возвратов</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl">
             <div class="card border-0 shadow-sm bg-white h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-warning border-4 rounded-start">
                     <h6 class="text-uppercase small text-muted fw-bold mb-1 text-warning">Маржа продаж</h6>
@@ -102,10 +111,18 @@
     </div>
 
     <% if (currentUser.role === 'admin' || currentUser.role === 'Администратор') { %>
+        <% const staffTotals = employeeTotals || {}; %>
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white fw-bold py-3 text-muted text-uppercase small d-flex justify-content-between align-items-center border-bottom-0">
+            <div class="card-header bg-white fw-bold py-3 text-muted text-uppercase small d-flex flex-wrap gap-2 justify-content-between align-items-center border-bottom-0">
                 <span><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Кассы сотрудников (Контроль персонала)</span>
-                <span class="badge bg-primary px-2.5 py-1.5 fs-7">Админ-панель</span>
+                <div class="d-flex flex-wrap gap-2 finance-employee-totals">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                        Наличные: <%= Number(staffTotals.cash || 0).toFixed(2) %> ₴
+                    </span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                        Всего по сотрудникам: <%= Number(staffTotals.balance || 0).toFixed(2) %> ₴
+                    </span>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -117,43 +134,68 @@
                                 <th>Наличные в руках</th>
                                 <th>Безналичные (Карта)</th>
                                 <th>Переводы (Счет)</th>
+                                <th>Себестоимость</th>
                                 <th>Маржа</th>
                                 <th class="pe-4 text-end">Всего принял</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% employeeCashes.forEach(emp => { %>
-                                <% /* ИСПРАВЛЕНО: Теперь плюсуем еще и переводы (employee_transfer) */ %>
-                                <% const empTotal = Number(emp.employee_cash || 0) + Number(emp.employee_card || 0) + Number(emp.employee_transfer || 0); %>
+                            <% if (!employeeCashes.length) { %>
                                 <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">
-                                            <i class="bi bi-person-circle me-2 text-secondary"></i><%= emp.user_name %>
-                                            <% if (emp.user_id === currentUser.id) { %>
-                                                <span class="text-muted small fw-normal">(Вы)</span>
-                                            <% } %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-secondary border"><%= emp.user_role %></span>
-                                    </td>
-                                    <td class="fw-medium text-success">
-                                        <%= Number(emp.employee_cash || 0).toFixed(2) %> ₴
-                                    </td>
-                                    <td class="fw-medium text-info">
-                                        <%= Number(emp.employee_card || 0).toFixed(2) %> ₴
-                                    </td>
-                                    <td class="fw-medium text-primary"> <%= Number(emp.employee_transfer || 0).toFixed(2) %> ₴
-                                    </td>
-                                    <td class="fw-bold <%= Number(emp.employee_margin || 0) >= 0 ? 'text-success' : 'text-danger' %>">
-                                        <%= Number(emp.employee_margin || 0).toFixed(2) %> ₴
-                                    </td>
-                                    <td class="pe-4 text-end fw-bold text-dark">
-                                        <%= empTotal.toFixed(2) %> ₴
-                                    </td>
+                                    <td colspan="8" class="text-center py-4 text-muted">Сотрудники не найдены</td>
                                 </tr>
-                            <% }) %>
+                            <% } else { %>
+                                <% employeeCashes.forEach(emp => { %>
+                                    <% const empTotal = Number(emp.employee_cash || 0) + Number(emp.employee_card || 0) + Number(emp.employee_transfer || 0); %>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">
+                                                <i class="bi bi-person-circle me-2 text-secondary"></i><%= emp.user_name %>
+                                                <% if (emp.user_id === currentUser.id) { %>
+                                                    <span class="text-muted small fw-normal">(Вы)</span>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-secondary border"><%= emp.user_role %></span>
+                                        </td>
+                                        <td class="fw-medium text-success">
+                                            <%= Number(emp.employee_cash || 0).toFixed(2) %> ₴
+                                        </td>
+                                        <td class="fw-medium text-info">
+                                            <%= Number(emp.employee_card || 0).toFixed(2) %> ₴
+                                        </td>
+                                        <td class="fw-medium text-primary">
+                                            <%= Number(emp.employee_transfer || 0).toFixed(2) %> ₴
+                                        </td>
+                                        <td class="fw-medium text-secondary">
+                                            <%= Number(emp.employee_cost || 0).toFixed(2) %> ₴
+                                        </td>
+                                        <td class="fw-bold <%= Number(emp.employee_margin || 0) >= 0 ? 'text-success' : 'text-danger' %>">
+                                            <%= Number(emp.employee_margin || 0).toFixed(2) %> ₴
+                                        </td>
+                                        <td class="pe-4 text-end fw-bold text-dark">
+                                            <%= empTotal.toFixed(2) %> ₴
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } %>
                         </tbody>
+                        <% if (employeeCashes.length) { %>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td class="ps-4" colspan="2">Итого</td>
+                                    <td class="text-success"><%= Number(staffTotals.cash || 0).toFixed(2) %> ₴</td>
+                                    <td class="text-info"><%= Number(staffTotals.card || 0).toFixed(2) %> ₴</td>
+                                    <td class="text-primary"><%= Number(staffTotals.transfer || 0).toFixed(2) %> ₴</td>
+                                    <td class="text-secondary"><%= Number(staffTotals.cost || 0).toFixed(2) %> ₴</td>
+                                    <td class="<%= Number(staffTotals.margin || 0) >= 0 ? 'text-success' : 'text-danger' %>">
+                                        <%= Number(staffTotals.margin || 0).toFixed(2) %> ₴
+                                    </td>
+                                    <td class="pe-4 text-end"><%= Number(staffTotals.balance || 0).toFixed(2) %> ₴</td>
+                                </tr>
+                            </tfoot>
+                        <% } %>
                     </table>
                 </div>
             </div>

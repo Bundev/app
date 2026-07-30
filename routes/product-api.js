@@ -22,9 +22,17 @@ router.get('/search', auth, async (req, res) => {
                 p.purchase_price,
                 p.sale_price,
                 p.image,
-                SUM(COALESCE(ps.quantity, 0)) AS quantity,
+                SUM(
+                    CASE
+                        WHEN s.id IS NOT NULL THEN COALESCE(ps.quantity, 0)
+                        ELSE 0
+                    END
+                ) AS quantity,
                 GROUP_CONCAT(
-                    CONCAT(s.name, ' (', COALESCE(ps.location, '-'), ') : ', COALESCE(ps.quantity, 0))
+                    CASE
+                        WHEN s.id IS NOT NULL THEN
+                            CONCAT(s.name, ' (', COALESCE(ps.location, '-'), ') : ', COALESCE(ps.quantity, 0))
+                    END
                     ORDER BY s.name
                     SEPARATOR ' | '
                 ) AS stock_info
@@ -37,7 +45,10 @@ router.get('/search', auth, async (req, res) => {
             // Для админа джоиним все склады этой компании
             queryStr += `
                 LEFT JOIN product_stores ps ON ps.product_id = p.id
-                LEFT JOIN stores s ON s.id = ps.store_id AND s.company_id = ?
+                LEFT JOIN stores s
+                    ON s.id = ps.store_id
+                   AND s.company_id = ?
+                   AND s.status = 'active'
                 WHERE p.company_id = ? AND p.archived = 0
             `;
             // Важно: s.company_id в условии JOIN, чтобы LEFT JOIN не ломался,
@@ -48,10 +59,14 @@ router.get('/search', auth, async (req, res) => {
             queryStr += `
                 INNER JOIN product_stores ps ON ps.product_id = p.id
                 INNER JOIN user_stores us ON us.store_id = ps.store_id AND us.user_id = ?
-                INNER JOIN stores s ON s.id = ps.store_id
-                WHERE p.archived = 0
+                INNER JOIN stores s
+                    ON s.id = ps.store_id
+                   AND s.company_id = ?
+                   AND s.status = 'active'
+                WHERE p.company_id = ?
+                  AND p.archived = 0
             `;
-            queryParams.push(userId);
+            queryParams.push(userId, companyId, companyId);
         }
 
         // Общая часть условий поиска и сортировки

@@ -2,6 +2,12 @@
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
 <div class="col content">
+    <% if (userSuccess) { %>
+    <div class="alert alert-success" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><%= userSuccess %>
+    </div>
+    <% } %>
+
     <div class="card shadow-sm border-0">
 
         <div class="card-body">
@@ -11,7 +17,7 @@
                 <div class="col-md-3 text-center">
 
                     <img
-                        src="<%= user_st.avatar %>"
+                        src="<%= user_st.avatar || '/img/default-avatar.png' %>"
                         class="rounded-circle border"
                         width="140">
 
@@ -48,7 +54,7 @@
                             <th>Email</th>
 
                             <td>
-                                <%= user_st.email %>
+                                <%= user_st.email || '-' %>
                             </td>
 
                         </tr>
@@ -119,7 +125,7 @@
     <div class="mt-3">
 
         <a
-            href="/users/edit/<%= user_st.id %>"
+            href="/user/<%= user_st.id %>/edit"
             class="btn btn-primary">
 
             ✏️ Редактировать
@@ -127,7 +133,7 @@
         </a>
 
         <a
-            href="/users/stores/<%= user_st.id %>"
+            href="/user/stores/<%= user_st.id %>"
             class="btn btn-info">
 
             🏪 Магазины
@@ -135,14 +141,14 @@
         </a>
         <% if(user_st.status === 'active'){%>
         <a
-            href="/users/block/<%= user_st.id %>"
+            href="/user/block/<%= user_st.id %>"
             class="btn btn-warning" onclick="return confirm('Заблокировать сотрудника?')">
             <i class="bi bi-lock"></i>
             Заблокировать
         </a>
         <% }else if(user_st.status === 'blocked'){%>
         <a
-            href="/users/unblock/<%= user_st.id %>"
+            href="/user/unblock/<%= user_st.id %>"
             class="btn btn-success" onclick="return confirm('Разблокировать сотрудника?')">
 
             <i class="bi bi-unlock"></i>
@@ -152,7 +158,7 @@
         </a>
         <% } %>
         <a
-            href="/users/delete/<%= user_st.id %>"
+            href="/user/delete/<%= user_st.id %>"
             class="btn btn-danger"
             onclick="return confirm('Удалить сотрудника безвозвратно?')">
 

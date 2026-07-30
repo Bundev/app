@@ -16,6 +16,28 @@
     min-width: 720px;
 }
 
+.finance-summary .card-body {
+    min-height: 132px;
+}
+
+.finance-summary h2 {
+    font-size: clamp(1.35rem, 2vw, 2rem);
+}
+
+.finance-employee-table {
+    min-width: 1080px;
+}
+
+.finance-employee-table th,
+.finance-employee-table td {
+    white-space: nowrap;
+}
+
+.finance-employee-totals .badge {
+    font-size: 0.75rem;
+    text-transform: none;
+}
+
 @media (max-width: 768px) {
     .finance-cash-header {
         align-items: stretch !important;

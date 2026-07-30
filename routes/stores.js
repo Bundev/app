@@ -5,6 +5,116 @@ const auth = require('../middleware/auth');
 const requireAdmin = require('../middleware/requireAdmin');
 const page = require('../helpers/page');
 
+async function setStoreStatus(req, res, status) {
+    const storeId = Number(req.params.id);
+    const isActive = status === 'active';
+    const actionLabel = isActive ? 'активировать' : 'деактивировать';
+
+    if (!Number.isSafeInteger(storeId) || storeId <= 0) {
+        req.session.storeError = 'Некорректный идентификатор магазина.';
+        return res.redirect('/settings?tab=stores');
+    }
+
+    let connection = null;
+    let transactionStarted = false;
+
+    try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+        transactionStarted = true;
+
+        const [companyStores] = await connection.execute(
+            `
+            SELECT id, status
+            FROM stores
+            WHERE company_id = ?
+            ORDER BY id
+            FOR UPDATE
+            `,
+            [req.session.user.company_id]
+        );
+        const store = companyStores.find(
+            item => Number(item.id) === storeId
+        );
+
+        if (!store) {
+            req.session.storeError = 'Магазин не найден.';
+            await connection.rollback();
+            transactionStarted = false;
+            return res.redirect('/settings?tab=stores');
+        }
+
+        if (store.status === status) {
+            req.session.storeSuccess = isActive
+                ? 'Магазин уже активен.'
+                : 'Магазин уже деактивирован.';
+            await connection.commit();
+            transactionStarted = false;
+            return res.redirect('/settings?tab=stores');
+        }
+
+        if (!isActive) {
+            const activeStoreCount = companyStores.filter(
+                item => item.status === 'active'
+            ).length;
+
+            if (activeStoreCount <= 1) {
+                req.session.storeError =
+                    'Нельзя деактивировать последний активный магазин.';
+                await connection.rollback();
+                transactionStarted = false;
+                return res.redirect('/settings?tab=stores');
+            }
+        }
+
+        const [result] = await connection.execute(
+            `
+            UPDATE stores
+            SET status = ?
+            WHERE id = ?
+              AND company_id = ?
+              AND status <> ?
+            LIMIT 1
+            `,
+            [
+                status,
+                storeId,
+                req.session.user.company_id,
+                status
+            ]
+        );
+
+        if (result.affectedRows !== 1) {
+            throw new Error('Store status was not updated');
+        }
+
+        await connection.commit();
+        transactionStarted = false;
+        req.session.storeSuccess = isActive
+            ? 'Магазин активирован.'
+            : 'Магазин деактивирован. Данные и история сохранены.';
+    } catch (error) {
+        if (transactionStarted) {
+            try {
+                await connection.rollback();
+            } catch (rollbackError) {
+                console.error(
+                    'Не удалось откатить смену статуса магазина:',
+                    rollbackError
+                );
+            }
+        }
+
+        console.error(error);
+        req.session.storeError =
+            `Не удалось ${actionLabel} магазин.`;
+    } finally {
+        connection?.release();
+    }
+
+    return res.redirect('/settings?tab=stores');
+}
+
 router.get('/new', auth, (req, res) => {
 
     if (!req.session.user || req.session.user.role !== 'admin') {
@@ -180,31 +290,17 @@ router.post('/:id/edit', auth, requireAdmin, async (req, res) => {
 
 });
 
-router.post('/:id/archive', auth, requireAdmin, async (req, res) => {
+router.post('/:id/deactivate', auth, requireAdmin, (req, res) => {
+    return setStoreStatus(req, res, 'inactive');
+});
 
-    try {
-        const [result] = await db.execute(
-            `
-            UPDATE stores
-            SET status = 'inactive'
-            WHERE id = ? AND company_id = ? AND status = 'active'
-            LIMIT 1
-            `,
-            [req.params.id, req.session.user.company_id]
-        );
+// Обратная совместимость со старой кнопкой архивации.
+router.post('/:id/archive', auth, requireAdmin, (req, res) => {
+    return setStoreStatus(req, res, 'inactive');
+});
 
-        req.session[result.affectedRows ? 'storeSuccess' : 'storeError'] = result.affectedRows
-            ? 'Магазин перенесён в архив.'
-            : 'Не удалось архивировать магазин.';
-
-        return res.redirect('/settings?tab=stores');
-
-    } catch (error) {
-        console.error(error);
-        req.session.storeError = 'Не удалось архивировать магазин.';
-        return res.redirect('/settings?tab=stores');
-    }
-
+router.post('/:id/activate', auth, requireAdmin, (req, res) => {
+    return setStoreStatus(req, res, 'active');
 });
 
 module.exports = router;

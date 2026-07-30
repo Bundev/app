@@ -1,26 +1,27 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const db = require('../config/db');
 const uploadUser = require('../config/uploadUser');
 const auth = require('../middleware/auth');
 const page = require('../helpers/page');
+const userEditController = require('../controllers/user-edit.controller');
 
 const requireAdmin = require('../middleware/requireAdmin');
 
 
 
-router.get('/new', auth, async (req, res) => {
+router.get('/new', auth, requireAdmin, async (req, res) => {
     const [stores] =
         await db.execute(
             `
-            SELECT s.*
-            FROM stores s
-            INNER JOIN user_stores us
-                ON us.store_id = s.id
-            WHERE us.user_id = ?
-            ORDER BY s.name
+            SELECT id, name
+            FROM stores
+            WHERE company_id = ?
+              AND status = 'active'
+            ORDER BY name
             `,
-            [req.session.user.id]
+            [req.session.user.company_id]
         );
     
     res.render('user_new', {
@@ -36,7 +37,7 @@ router.get('/new', auth, async (req, res) => {
 
 });
 
-router.post('/new', auth, uploadUser.single('avatar'),
+router.post('/new', auth, requireAdmin, uploadUser.single('avatar'),
     async (req, res) => {
 
         try {
@@ -134,7 +135,7 @@ router.post('/new', auth, uploadUser.single('avatar'),
             }
 
             res.redirect(
-                `/users/${userId}`
+                `/user/${userId}`
             );
 
             
@@ -152,7 +153,7 @@ router.post('/new', auth, uploadUser.single('avatar'),
     }
 );
 
-router.get('/stores/:id', auth, async (req, res) => {
+router.get('/stores/:id', auth, requireAdmin, async (req, res) => {
 
     const userId =
         req.params.id;
@@ -163,9 +164,17 @@ router.get('/stores/:id', auth, async (req, res) => {
             SELECT *
             FROM user
             WHERE id = ?
+              AND company_id = ?
             `,
-            [userId]
+            [
+                userId,
+                req.session.user.company_id
+            ]
         );
+
+    if (!user.length) {
+        return res.status(404).send('Сотрудник не найден.');
+    }
 
     const [stores] =
         await db.execute(
@@ -176,7 +185,7 @@ router.get('/stores/:id', auth, async (req, res) => {
             ORDER BY name
             `,
             [
-                user[0].company_id
+                req.session.user.company_id
             ]
         );
 
@@ -213,7 +222,7 @@ router.get('/stores/:id', auth, async (req, res) => {
 
 });
 
-router.get('/block/:id',requireAdmin, auth, async (req, res) => {
+router.get('/block/:id', auth, requireAdmin, async (req, res) => {
 
         const userId = Number(req.params.id);
         // нельзя заблокировать самого себя
@@ -231,11 +240,11 @@ router.get('/block/:id',requireAdmin, auth, async (req, res) => {
                 SELECT id
                 FROM user
                 WHERE id = ?
-                AND id_admin = ?
+                AND company_id = ?
                 `,
                 [
                     userId,
-                    req.session.user.id
+                    req.session.user.company_id
                 ]
             );
 
@@ -252,12 +261,16 @@ router.get('/block/:id',requireAdmin, auth, async (req, res) => {
             UPDATE user
             SET status = 'blocked'
             WHERE id = ?
+              AND company_id = ?
             `,
-            [userId]
+            [
+                userId,
+                req.session.user.company_id
+            ]
         );
 
         res.redirect(
-            `/users/${userId}`
+            `/user/${userId}`
         );
 
     }
@@ -274,11 +287,11 @@ router.get('/unblock/:id', auth, requireAdmin, async (req, res) => {
             SELECT id
             FROM user
             WHERE id = ?
-            AND id_admin = ?
+            AND company_id = ?
             `,
             [
                 userId,
-                req.session.user.id
+                req.session.user.company_id
             ]
         );
 
@@ -295,17 +308,21 @@ router.get('/unblock/:id', auth, requireAdmin, async (req, res) => {
         UPDATE user
         SET status = 'active'
         WHERE id = ?
+          AND company_id = ?
         `,
-        [userId]
+        [
+            userId,
+            req.session.user.company_id
+        ]
     );
 
     res.redirect(
-        `/users/${userId}`
+        `/user/${userId}`
     );
 
 });
 
-router.get('/delete/:id', auth,requireAdmin, async (req, res) => {
+router.get('/delete/:id', auth, requireAdmin, async (req, res) => {
 
     const userId =
         req.params.id;
@@ -316,6 +333,24 @@ router.get('/delete/:id', auth,requireAdmin, async (req, res) => {
             'Нельзя удалить самого себя'
         );
 
+    }
+
+    const [[employee]] = await db.execute(
+        `
+        SELECT id
+        FROM user
+        WHERE id = ?
+          AND company_id = ?
+        LIMIT 1
+        `,
+        [
+            userId,
+            req.session.user.company_id
+        ]
+    );
+
+    if (!employee) {
+        return res.status(404).send('Сотрудник не найден.');
     }
 
     await db.execute(
@@ -332,15 +367,19 @@ router.get('/delete/:id', auth,requireAdmin, async (req, res) => {
         DELETE
         FROM user
         WHERE id = ?
+          AND company_id = ?
         `,
-        [userId]
+        [
+            userId,
+            req.session.user.company_id
+        ]
     );
 
     res.redirect('/settings?tab=users');
 
 });
 
-router.post('/stores/:id', auth, async (req, res) => {
+router.post('/stores/:id', auth, requireAdmin, async (req, res) => {
 
     const userId = req.params.id;
 
@@ -351,6 +390,54 @@ router.post('/stores/:id', auth, async (req, res) => {
                 ? [req.body.stores]
                 : [];
 
+    const [[employee]] = await db.execute(
+        `
+        SELECT id
+        FROM user
+        WHERE id = ?
+          AND company_id = ?
+        LIMIT 1
+        `,
+        [
+            userId,
+            req.session.user.company_id
+        ]
+    );
+
+    if (!employee) {
+        return res.status(404).send('Сотрудник не найден.');
+    }
+
+    const normalizedStoreIds = [...new Set(
+        stores
+            .map(storeId => Number(storeId))
+            .filter(storeId => Number.isSafeInteger(storeId) && storeId > 0)
+    )];
+
+    if (normalizedStoreIds.length) {
+        const placeholders = normalizedStoreIds
+            .map(() => '?')
+            .join(', ');
+        const [companyStores] = await db.execute(
+            `
+            SELECT id
+            FROM stores
+            WHERE company_id = ?
+              AND id IN (${placeholders})
+            `,
+            [
+                req.session.user.company_id,
+                ...normalizedStoreIds
+            ]
+        );
+
+        if (companyStores.length !== normalizedStoreIds.length) {
+            return res.status(400).send(
+                'Выбран недоступный магазин.'
+            );
+        }
+    }
+
     await db.execute(
         `
         DELETE
@@ -360,7 +447,7 @@ router.post('/stores/:id', auth, async (req, res) => {
         [userId]
     );
 
-    for (const storeId of stores) {
+    for (const storeId of normalizedStoreIds) {
 
         await db.execute(
             `
@@ -379,11 +466,21 @@ router.post('/stores/:id', auth, async (req, res) => {
 
     }
 
-    res.redirect(`/users/${userId}`);
+    res.redirect(`/user/${userId}`);
 
 });
 
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id/edit', auth, requireAdmin, userEditController.show);
+
+router.post(
+    '/:id/edit',
+    auth,
+    requireAdmin,
+    userEditController.uploadAvatar,
+    userEditController.update
+);
+
+router.get('/:id', auth, requireAdmin, async (req, res) => {
 
     const [users] =
         await db.execute(
@@ -391,13 +488,17 @@ router.get('/:id', auth, async (req, res) => {
             SELECT *
             FROM user
             WHERE id = ?
+              AND company_id = ?
             `,
-            [req.params.id]
+            [
+                req.params.id,
+                req.session.user.company_id
+            ]
         );
 
     if (!users.length) {
 
-        return res.redirect('/users');
+        return res.redirect('/settings?tab=users');
 
     }
 
@@ -412,15 +513,23 @@ router.get('/:id', auth, async (req, res) => {
             INNER JOIN user_stores us
                 ON us.store_id = s.id
             WHERE us.user_id = ?
+              AND s.company_id = ?
             `,
-            [user_st.id]
+            [
+                user_st.id,
+                req.session.user.company_id
+            ]
         );
+
+    const userSuccess = req.session.userSuccess || null;
+    delete req.session.userSuccess;
 
     res.render('user', {
         titleKey: 'title.user',
         activeMenu: 'settings',
         user_st,
         stores,
+        userSuccess,
         ...page(req, 'user', [
             { title: req.__('title.settings'), url: '/settings' },
             { title: req.__('title.user') }

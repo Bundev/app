@@ -1,0 +1,264 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+
+<%
+    const transferData = transfer || {};
+    const transferItems = Array.isArray(items) ? items : [];
+    const dateLocale = lang === 'uk' ? 'uk-UA' : 'ru-RU';
+    const transferNumber = transferData.number || transferData.transfer_number || transferData.id;
+    const fromStoreName = transferData.from_store_name || transferData.source_store_name || __('transfers.storeFallback');
+    const toStoreName = transferData.to_store_name || transferData.destination_store_name || __('transfers.storeFallback');
+    const createdBy =
+        transferData.user_name ||
+        transferData.created_by_name ||
+        transferData.creator_name ||
+        __('transfers.unknownUser');
+    const positionCount = Number(transferData.position_count || transferData.positions_count || transferItems.length || 0);
+    const quantityTotal = Number(
+        transferData.total_quantity ||
+        transferItems.reduce((total, item) => total + Number(item.quantity || 0), 0)
+    );
+
+    const formatTransferDate = value => {
+        if (!value) return '—';
+
+        const parsedDate = new Date(value);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return String(value);
+        }
+
+        return parsedDate.toLocaleString(dateLocale, {
+            timeZone: 'Europe/Kyiv',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatQuantity = value => {
+        const quantity = Number(value);
+        return Number.isFinite(quantity) ? quantity.toLocaleString(dateLocale) : '—';
+    };
+%>
+
+<div class="col content transfer-view-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4 transfer-view-header">
+        <div>
+            <div class="small text-uppercase text-muted fw-bold mb-1"><%= __('title.transfers') %></div>
+            <h1 class="h3 mb-1 fw-bold text-dark">
+                <i class="bi bi-arrow-left-right me-2 text-primary" aria-hidden="true"></i>
+                № <%= transferNumber %>
+            </h1>
+            <p class="text-muted mb-0"><%= __('transfers.detailsDescription') %></p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 transfer-view-actions">
+            <a href="/transfers" class="btn btn-light border">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i><%= __('transfers.back') %>
+            </a>
+            <button type="button" class="btn btn-primary" data-print-transfer>
+                <i class="bi bi-printer me-1" aria-hidden="true"></i><%= __('transfers.print') %>
+            </button>
+        </div>
+    </div>
+
+    <% if (success) { %>
+        <div class="alert alert-success d-flex align-items-center shadow-sm" role="status">
+            <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
+            <div><%= success %></div>
+        </div>
+    <% } %>
+
+    <section class="card border-0 shadow-sm mb-4 transfer-direction-card">
+        <div class="card-body p-4">
+            <div class="transfer-direction">
+                <div class="transfer-direction__store transfer-direction__store--source">
+                    <div class="transfer-direction__label"><%= __('transfers.sourceStore') %></div>
+                    <div class="transfer-direction__name">
+                        <i class="bi bi-shop me-2" aria-hidden="true"></i><%= fromStoreName %>
+                    </div>
+                </div>
+
+                <div class="transfer-direction__arrow" aria-hidden="true">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+                <div class="transfer-direction__store transfer-direction__store--destination">
+                    <div class="transfer-direction__label"><%= __('transfers.destinationStore') %></div>
+                    <div class="transfer-direction__name">
+                        <i class="bi bi-shop me-2" aria-hidden="true"></i><%= toStoreName %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-3 mb-4 transfer-meta-grid">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 transfer-meta-card">
+                <div class="card-body">
+                    <div class="transfer-meta-card__icon"><i class="bi bi-calendar3" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="small text-muted"><%= __('transfers.createdAt') %></div>
+                        <div class="fw-semibold"><%= formatTransferDate(transferData.created_at) %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 transfer-meta-card">
+                <div class="card-body">
+                    <div class="transfer-meta-card__icon"><i class="bi bi-person" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="small text-muted"><%= __('transfers.createdBy') %></div>
+                        <div class="fw-semibold"><%= createdBy %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 transfer-meta-card">
+                <div class="card-body">
+                    <div class="transfer-meta-card__icon"><i class="bi bi-list-check" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="small text-muted"><%= __('transfers.positions') %></div>
+                        <div class="fs-5 fw-bold"><%= positionCount %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 transfer-meta-card">
+                <div class="card-body">
+                    <div class="transfer-meta-card__icon"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="small text-muted"><%= __('transfers.totalQuantity') %></div>
+                        <div class="fs-5 fw-bold"><%= formatQuantity(quantityTotal) %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% if (transferData.comment) { %>
+        <section class="card border-0 shadow-sm mb-4 transfer-comment-card">
+            <div class="card-body">
+                <h2 class="h6 text-muted mb-2">
+                    <i class="bi bi-chat-left-text me-1" aria-hidden="true"></i><%= __('transfers.comment') %>
+                </h2>
+                <p class="mb-0 transfer-comment"><%= transferData.comment %></p>
+            </div>
+        </section>
+    <% } %>
+
+    <section class="card border-0 shadow-sm transfer-view-items">
+        <div class="card-header bg-white border-0 p-4 pb-3">
+            <h2 class="h5 fw-bold mb-0"><%= __('transfers.items') %></h2>
+        </div>
+
+        <% if (!transferItems.length) { %>
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-box-seam d-block fs-2 mb-2" aria-hidden="true"></i>
+                <%= __('transfers.noItems') %>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 transfer-detail-table">
+                    <thead class="table-light text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4"><%= __('transfers.product') %></th>
+                            <th class="text-center"><%= __('transfers.quantity') %></th>
+                            <th><%= __('transfers.sourceBalance') %></th>
+                            <th><%= __('transfers.destinationBalance') %></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <% transferItems.forEach(item => { %>
+                            <%
+                                const itemName = item.name || item.product_name || __('transfers.productFallback');
+                                const itemCode = item.sku || item.product_sku || item.barcode || '';
+                                const unit = item.unit || item.product_unit || '';
+                                const sourceBefore =
+                                    item.source_before ??
+                                    item.from_before ??
+                                    item.from_quantity_before;
+                                const sourceAfter =
+                                    item.source_after ??
+                                    item.from_after ??
+                                    item.from_quantity_after;
+                                const destinationBefore =
+                                    item.destination_before ??
+                                    item.to_before ??
+                                    item.to_quantity_before;
+                                const destinationAfter =
+                                    item.destination_after ??
+                                    item.to_after ??
+                                    item.to_quantity_after;
+                            %>
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-semibold text-dark"><%= itemName %></div>
+                                    <% if (itemCode) { %>
+                                        <div class="small text-muted"><%= itemCode %></div>
+                                    <% } %>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                                        <%= formatQuantity(item.quantity) %><%= unit ? ` ${unit}` : '' %>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="transfer-balance transfer-balance--source">
+                                        <span>
+                                            <small><%= __('transfers.before') %></small>
+                                            <strong><%= formatQuantity(sourceBefore) %></strong>
+                                        </span>
+                                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                                        <span>
+                                            <small><%= __('transfers.after') %></small>
+                                            <strong><%= formatQuantity(sourceAfter) %></strong>
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="transfer-balance transfer-balance--destination">
+                                        <span>
+                                            <small><%= __('transfers.before') %></small>
+                                            <strong><%= formatQuantity(destinationBefore) %></strong>
+                                        </span>
+                                        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                                        <span>
+                                            <small><%= __('transfers.after') %></small>
+                                            <strong><%= formatQuantity(destinationAfter) %></strong>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+
+                    <tfoot class="table-light">
+                        <tr>
+                            <td class="ps-4 fw-semibold"><%= __('transfers.totalQuantity') %></td>
+                            <td class="text-center fw-bold"><%= formatQuantity(quantityTotal) %></td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        <% } %>
+    </section>
+</div>
+
+<%- include('blocks/footer') -%>

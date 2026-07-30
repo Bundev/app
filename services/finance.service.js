@@ -5,80 +5,77 @@ exports.getCashData = async (req) => {
         const companyId = req.session.user.company_id;
         const currentUser = req.session.user;
 
-        const period = req.query.period || 'all';
+        const requestedPeriod = String(req.query.period || 'all');
+        const periodAliases = {
+            week: 'current_week',
+            month: 'current_month',
+            year: 'current_year'
+        };
+        const normalizedPeriod =
+            periodAliases[requestedPeriod] || requestedPeriod;
+        const periodRanges = {
+            day: {
+                start: 'CURDATE()',
+                end: 'DATE_ADD(CURDATE(), INTERVAL 1 DAY)'
+            },
+            yesterday: {
+                start: 'DATE_SUB(CURDATE(), INTERVAL 1 DAY)',
+                end: 'CURDATE()'
+            },
+            current_week: {
+                start: 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)',
+                end: 'DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)'
+            },
+            previous_week: {
+                start: 'DATE_SUB(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)',
+                end: 'DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)'
+            },
+            current_month: {
+                start: "DATE_FORMAT(CURDATE(), '%Y-%m-01')",
+                end: "DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)"
+            },
+            previous_month: {
+                start: "DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)",
+                end: "DATE_FORMAT(CURDATE(), '%Y-%m-01')"
+            },
+            current_year: {
+                start: 'MAKEDATE(YEAR(CURDATE()), 1)',
+                end: 'MAKEDATE(YEAR(CURDATE()) + 1, 1)'
+            },
+            previous_year: {
+                start: 'MAKEDATE(YEAR(CURDATE()) - 1, 1)',
+                end: 'MAKEDATE(YEAR(CURDATE()), 1)'
+            },
+            all: null
+        };
+        const period = Object.prototype.hasOwnProperty.call(
+            periodRanges,
+            normalizedPeriod
+        )
+            ? normalizedPeriod
+            : 'all';
         const method = req.query.method || 'all';
         const docType = req.query.docType || 'all';        // 'all', 'sale', 'transaction', 'return'
         const employeeId = req.query.employeeId || 'all';
 
-        // Настройки фильтров времени
-        let filterNoAlias = '';
-        let filterS = '';
-        let filterT = '';
-        let filterSR = ''; // Специальный фильтр дат для sale_returns
+        // Полуоткрытые календарные интервалы [начало, конец) сохраняют
+        // возможность использовать индексы по created_at.
+        const range = periodRanges[period];
+        const buildDateFilter = alias => {
+            if (!range) {
+                return '';
+            }
 
-        if (period === 'day') {
-            filterNoAlias = ' AND DATE(created_at) = CURDATE()';
-            filterS = ' AND DATE(s.created_at) = CURDATE()';
-            filterT = ' AND DATE(t.created_at) = CURDATE()';
-            filterSR = ' AND DATE(sr.created_at) = CURDATE()';
+            const column = alias
+                ? `${alias}.created_at`
+                : 'created_at';
 
-        } else if (period === 'yesterday') {
-
-            filterNoAlias = ' AND DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
-            filterS = ' AND DATE(s.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
-            filterT = ' AND DATE(t.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
-            filterSR = ' AND DATE(sr.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
-
-        } else if (period === 'week') {
-
-            filterNoAlias = ' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-            filterS = ' AND s.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-            filterT = ' AND t.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-            filterSR = ' AND sr.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-
-        } else if (period === 'current_month') {
-
-            filterNoAlias = ' AND YEAR(created_at)=YEAR(CURDATE()) AND MONTH(created_at)=MONTH(CURDATE())';
-            filterS = ' AND YEAR(s.created_at)=YEAR(CURDATE()) AND MONTH(s.created_at)=MONTH(CURDATE())';
-            filterT = ' AND YEAR(t.created_at)=YEAR(CURDATE()) AND MONTH(t.created_at)=MONTH(CURDATE())';
-            filterSR = ' AND YEAR(sr.created_at)=YEAR(CURDATE()) AND MONTH(sr.created_at)=MONTH(CURDATE())';
-
-        } else if (period === 'month') {
-
-            filterNoAlias = ' AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
-            filterS = ' AND s.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
-            filterT = ' AND t.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
-            filterSR = ' AND sr.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
-
-        } else if (period === '2months') {
-
-            filterNoAlias = ' AND created_at >= DATE_SUB(NOW(), INTERVAL 2 MONTH)';
-            filterS = ' AND s.created_at >= DATE_SUB(NOW(), INTERVAL 2 MONTH)';
-            filterT = ' AND t.created_at >= DATE_SUB(NOW(), INTERVAL 2 MONTH)';
-            filterSR = ' AND sr.created_at >= DATE_SUB(NOW(), INTERVAL 2 MONTH)';
-
-        } else if (period === '3months') {
-
-            filterNoAlias = ' AND created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)';
-            filterS = ' AND s.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)';
-            filterT = ' AND t.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)';
-            filterSR = ' AND sr.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)';
-
-        } else if (period === 'current_year') {
-
-            filterNoAlias = ' AND YEAR(created_at)=YEAR(CURDATE())';
-            filterS = ' AND YEAR(s.created_at)=YEAR(CURDATE())';
-            filterT = ' AND YEAR(t.created_at)=YEAR(CURDATE())';
-            filterSR = ' AND YEAR(sr.created_at)=YEAR(CURDATE())';
-
-        } else if (period === 'year') {
-
-            filterNoAlias = ' AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)';
-            filterS = ' AND s.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)';
-            filterT = ' AND t.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)';
-            filterSR = ' AND sr.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)';
-
-        }
+            return ` AND ${column} >= ${range.start} AND ${column} < ${range.end}`;
+        };
+        const filterNoAlias = buildDateFilter('');
+        const filterS = buildDateFilter('s');
+        const filterT = buildDateFilter('t');
+        const filterSR = buildDateFilter('sr');
 
         // 1. Считаем общую выручку компании (Продажи)
         const [[salesTotals]] = await db.query(
@@ -118,15 +115,24 @@ exports.getCashData = async (req) => {
         // Валовая маржа: сумма продаж минус закупочная стоимость, с учетом возвратов.
         const [[marginTotals]] = await db.query(
             `
-            SELECT COALESCE(SUM(
-                (si.final_subtotal - (si.purchase_price * si.quantity))
-                - COALESCE(returned.margin, 0)
-            ), 0) AS margin
+            SELECT
+                COALESCE(SUM(
+                    (si.final_subtotal - (si.purchase_price * si.quantity))
+                    - COALESCE(returned.margin, 0)
+                ), 0) AS margin,
+                COALESCE(SUM(
+                    COALESCE(si.purchase_price, 0)
+                    * GREATEST(
+                        si.quantity - COALESCE(returned.returned_quantity, 0),
+                        0
+                    )
+                ), 0) AS cost_total
             FROM sale_items si
             INNER JOIN sales s ON s.id = si.sale_id
             LEFT JOIN (
                 SELECT
                     sri.sale_item_id,
+                    SUM(sri.quantity) AS returned_quantity,
                     SUM(
                         ((si2.final_subtotal / NULLIF(si2.quantity, 0)) - si2.purchase_price)
                         * sri.quantity
@@ -143,6 +149,7 @@ exports.getCashData = async (req) => {
         );
 
         const margin = Number(marginTotals.margin || 0);
+        const costTotal = Number(marginTotals.cost_total || 0);
 
         // Вычисляем чистый баланс кассы организации (Продажи + Транзакции - Возвраты)
         const cashBalance = Number(salesTotals.sales_cash || 0) + Number(transTotals.trans_cash || 0) - Number(returnsTotals.returns_cash || 0);
@@ -189,11 +196,57 @@ exports.getCashData = async (req) => {
                       AND s.company_id = ?
                       ${filterS}
                       AND s.status IN ('completed', 'partial_return', 'returned')
-                ) AS employee_margin
+                ) AS employee_margin,
+
+                (
+                    SELECT COALESCE(SUM(
+                        COALESCE(si.purchase_price, 0)
+                        * GREATEST(
+                            si.quantity - COALESCE(returned.returned_quantity, 0),
+                            0
+                        )
+                    ), 0)
+                    FROM sale_items si
+                    INNER JOIN sales s ON s.id = si.sale_id
+                    LEFT JOIN (
+                        SELECT
+                            sri.sale_item_id,
+                            SUM(sri.quantity) AS returned_quantity
+                        FROM sale_return_items sri
+                        GROUP BY sri.sale_item_id
+                    ) returned ON returned.sale_item_id = si.id
+                    WHERE s.user_id = u.id
+                      AND s.company_id = ?
+                      ${filterS}
+                      AND s.status IN ('completed', 'partial_return', 'returned')
+                ) AS employee_cost
             FROM user u WHERE u.company_id = ? ORDER BY u.name ASC
             `,
-            [companyId, companyId]
+            [companyId, companyId, companyId]
         );
+
+        const employeeTotals = employeeCashes.reduce(
+            (totals, employee) => {
+                totals.cash += Number(employee.employee_cash || 0);
+                totals.card += Number(employee.employee_card || 0);
+                totals.transfer += Number(employee.employee_transfer || 0);
+                totals.cost += Number(employee.employee_cost || 0);
+                totals.margin += Number(employee.employee_margin || 0);
+                return totals;
+            },
+            {
+                cash: 0,
+                card: 0,
+                transfer: 0,
+                cost: 0,
+                margin: 0
+            }
+        );
+
+        employeeTotals.balance =
+            employeeTotals.cash +
+            employeeTotals.card +
+            employeeTotals.transfer;
 
         // 5. ДИНАМИЧЕСКИЙ КОНСТРУКТОР ДЛЯ ИСТОРИИ ОПЕРАЦИЙ
         let queries = [];
@@ -265,7 +318,9 @@ exports.getCashData = async (req) => {
             transferBalance,
             totalBalance,
             margin,
+            costTotal,
             employeeCashes,
+            employeeTotals,
             currentUser,
             history,
             period,
@@ -280,7 +335,7 @@ exports.getCashData = async (req) => {
         };
     } catch (error) {
         console.error(error);
-        res.status(500).send('Ошибка сервера');
+        throw error;
     }
 
 };

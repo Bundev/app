@@ -72,6 +72,7 @@ exports.showAdd = async (req, res) => {
             SELECT id, name
             FROM stores
             WHERE company_id = ?
+            AND status = 'active'
             ORDER BY name ASC
             `,
             [companyId]
@@ -231,6 +232,30 @@ exports.store = async (req, res) => {
 
         await connection.beginTransaction();
 
+        const [[store]] = await connection.execute(
+            `
+            SELECT id
+            FROM stores
+            WHERE id = ?
+              AND company_id = ?
+              AND status = 'active'
+            LIMIT 1
+            FOR UPDATE
+            `,
+            [
+                store_id,
+                companyId
+            ]
+        );
+
+        if (!store) {
+            const storeError = new Error(
+                'Выбранный магазин неактивен или недоступен.'
+            );
+            storeError.statusCode = 400;
+            throw storeError;
+        }
+
         let totalAmount = 0;
 
         items.forEach(item => {
@@ -342,8 +367,10 @@ exports.store = async (req, res) => {
             error
         );
 
-        res.status(500).send(
-            'Ошибка при сохранении закупки'
+        res.status(error.statusCode || 500).send(
+            error.statusCode
+                ? error.message
+                : 'Ошибка при сохранении закупки'
         );
 
     } finally {

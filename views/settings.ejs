@@ -239,6 +239,9 @@
                                     <a href="/user/<%= user.id %>" class="btn btn-sm btn-outline-primary" title="Открыть профиль" aria-label="Открыть профиль <%= user.name %>">
                                         <i class="bi bi-box-arrow-up-right me-1"></i>Открыть
                                     </a>
+                                    <a href="/user/<%= user.id %>/edit" class="btn btn-sm btn-outline-secondary" title="Редактировать сотрудника" aria-label="Редактировать сотрудника <%= user.name %>">
+                                        <i class="bi bi-pencil me-1"></i>Редактировать
+                                    </a>
                                 </div>
                             </article>
                             <% }) %>
@@ -278,6 +281,7 @@
                         </div>
 
                         <% if (stores.length) { %>
+                        <% const activeStoreCount = stores.filter(store => store.status === 'active').length; %>
                         <% if (storeSuccess) { %>
                         <div class="alert alert-success settings-alert mb-0" role="alert">
                             <i class="bi bi-check-circle-fill me-2"></i><%= storeSuccess %>
@@ -289,6 +293,18 @@
                             <i class="bi bi-exclamation-circle-fill me-2"></i><%= storeError %>
                         </div>
                         <% } %>
+
+                        <div class="employees-summary stores-summary">
+                            <span>Всего: <strong><%= stores.length %></strong></span>
+                            <span class="employees-summary__active">
+                                <i class="bi bi-circle-fill"></i>
+                                Активных: <%= activeStoreCount %>
+                            </span>
+                            <span class="stores-summary__inactive">
+                                <i class="bi bi-circle-fill"></i>
+                                Неактивных: <%= stores.filter(store => store.status !== 'active').length %>
+                            </span>
+                        </div>
 
                         <div class="table-responsive settings-table-wrap">
 
@@ -321,7 +337,7 @@
 
                                     <td>
                                         <span class="employee-status status-<%= store.status === 'active' ? 'active' : 'blocked' %>">
-                                            <i class="bi bi-circle-fill"></i><%= store.status === 'active' ? 'Активен' : 'В архиве' %>
+                                            <i class="bi bi-circle-fill"></i><%= store.status === 'active' ? 'Активен' : 'Неактивен' %>
                                         </span>
                                     </td>
 
@@ -331,9 +347,20 @@
                                                 <i class="bi bi-pencil me-1"></i>Изменить
                                             </a>
                                             <% if (store.status === 'active') { %>
-                                            <form method="POST" action="/stores/<%= store.id %>/archive" onsubmit="return confirm('Архивировать магазин? Продажи и данные сохранятся.');">
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-archive me-1"></i>В архив
+                                            <% const isLastActiveStore = activeStoreCount <= 1; %>
+                                            <form method="POST" action="/stores/<%= store.id %>/deactivate" onsubmit="return confirm('Деактивировать магазин? Данные и история сохранятся.');">
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    <%= isLastActiveStore ? 'disabled' : '' %>
+                                                    title="<%= isLastActiveStore ? 'Последний активный магазин нельзя деактивировать' : 'Деактивировать магазин' %>">
+                                                    <i class="bi bi-pause-circle me-1"></i>Деактивировать
+                                                </button>
+                                            </form>
+                                            <% } else { %>
+                                            <form method="POST" action="/stores/<%= store.id %>/activate" onsubmit="return confirm('Активировать магазин?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                                    <i class="bi bi-play-circle me-1"></i>Активировать
                                                 </button>
                                             </form>
                                             <% } %>

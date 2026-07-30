@@ -1,0 +1,210 @@
+.transfer-view-page {
+    min-width: 0;
+    padding-bottom: 2rem;
+}
+
+.transfer-view-page .card {
+    border-radius: .85rem;
+}
+
+.transfer-direction-card {
+    overflow: hidden;
+}
+
+.transfer-direction {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: center;
+}
+
+.transfer-direction__store {
+    padding: 1rem 1.25rem;
+    border: 1px solid transparent;
+    border-radius: .75rem;
+}
+
+.transfer-direction__store--source {
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.transfer-direction__store--destination {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.transfer-direction__label {
+    margin-bottom: .35rem;
+    color: #64748b;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+}
+
+.transfer-direction__name {
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.transfer-direction__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: #2563eb;
+    font-size: 1.25rem;
+    background: #eff6ff;
+    border-radius: 50%;
+}
+
+.transfer-meta-card .card-body {
+    display: flex;
+    gap: .8rem;
+    align-items: center;
+}
+
+.transfer-meta-card__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: #2563eb;
+    font-size: 1.1rem;
+    background: #eff6ff;
+    border-radius: .65rem;
+}
+
+.transfer-comment-card {
+    border-left: 4px solid #60a5fa !important;
+}
+
+.transfer-comment {
+    color: #334155;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.transfer-view-items {
+    overflow: hidden;
+}
+
+.transfer-detail-table {
+    min-width: 860px;
+}
+
+.transfer-detail-table thead th {
+    padding-top: .8rem;
+    padding-bottom: .8rem;
+    color: #64748b;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+    border-color: #e5eaf0;
+}
+
+.transfer-detail-table tbody td,
+.transfer-detail-table tfoot td {
+    padding-top: .9rem;
+    padding-bottom: .9rem;
+    border-color: #edf1f5;
+}
+
+.transfer-balance {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.transfer-balance > span {
+    display: inline-flex;
+    min-width: 4.25rem;
+    padding: .35rem .5rem;
+    flex-direction: column;
+    border-radius: .45rem;
+}
+
+.transfer-balance small {
+    color: #64748b;
+    font-size: .65rem;
+    text-transform: uppercase;
+}
+
+.transfer-balance strong {
+    color: #0f172a;
+}
+
+.transfer-balance > i {
+    color: #94a3b8;
+}
+
+.transfer-balance--source > span:first-child,
+.transfer-balance--destination > span:last-child {
+    background: #f0fdf4;
+}
+
+.transfer-balance--source > span:last-child {
+    background: #fff7ed;
+}
+
+.transfer-balance--destination > span:first-child {
+    background: #f8fafc;
+}
+
+@media (max-width: 767.98px) {
+    .transfer-view-actions {
+        width: 100%;
+    }
+
+    .transfer-view-actions > * {
+        flex: 1 1 auto;
+    }
+
+    .transfer-direction {
+        grid-template-columns: 1fr;
+    }
+
+    .transfer-direction__arrow {
+        justify-self: center;
+        transform: rotate(90deg);
+    }
+}
+
+@media print {
+    .header,
+    .sidebar,
+    .breadcrumb,
+    .transfer-view-actions,
+    #overlay {
+        display: none !important;
+    }
+
+    #cont,
+    #cont > .row,
+    .transfer-view-page {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .transfer-view-page .card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #d9dee7 !important;
+    }
+
+    .transfer-detail-table {
+        min-width: 0;
+    }
+}

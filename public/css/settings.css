@@ -288,6 +288,7 @@
 }
 
 .employees-summary__active i,
+.stores-summary__inactive i,
 .employee-status i {
 
     font-size: .5rem;
@@ -299,6 +300,10 @@
 
     color: #15803d;
 
+}
+
+.stores-summary__inactive {
+    color: #b91c1c;
 }
 
 .employees-list {

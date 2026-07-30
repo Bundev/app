@@ -82,6 +82,30 @@ module.exports = async (
     try {
         await connection.beginTransaction();
 
+        const [[store]] = await connection.execute(
+            `
+            SELECT id
+            FROM stores
+            WHERE id = ?
+              AND company_id = ?
+              AND status = 'active'
+            LIMIT 1
+            FOR UPDATE
+            `,
+            [
+                storeId,
+                companyId
+            ]
+        );
+
+        if (!store) {
+            const storeError = new Error(
+                'Выбранный магазин неактивен или недоступен.'
+            );
+            storeError.statusCode = 400;
+            throw storeError;
+        }
+
         // Шаг 2: Обработка категорий
         const [existingCategories] = await connection.execute(
             `SELECT id, name FROM categories WHERE company_id = ?`,

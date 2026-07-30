@@ -830,15 +830,32 @@ router.post('/save', auth, async (req, res) => {
 
         const [[userStore]] = await connection.query(
             `
-            SELECT store_id
-            FROM user_stores
-            WHERE user_id = ?
+            SELECT st.id AS store_id
+            FROM user_stores us
+            INNER JOIN stores st
+                ON st.id = us.store_id
+            WHERE us.user_id = ?
+              AND st.company_id = ?
+              AND st.status = 'active'
+            ORDER BY st.id
             LIMIT 1
+            FOR UPDATE
             `,
-            [req.session.user.id]
+            [
+                req.session.user.id,
+                company_id
+            ]
         );
 
-        const store_id = userStore?.store_id || 1;
+        if (!userStore) {
+            const storeError = new Error(
+                'Нет активного магазина, доступного для продажи.'
+            );
+            storeError.statusCode = 400;
+            throw storeError;
+        }
+
+        const store_id = Number(userStore.store_id);
 
         const year = new Date().getFullYear();
 
@@ -1082,7 +1099,7 @@ router.post('/save', auth, async (req, res) => {
     } catch (error) {
         await connection.rollback();
         console.error(error);
-        res.status(500).json({
+        res.status(error.statusCode || 500).json({
             success: false,
             error: error.message
         });

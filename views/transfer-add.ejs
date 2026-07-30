@@ -1,0 +1,271 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+
+<%
+    const availableStores = Array.isArray(stores) ? stores : [];
+    const hasEnoughStores = availableStores.length >= 2;
+    const savedFormData =
+        typeof formData !== 'undefined' && formData && typeof formData === 'object'
+            ? formData
+            : {};
+    const savedFromStoreId = String(savedFormData.from_store_id || '');
+    const savedToStoreId = String(savedFormData.to_store_id || '');
+%>
+
+<div
+    class="col content transfer-add-page"
+    id="transferFormPage"
+    data-search-hint="<%= __('transfers.searchHint') %>"
+    data-loading="<%= __('transfers.loading') %>"
+    data-no-products="<%= __('transfers.noProducts') %>"
+    data-search-error="<%= __('transfers.searchError') %>"
+    data-already-added="<%= __('transfers.alreadyAdded') %>"
+    data-select-stores-error="<%= __('transfers.selectStoresError') %>"
+    data-same-store-error="<%= __('transfers.sameStoreError') %>"
+    data-add-item-error="<%= __('transfers.addAtLeastOneProduct') %>"
+    data-select-product-error="<%= __('transfers.selectProductError') %>"
+    data-invalid-quantity="<%= __('transfers.invalidQuantity') %>"
+    data-duplicate-product="<%= __('transfers.duplicateProduct') %>"
+    data-change-source-confirm="<%= __('transfers.changeSourceConfirm') %>"
+    data-submitting="<%= __('transfers.submitting') %>">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark">
+                <i class="bi bi-arrow-left-right me-2 text-primary"></i><%= __('transfers.new') %>
+            </h1>
+            <p class="text-muted mb-0"><%= __('transfers.createDescription') %></p>
+        </div>
+
+        <a href="/transfers" class="btn btn-light border">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i><%= __('transfers.backToHistory') %>
+        </a>
+    </div>
+
+    <% if (error) { %>
+        <div class="alert alert-danger d-flex align-items-center shadow-sm" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i>
+            <div><%= error %></div>
+        </div>
+    <% } %>
+
+    <% if (!hasEnoughStores) { %>
+        <div class="alert alert-warning d-flex align-items-center shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+            <div><%= __('transfers.needTwoStores') %></div>
+        </div>
+    <% } %>
+
+    <div class="alert alert-danger d-none" id="transferClientError" role="alert" tabindex="-1"></div>
+    <div class="visually-hidden" id="transferLiveMessage" aria-live="polite"></div>
+
+    <form
+        action="/transfers/add"
+        method="POST"
+        id="transferForm"
+        autocomplete="off"
+        novalidate>
+
+        <input
+            type="hidden"
+            name="request_key"
+            value="<%= typeof requestKey !== 'undefined' && requestKey ? requestKey : '' %>">
+
+        <section class="card border-0 shadow-sm rounded-3 mb-4 transfer-route-card">
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                <h2 class="h5 fw-bold mb-1"><%= __('transfers.transferRoute') %></h2>
+            </div>
+
+            <div class="card-body px-4 pb-4">
+                <div class="transfer-route-grid">
+                    <div class="transfer-store-field">
+                        <label for="fromStore" class="form-label small text-uppercase text-muted fw-bold">
+                            <%= __('transfers.sourceStore') %>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-box-arrow-up-right text-warning" aria-hidden="true"></i>
+                            </span>
+                            <select
+                                id="fromStore"
+                                name="from_store_id"
+                                class="form-select"
+                                <%= hasEnoughStores ? '' : 'disabled' %>
+                                required>
+                                <option value=""><%= __('transfers.selectSourceStore') %></option>
+                                <% availableStores.forEach(store => { %>
+                                    <option
+                                        value="<%= store.id %>"
+                                        <%= String(store.id) === savedFromStoreId ? 'selected' : '' %>>
+                                        <%= store.name %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-light border transfer-swap-button"
+                        id="swapStores"
+                        title="<%= __('transfers.swapStores') %>"
+                        aria-label="<%= __('transfers.swapStores') %>"
+                        <%= hasEnoughStores ? '' : 'disabled' %>>
+                        <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="transfer-store-field">
+                        <label for="toStore" class="form-label small text-uppercase text-muted fw-bold">
+                            <%= __('transfers.destinationStore') %>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-box-arrow-in-down-right text-success" aria-hidden="true"></i>
+                            </span>
+                            <select
+                                id="toStore"
+                                name="to_store_id"
+                                class="form-select"
+                                <%= hasEnoughStores ? '' : 'disabled' %>
+                                required>
+                                <option value=""><%= __('transfers.selectDestinationStore') %></option>
+                                <% availableStores.forEach(store => { %>
+                                    <option
+                                        value="<%= store.id %>"
+                                        <%= String(store.id) === savedToStoreId ? 'selected' : '' %>>
+                                        <%= store.name %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="transferComment" class="form-label small text-uppercase text-muted fw-bold">
+                        <%= __('transfers.comment') %>
+                    </label>
+                    <textarea
+                        class="form-control"
+                        id="transferComment"
+                        name="comment"
+                        rows="2"
+                        maxlength="2000"
+                        placeholder="<%= __('transfers.commentPlaceholder') %>"><%= savedFormData.comment || '' %></textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="card border-0 shadow-sm rounded-3 transfer-items-card">
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h2 class="h5 fw-bold mb-1"><%= __('transfers.items') %></h2>
+                    <p class="small text-muted mb-0"><%= __('transfers.noItemsDescription') %></p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                    id="addTransferItem"
+                    disabled>
+                    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i><%= __('transfers.addProduct') %>
+                </button>
+            </div>
+
+            <div class="transfer-items-table-wrap d-none" id="transferItemsTableWrap">
+                <table class="table align-middle mb-0 transfer-items-table">
+                    <thead class="table-light text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4"><%= __('transfers.product') %></th>
+                            <th><%= __('transfers.available') %></th>
+                            <th><%= __('transfers.quantity') %></th>
+                            <th class="pe-4 text-end"><%= __('transfers.actions') %></th>
+                        </tr>
+                    </thead>
+                    <tbody id="transferItems"></tbody>
+                </table>
+            </div>
+
+            <div class="transfer-items-empty text-center" id="transferItemsEmpty">
+                <div class="transfer-items-empty__icon" aria-hidden="true">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h3 class="h6 mb-1"><%= __('transfers.noItemsTitle') %></h3>
+                <p class="text-muted small mb-0"><%= __('transfers.noItemsDescription') %></p>
+            </div>
+
+            <div class="card-footer bg-light border-0 px-4 py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="small text-muted">
+                    <span><%= __('transfers.positions') %>:</span>
+                    <strong class="text-dark" id="transferPositionCount">0</strong>
+                    <span class="mx-2" aria-hidden="true">•</span>
+                    <span><%= __('transfers.totalQuantity') %>:</span>
+                    <strong class="text-dark" id="transferQuantityTotal">0</strong>
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-success px-4"
+                    id="submitTransfer"
+                    disabled>
+                    <span class="spinner-border spinner-border-sm me-2 d-none" id="transferSubmitSpinner" aria-hidden="true"></span>
+                    <i class="bi bi-check-lg me-1" id="transferSubmitIcon" aria-hidden="true"></i>
+                    <span id="transferSubmitText"><%= __('transfers.submit') %></span>
+                </button>
+            </div>
+        </section>
+    </form>
+
+    <template id="transferItemTemplate">
+        <tr class="transfer-item-row">
+            <td class="ps-4 transfer-product-cell" data-label="<%= __('transfers.product') %>">
+                <div class="position-relative transfer-product-picker">
+                    <input
+                        type="search"
+                        class="form-control product-search-input"
+                        placeholder="<%= __('transfers.searchProductPlaceholder') %>"
+                        aria-label="<%= __('transfers.searchProductPlaceholder') %>"
+                        spellcheck="false">
+                    <input type="hidden" class="product-id-input">
+                    <div class="invalid-feedback product-invalid-feedback"></div>
+                    <div
+                        class="list-group transfer-product-results d-none"
+                        role="listbox"
+                        aria-label="<%= __('transfers.product') %>"></div>
+                </div>
+            </td>
+
+            <td data-label="<%= __('transfers.available') %>">
+                <span class="transfer-available-value">—</span>
+            </td>
+
+            <td data-label="<%= __('transfers.quantity') %>">
+                <div class="input-group transfer-quantity-group">
+                    <input
+                        type="number"
+                        class="form-control quantity-input"
+                        value="1"
+                        min="1"
+                        step="1"
+                        inputmode="numeric"
+                        aria-label="<%= __('transfers.quantity') %>">
+                    <span class="input-group-text product-unit"><%= __('transfers.unit') %></span>
+                    <div class="invalid-feedback quantity-invalid-feedback"></div>
+                </div>
+            </td>
+
+            <td class="pe-4 text-end" data-label="<%= __('transfers.actions') %>">
+                <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger remove-transfer-item"
+                    title="<%= __('transfers.remove') %>"
+                    aria-label="<%= __('transfers.remove') %>">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+            </td>
+        </tr>
+    </template>
+</div>
+
+<%- include('blocks/footer') -%>

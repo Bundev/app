@@ -1,0 +1,208 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+
+<%
+    const transferRows = Array.isArray(transfers) ? transfers : [];
+    const dateLocale = lang === 'uk' ? 'uk-UA' : 'ru-RU';
+
+    const formatTransferDate = value => {
+        if (!value) return '—';
+
+        const parsedDate = new Date(value);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return String(value);
+        }
+
+        return parsedDate.toLocaleString(dateLocale, {
+            timeZone: 'Europe/Kyiv',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+%>
+
+<div
+    class="col content transfers-page"
+    id="transfersPage"
+    data-shown-label="<%= __('transfers.shown') %>"
+    data-of-label="<%= __('transfers.of') %>">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1 fw-bold text-dark">
+                <i class="bi bi-arrow-left-right me-2 text-primary"></i><%= __('title.transfers') %>
+            </h1>
+            <p class="text-muted mb-0"><%= __('transfers.historyDescription') %></p>
+        </div>
+
+        <a href="/transfers/add" class="btn btn-primary transfer-new-button">
+            <i class="bi bi-plus-lg me-1"></i><%= __('transfers.new') %>
+        </a>
+    </div>
+
+    <% if (success) { %>
+        <div class="alert alert-success d-flex align-items-center shadow-sm" role="status">
+            <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
+            <div><%= success %></div>
+        </div>
+    <% } %>
+
+    <% if (error) { %>
+        <div class="alert alert-danger d-flex align-items-center shadow-sm" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2" aria-hidden="true"></i>
+            <div><%= error %></div>
+        </div>
+    <% } %>
+
+    <% if (transferRows.length) { %>
+        <section class="card border-0 shadow-sm mb-3 transfer-filter-card" aria-label="<%= __('transfers.searchPlaceholder') %>">
+            <div class="card-body">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md">
+                        <label class="visually-hidden" for="transferSearch"><%= __('transfers.searchPlaceholder') %></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-muted border-end-0">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                            </span>
+                            <input
+                                type="search"
+                                class="form-control border-start-0 ps-0"
+                                id="transferSearch"
+                                placeholder="<%= __('transfers.searchPlaceholder') %>"
+                                autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="col-md-auto d-flex align-items-center gap-2">
+                        <span class="small text-muted text-nowrap" id="transferResultCount" aria-live="polite"></span>
+                        <button type="button" class="btn btn-outline-secondary" id="resetTransferFilters">
+                            <i class="bi bi-x-lg me-1" aria-hidden="true"></i><%= __('transfers.resetFilters') %>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <% } %>
+
+    <section class="card border-0 shadow-sm transfer-history-card">
+        <% if (!transferRows.length) { %>
+            <div class="transfer-empty text-center">
+                <div class="transfer-empty__icon" aria-hidden="true">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <h2 class="h5 mb-2"><%= __('transfers.emptyTitle') %></h2>
+                <p class="text-muted mb-3"><%= __('transfers.emptyDescription') %></p>
+                <a href="/transfers/add" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i><%= __('transfers.new') %>
+                </a>
+            </div>
+        <% } else { %>
+            <div class="table-responsive transfer-table-wrap">
+                <table class="table table-hover align-middle mb-0 transfer-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4"><%= __('transfers.transferNumber') %></th>
+                            <th><%= __('transfers.date') %></th>
+                            <th><%= __('transfers.fromStore') %></th>
+                            <th class="transfer-direction-column" aria-hidden="true"></th>
+                            <th><%= __('transfers.toStore') %></th>
+                            <th class="text-center"><%= __('transfers.positions') %></th>
+                            <th class="text-center"><%= __('transfers.totalQuantity') %></th>
+                            <th><%= __('transfers.createdBy') %></th>
+                            <th class="pe-4 text-end"><%= __('transfers.actions') %></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="transferRows">
+                        <% transferRows.forEach(transfer => { %>
+                            <%
+                                const transferNumber = transfer.number || transfer.transfer_number || transfer.id;
+                                const fromStoreName = transfer.from_store_name || transfer.source_store_name || __('transfers.storeFallback');
+                                const toStoreName = transfer.to_store_name || transfer.destination_store_name || __('transfers.storeFallback');
+                                const positionCount = Number(transfer.position_count || transfer.positions_count || 0);
+                                const totalQuantity = Number(transfer.total_quantity || 0);
+                                const userName = transfer.user_name || transfer.created_by_name || __('transfers.unknownUser');
+                                const searchableText = [
+                                    transferNumber,
+                                    fromStoreName,
+                                    toStoreName,
+                                    userName,
+                                    transfer.comment || '',
+                                    formatTransferDate(transfer.created_at)
+                                ].join(' ').toLocaleLowerCase(dateLocale);
+                            %>
+
+                            <tr
+                                class="transfer-row"
+                                data-search="<%= searchableText %>">
+                                <td class="ps-4" data-label="<%= __('transfers.transferNumber') %>">
+                                    <a href="/transfers/view/<%= transfer.id %>" class="transfer-number">
+                                        № <%= transferNumber %>
+                                    </a>
+                                </td>
+
+                                <td data-label="<%= __('transfers.date') %>">
+                                    <span class="transfer-date">
+                                        <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+                                        <%= formatTransferDate(transfer.created_at) %>
+                                    </span>
+                                </td>
+
+                                <td data-label="<%= __('transfers.fromStore') %>">
+                                    <span class="transfer-store-badge transfer-store-badge--source">
+                                        <i class="bi bi-shop me-1" aria-hidden="true"></i><%= fromStoreName %>
+                                    </span>
+                                </td>
+
+                                <td class="text-center transfer-direction-cell" aria-hidden="true">
+                                    <i class="bi bi-arrow-right"></i>
+                                </td>
+
+                                <td data-label="<%= __('transfers.toStore') %>">
+                                    <span class="transfer-store-badge transfer-store-badge--destination">
+                                        <i class="bi bi-shop me-1" aria-hidden="true"></i><%= toStoreName %>
+                                    </span>
+                                </td>
+
+                                <td class="text-center" data-label="<%= __('transfers.positions') %>">
+                                    <span class="badge rounded-pill text-bg-light border"><%= positionCount %></span>
+                                </td>
+
+                                <td class="text-center fw-semibold" data-label="<%= __('transfers.totalQuantity') %>">
+                                    <%= totalQuantity %>
+                                </td>
+
+                                <td data-label="<%= __('transfers.createdBy') %>">
+                                    <span class="text-muted">
+                                        <i class="bi bi-person me-1" aria-hidden="true"></i><%= userName %>
+                                    </span>
+                                </td>
+
+                                <td class="pe-4 text-end" data-label="<%= __('transfers.actions') %>">
+                                    <a
+                                        href="/transfers/view/<%= transfer.id %>"
+                                        class="btn btn-sm btn-outline-primary"
+                                        aria-label="<%= __('transfers.view') %> № <%= transferNumber %>">
+                                        <i class="bi bi-eye me-1" aria-hidden="true"></i><%= __('transfers.view') %>
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="transfer-filter-empty text-center d-none" id="transferFilterEmpty" role="status">
+                <i class="bi bi-search d-block mb-2" aria-hidden="true"></i>
+                <%= __('transfers.noFilteredResults') %>
+            </div>
+        <% } %>
+    </section>
+</div>
+
+<%- include('blocks/footer') -%>

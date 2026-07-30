@@ -20,6 +20,7 @@ router.get('/import',auth,requireAdmin,async (req, res) => {
                 SELECT *
                 FROM stores
                 WHERE company_id = ?
+                  AND status = 'active'
                 ORDER BY name
                 `,
                 [
@@ -101,19 +102,6 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
         try {
 
 
-            const [[userStore]] =
-                await db.query(
-                    `
-                    SELECT store_id
-                    FROM user_stores
-                    WHERE user_id = ?
-                    LIMIT 1
-                    `,
-                    [
-                        req.session.user.id
-                    ]
-                );
-
             const storeId =
                     Number(
                         req.body.store_id
@@ -122,10 +110,10 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
             const markupBelow100 = Number(req.body.markup_below_100);
             const markupFrom100 = Number(req.body.markup_from_100);
 
-            if (!storeId) {
+            if (!Number.isSafeInteger(storeId) || storeId <= 0) {
 
                 return res.status(400).send(
-                    'Магазин пользователя не найден'
+                    'Магазин не выбран'
                 );
 
             }
@@ -166,7 +154,7 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
 
             console.error(error);
 
-            res.status(500).send(
+            res.status(error.statusCode || 500).send(
                 error.message
             );
 

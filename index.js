@@ -62,6 +62,7 @@ app.use('/api/customers', require('./routes/customers-api'));
 
 // Закупки
 app.use('/purchases', require('./routes/purchases'));
+app.use('/transfers', require('./routes/transfers'));
 app.use('/suppliers', require('./routes/suppliers'));
 
 // Финансы
