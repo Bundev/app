@@ -1,16 +1,56 @@
         <%- include('blocks/head') -%>
         <%- include('blocks/header') -%>
         <%- include('blocks/menu') -%>
-        <div class="col content">
-            <div class="buttonblox">
-                <a href="/sales/new" class="btn btn-primary">+ <%= __('title.new') %></a>
-                <a href="/return" class="btn btn-outline-warning ms-2">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i>Возвраты
+        <%
+            const saleRows = Array.isArray(sales) ? sales : [];
+            const completedSales = saleRows.filter(sale => sale.status === 'completed');
+            const returnedSales = saleRows.filter(sale => sale.status === 'returned' || sale.status === 'partial_return');
+            const salesTotal = completedSales.reduce((total, sale) => total + Number(sale.total || 0), 0);
+            const averageSale = completedSales.length ? salesTotal / completedSales.length : 0;
+        %>
+        <div class="col content sales-page">
+            <div class="sales-shell">
+            <header class="sales-header">
+                <div>
+                    <div class="sales-eyebrow"><i class="bi bi-receipt"></i>История операций</div>
+                    <h1>Продажи</h1>
+                    <p>Чеки, покупатели, суммы и возвраты в одном журнале</p>
+                </div>
+                <div class="sales-actions">
+                <a href="/return" class="sales-secondary-action">
+                    <i class="bi bi-arrow-counterclockwise"></i>Возвраты
                 </a>
-            </div>
+                <a href="/sales/new" class="sales-primary-action">
+                    <i class="bi bi-plus-lg"></i><%= __('title.new') %>
+                </a>
+                </div>
+            </header>
+
+            <section class="sales-metrics">
+                <div class="sales-metric">
+                    <span class="sales-metric-icon sales-metric-icon--primary"><i class="bi bi-receipt-cutoff"></i></span>
+                    <span class="sales-metric-copy"><span>Чеков</span><strong><%= saleRows.length %></strong></span>
+                </div>
+                <div class="sales-metric">
+                    <span class="sales-metric-icon sales-metric-icon--success"><i class="bi bi-cash-stack"></i></span>
+                    <span class="sales-metric-copy"><span>Сумма продаж</span><strong><%= salesTotal.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong></span>
+                </div>
+                <div class="sales-metric">
+                    <span class="sales-metric-icon sales-metric-icon--warning"><i class="bi bi-graph-up"></i></span>
+                    <span class="sales-metric-copy"><span>Средний чек</span><strong><%= averageSale.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong></span>
+                </div>
+                <div class="sales-metric">
+                    <span class="sales-metric-icon sales-metric-icon--danger"><i class="bi bi-arrow-return-left"></i></span>
+                    <span class="sales-metric-copy"><span>С возвратом</span><strong><%= returnedSales.length %></strong></span>
+                </div>
+            </section>
 
 
-            <div class="card border-0 mb-3 sales-filters-card">
+            <section class="sales-filters-card">
+                <div class="sales-section-heading">
+                    <div><h2>Фильтры</h2><p>Найдите чек по любому параметру</p></div>
+                    <i class="bi bi-funnel"></i>
+                </div>
                 <div class="card-body">
                     <div class="row g-1 sales-filters">
 
@@ -111,10 +151,14 @@
 
                     </div>
                 </div>
-            </div>
+            </section>
 
 
-            <div class="card border-0 shadow-sm">
+            <section class="sales-list-card">
+                <div class="sales-list-heading">
+                    <div><h2>Журнал продаж</h2><p>Нажмите на строку, чтобы открыть чек</p></div>
+                    <span class="sales-count"><%= saleRows.length %></span>
+                </div>
 
                 <div class="table-wrapper border-0 ">
 
@@ -211,7 +255,8 @@
 
                 </div>
 
-            </div>  
+            </section>
+            </div>
         </div>
 
     <%- include('blocks/footer') -%>

@@ -2,16 +2,18 @@
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
 
-<div class="col content">
+<div class="col content sale-view-page">
+    <div class="sale-view-shell">
 
-    <div class="card shadow-sm border-0">
+    <div class="card sale-document-card">
 
         <div class="card-body">
 
-            <div class="d-flex justify-content-between mb-4">
+            <header class="sale-document-header">
 
-                <h2>
-                    🧾 Чек <%= sale.invoice_number %>
+                <div>
+                <div class="sale-view-eyebrow"><i class="bi bi-receipt"></i>Документ продажи</div>
+                <h1>Чек <%= sale.invoice_number %>
                    <% if (returnTotal >= sale.total) { %>
 
                     <span class="badge bg-danger">
@@ -37,8 +39,12 @@
                         </span>
 
                     <% } %>
-                </h2>
+                </h1>
+                <p>Состав продажи, оплата и история возвратов</p>
+                </div>
 
+                <div class="sale-view-actions">
+                <a href="/sales" class="sale-view-back"><i class="bi bi-arrow-left"></i>К продажам</a>
                 <div class="btn-group sale-actions">
 <div class="btn-group">
 
@@ -120,13 +126,14 @@
 
                 </div>
 
-            </div>
+                </div>
+            </header>
 
             <div class="row g-3 mb-4">
 
                 <div class="col-md-3">
 
-                    <div class="card bg-light border-0">
+                    <div class="card sale-meta-card sale-meta-card--date">
 
                         <div class="card-body">
 
@@ -157,7 +164,7 @@
 
                 <div class="col-md-3">
 
-                    <div class="card bg-light border-0">
+                    <div class="card sale-meta-card sale-meta-card--customer">
 
                         <div class="card-body">
 
@@ -179,7 +186,7 @@
 
                 <div class="col-md-3">
 
-                    <div class="card bg-light border-0">
+                    <div class="card sale-meta-card sale-meta-card--store">
 
                         <div class="card-body">
 
@@ -201,7 +208,7 @@
 
                 <div class="col-md-3">
 
-                    <div class="card bg-light border-0">
+                    <div class="card sale-meta-card sale-meta-card--payment">
 
                         <div class="card-body">
 
@@ -229,9 +236,11 @@
 
             </div>
 
+            <section class="sale-items-card">
+            <div class="sale-section-heading"><div><h2>Товары в чеке</h2><p><%= items.length %> позиций в документе</p></div><i class="bi bi-bag-check"></i></div>
             <div class="table-responsive">
 
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle sale-items-table">
 
                     <thead class="table-light">
 
@@ -291,9 +300,10 @@
                 </table>
 
             </div>
+            </section>
             <% if (returns.length) { %>
 
-            <div class="card mt-4">
+            <div class="card mt-4 sale-returns-card">
 
                 <div class="card-header d-flex justify-content-between"
                     data-bs-toggle="collapse"
@@ -453,5 +463,6 @@
 
     </div>
 
+    </div>
 </div>
 <%- include('blocks/footer') -%>

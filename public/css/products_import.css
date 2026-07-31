@@ -535,7 +535,7 @@
 }
 
 .products-import-preview .table {
-    min-width: 760px;
+    min-width: 680px;
     margin-bottom: 0;
     font-size: 0.78rem;
 }
@@ -563,6 +563,18 @@
     max-width: 280px;
     color: #334155;
     word-break: break-word;
+}
+
+.products-import-preview .products-import-product-name {
+    min-width: 280px;
+    max-width: 420px;
+    color: #0f172a;
+    font-weight: 650;
+}
+
+.products-import-preview .products-import-numeric {
+    text-align: right;
+    white-space: nowrap;
 }
 
 .products-import-preview .table .products-import-row-number {

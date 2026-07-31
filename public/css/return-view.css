@@ -1,3 +1,52 @@
+.return-view-page {
+    --return-primary: #2563eb;
+    --return-primary-dark: #1d4ed8;
+    --return-danger: #b91c1c;
+    --return-danger-soft: #fef2f2;
+    --return-warning: #b45309;
+    --return-warning-soft: #fffbeb;
+    --return-ink: #172033;
+    --return-muted: #64748b;
+    --return-border: #dbe3ee;
+    min-width: 0;
+    padding: 6px 0 32px;
+    color: var(--return-ink);
+}
+.return-view-page :is(a,button):focus-visible { outline: 3px solid rgba(37,99,235,.24)!important; outline-offset: 2px; }
+.return-view-shell { width: 100%; max-width: 1240px; margin: 0 auto; }
+.return-document-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.return-view-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 7px; color: var(--return-danger); font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.return-document-header h1 { margin: 0; color: var(--return-ink); font-size: clamp(1.65rem,3vw,2.15rem); font-weight: 750; letter-spacing: -.03em; }
+.return-document-header p { margin: 7px 0 0; color: var(--return-muted); font-size: .92rem; }
+.return-view-actions { display: flex; gap: 9px; }
+.return-primary-action,.return-secondary-action { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 7px; padding: 9px 13px; border: 1px solid; border-radius: 9px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.return-primary-action { border-color: var(--return-primary); background: var(--return-primary); color: #fff; }
+.return-primary-action:hover { border-color: var(--return-primary-dark); background: var(--return-primary-dark); color: #fff; }
+.return-secondary-action { border-color: var(--return-border); background: #fff; color: #475569; }
+.return-secondary-action:hover { border-color: #fed7aa; background: var(--return-warning-soft); color: #c2410c; }
+.return-info-card { border: 1px solid var(--return-border)!important; border-left: 1px solid var(--return-border)!important; border-radius: 13px; background: #fff; box-shadow: 0 5px 18px rgba(15,23,42,.04); }
+.return-info-card .card-body { position: relative; padding: 15px 16px 15px 52px; }
+.return-info-card .card-body::before { position: absolute; top: 16px; left: 16px; color: var(--return-danger); font-family: "bootstrap-icons"; font-size: 1.1rem; }
+.return-info-card--customer .card-body::before { content: "\F4E1"; }
+.return-info-card--store .card-body::before { content: "\F543"; }
+.return-info-card--user .card-body::before { content: "\F4DA"; }
+.return-info-card .small { margin-bottom: 3px; }
+.return-items-card { overflow: hidden; border: 1px solid var(--return-border)!important; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(15,23,42,.055); }
+.return-items-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 19px; border-bottom: 1px solid #edf1f5; }
+.return-items-heading h2 { margin: 0; font-size: 1rem; font-weight: 750; }
+.return-items-heading p { margin: 3px 0 0; color: var(--return-muted); font-size: .78rem; }
+.return-items-heading > i { color: var(--return-danger); font-size: 1.15rem; }
+.return-items-table { min-width: 760px; }
+.return-items-table thead th { padding: 11px 13px; background: #f8fafc; color: var(--return-muted); font-size: .68rem; font-weight: 750; letter-spacing: .055em; border-bottom: 1px solid #e5eaf0; }
+.return-items-table tbody td { padding: 12px 13px; border-color: #edf1f5; }
+.return-items-table tbody tr:nth-child(even) > td { background: #fbfdff; }
+.return-total { display: flex; align-items: center; gap: 12px; padding: 4px 0; color: var(--return-muted); font-size: .9rem; }
+.return-total span { color: var(--return-danger); font-size: 1.45rem; font-weight: 800; }
+@media (max-width: 767.98px) {
+    .return-document-header,.return-view-actions { align-items: stretch; flex-direction: column; }
+    .return-view-actions > * { width: 100%; }
+}
+
 .return-info-card {
     border-left: 4px solid #ffc107 !important;
 }

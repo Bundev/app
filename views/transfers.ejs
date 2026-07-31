@@ -5,6 +5,14 @@
 <%
     const transferRows = Array.isArray(transfers) ? transfers : [];
     const dateLocale = lang === 'uk' ? 'uk-UA' : 'ru-RU';
+    const transferQuantityTotal = transferRows.reduce(
+        (total, transfer) => total + Number(transfer.total_quantity || 0),
+        0
+    );
+    const transferPositionTotal = transferRows.reduce(
+        (total, transfer) => total + Number(transfer.position_count || transfer.positions_count || 0),
+        0
+    );
 
     const formatTransferDate = value => {
         if (!value) return '—';
@@ -32,18 +40,18 @@
     data-shown-label="<%= __('transfers.shown') %>"
     data-of-label="<%= __('transfers.of') %>">
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="transfers-shell">
+    <header class="transfers-header">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-dark">
-                <i class="bi bi-arrow-left-right me-2 text-primary"></i><%= __('title.transfers') %>
-            </h1>
-            <p class="text-muted mb-0"><%= __('transfers.historyDescription') %></p>
+            <div class="transfers-eyebrow"><i class="bi bi-arrow-left-right"></i><%= __('title.transfers') %></div>
+            <h1><%= __('title.transfers') %></h1>
+            <p><%= __('transfers.historyDescription') %></p>
         </div>
 
-        <a href="/transfers/add" class="btn btn-primary transfer-new-button">
-            <i class="bi bi-plus-lg me-1"></i><%= __('transfers.new') %>
+        <a href="/transfers/add" class="transfers-primary-action transfer-new-button">
+            <i class="bi bi-plus-lg"></i><%= __('transfers.new') %>
         </a>
-    </div>
+    </header>
 
     <% if (success) { %>
         <div class="alert alert-success d-flex align-items-center shadow-sm" role="status">
@@ -59,8 +67,23 @@
         </div>
     <% } %>
 
+    <section class="transfers-metrics">
+        <div class="transfers-metric">
+            <span class="transfers-metric-icon transfers-metric-icon--primary"><i class="bi bi-files"></i></span>
+            <span class="transfers-metric-copy"><span><%= __('title.transfers') %></span><strong><%= transferRows.length %></strong></span>
+        </div>
+        <div class="transfers-metric">
+            <span class="transfers-metric-icon transfers-metric-icon--success"><i class="bi bi-box-seam"></i></span>
+            <span class="transfers-metric-copy"><span><%= __('transfers.totalQuantity') %></span><strong><%= transferQuantityTotal.toLocaleString(dateLocale) %></strong></span>
+        </div>
+        <div class="transfers-metric">
+            <span class="transfers-metric-icon transfers-metric-icon--warning"><i class="bi bi-list-check"></i></span>
+            <span class="transfers-metric-copy"><span><%= __('transfers.positions') %></span><strong><%= transferPositionTotal.toLocaleString(dateLocale) %></strong></span>
+        </div>
+    </section>
+
     <% if (transferRows.length) { %>
-        <section class="card border-0 shadow-sm mb-3 transfer-filter-card" aria-label="<%= __('transfers.searchPlaceholder') %>">
+        <section class="transfer-filter-card" aria-label="<%= __('transfers.searchPlaceholder') %>">
             <div class="card-body">
                 <div class="row g-2 align-items-center">
                     <div class="col-md">
@@ -89,7 +112,7 @@
         </section>
     <% } %>
 
-    <section class="card border-0 shadow-sm transfer-history-card">
+    <section class="transfer-history-card">
         <% if (!transferRows.length) { %>
             <div class="transfer-empty text-center">
                 <div class="transfer-empty__icon" aria-hidden="true">
@@ -203,6 +226,7 @@
             </div>
         <% } %>
     </section>
+    </div>
 </div>
 
 <%- include('blocks/footer') -%>

@@ -100,7 +100,7 @@ router.get('/add', auth, async (req, res) => {
         activeMenu: 'products',
         categories,
         stores,
-        ...page(req, 'product-add', [
+        ...page(req, 'products-add', [
                 {title: req.__('title.products'),url: '/products'},
                 {title: req.__('title.addProducts')}
             ])

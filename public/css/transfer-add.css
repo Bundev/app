@@ -1,10 +1,59 @@
 .transfer-add-page {
+    --transfer-primary: #2563eb;
+    --transfer-ink: #172033;
+    --transfer-muted: #64748b;
+    --transfer-border: #dbe3ee;
     min-width: 0;
-    padding-bottom: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-top: 6px;
+    padding-bottom: 32px;
+    color: var(--transfer-ink);
+}
+
+.transfer-add-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.transfer-add-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--transfer-primary);
+    font-size: .75rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.transfer-add-header h1 {
+    margin: 0;
+    color: var(--transfer-ink);
+    font-size: clamp(1.75rem, 3vw, 2.35rem);
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.transfer-add-header p {
+    margin: 8px 0 0;
+    color: var(--transfer-muted);
 }
 
 .transfer-add-page .card {
-    border-radius: .85rem !important;
+    border: 1px solid var(--transfer-border) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, .055) !important;
+}
+
+@media (max-width: 767.98px) {
+    .transfer-add-header {
+        flex-direction: column;
+    }
 }
 
 .transfer-route-card,
@@ -300,4 +349,3 @@
         gap: .25rem;
     }
 }
-

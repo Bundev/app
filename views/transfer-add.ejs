@@ -30,18 +30,17 @@
     data-change-source-confirm="<%= __('transfers.changeSourceConfirm') %>"
     data-submitting="<%= __('transfers.submitting') %>">
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <header class="transfer-add-header">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-dark">
-                <i class="bi bi-arrow-left-right me-2 text-primary"></i><%= __('transfers.new') %>
-            </h1>
-            <p class="text-muted mb-0"><%= __('transfers.createDescription') %></p>
+            <div class="transfer-add-eyebrow"><i class="bi bi-arrow-left-right"></i><%= __('title.transfers') %></div>
+            <h1><%= __('transfers.new') %></h1>
+            <p><%= __('transfers.createDescription') %></p>
         </div>
 
         <a href="/transfers" class="btn btn-light border">
             <i class="bi bi-arrow-left me-1" aria-hidden="true"></i><%= __('transfers.backToHistory') %>
         </a>
-    </div>
+    </header>
 
     <% if (error) { %>
         <div class="alert alert-danger d-flex align-items-center shadow-sm" role="alert">

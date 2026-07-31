@@ -2,37 +2,54 @@
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
 
-<div class="col content">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+<%
+    const returnRows = Array.isArray(returns) ? returns : [];
+    const averageReturn = returnRows.length ? Number(total) / returnRows.length : 0;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayReturns = returnRows.filter(
+        item => new Date(item.created_at).toISOString().slice(0, 10) === todayKey
+    ).length;
+    const returnCustomers = new Set(
+        returnRows.map(item => item.customer_name).filter(Boolean)
+    ).size;
+%>
+<div class="col content returns-page">
+    <div class="returns-shell">
+    <header class="returns-header">
         <div>
-            <h2 class="mb-1"><i class="bi bi-arrow-counterclockwise me-2"></i>Возвраты</h2>
-            <div class="text-muted">Оформленные возвраты по чекам</div>
+            <div class="returns-eyebrow"><i class="bi bi-arrow-counterclockwise"></i>История операций</div>
+            <h1>Возвраты</h1>
+            <p>Оформленные возвраты товаров и денежных средств по чекам</p>
         </div>
-        <a href="/sales" class="btn btn-outline-secondary">
-            <i class="bi bi-receipt me-1"></i>К продажам
+        <a href="/sales" class="returns-primary-action">
+            <i class="bi bi-receipt"></i>К продажам
         </a>
-    </div>
+    </header>
 
-    <div class="row g-3 mb-3">
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm returns-summary">
-                <div class="card-body">
-                    <div class="text-muted small">Количество возвратов</div>
-                    <div class="fs-3 fw-bold"><%= returns.length %></div>
-                </div>
-            </div>
+    <section class="returns-metrics">
+        <div class="returns-metric">
+            <span class="returns-metric-icon returns-metric-icon--primary"><i class="bi bi-arrow-return-left"></i></span>
+            <span class="returns-metric-copy"><span>Количество возвратов</span><strong><%= returnRows.length %></strong></span>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm returns-summary">
-                <div class="card-body">
-                    <div class="text-muted small">Сумма возвратов</div>
-                    <div class="fs-3 fw-bold text-danger"><%= Number(total).toFixed(2) %> ₴</div>
-                </div>
-            </div>
+        <div class="returns-metric">
+            <span class="returns-metric-icon returns-metric-icon--danger"><i class="bi bi-cash-stack"></i></span>
+            <span class="returns-metric-copy"><span>Сумма возвратов</span><strong><%= Number(total).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong></span>
         </div>
-    </div>
+        <div class="returns-metric">
+            <span class="returns-metric-icon returns-metric-icon--warning"><i class="bi bi-calculator"></i></span>
+            <span class="returns-metric-copy"><span>Средний возврат</span><strong><%= averageReturn.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong></span>
+        </div>
+        <div class="returns-metric">
+            <span class="returns-metric-icon returns-metric-icon--success"><i class="bi bi-calendar-check"></i></span>
+            <span class="returns-metric-copy"><span>Сегодня / клиентов</span><strong><%= todayReturns %> / <%= returnCustomers %></strong></span>
+        </div>
+    </section>
 
-    <div class="card border-0 shadow-sm mb-3">
+    <section class="returns-filters-card">
+        <div class="returns-section-heading">
+            <div><h2>Фильтры</h2><p>Поиск по документу, чеку, клиенту или периоду</p></div>
+            <i class="bi bi-funnel"></i>
+        </div>
         <div class="card-body">
             <div class="row g-2">
                 <div class="col-md-4">
@@ -52,9 +69,13 @@
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="card border-0 shadow-sm">
+    <section class="returns-list-card">
+        <div class="returns-list-heading">
+            <div><h2>Журнал возвратов</h2><p>Нажмите на строку для просмотра документа</p></div>
+            <span class="returns-count"><%= returnRows.length %></span>
+        </div>
         <div class="table-responsive returns-table-wrapper">
             <table class="table table-hover align-middle mb-0 returns-list-table">
                 <thead class="table-light text-muted small text-uppercase">
@@ -70,7 +91,9 @@
                 </thead>
                 <tbody>
                     <% if (!returns.length) { %>
-                        <tr><td colspan="7" class="py-5 text-center text-muted">Возвратов пока нет.</td></tr>
+                        <tr><td colspan="7">
+                            <div class="returns-empty"><i class="bi bi-inbox"></i><strong>Возвратов пока нет</strong><span>Новые документы появятся здесь после оформления</span></div>
+                        </td></tr>
                     <% } %>
                     <% returns.forEach(item => { %>
                         <tr class="returns-row"
@@ -112,6 +135,7 @@
                 </tbody>
             </table>
         </div>
+    </section>
     </div>
 </div>
 

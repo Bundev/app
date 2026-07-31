@@ -1,139 +1,117 @@
-<header class="header">
-  <nav class="navbar navbar-expand-lg navbar-dark topbar">
-    <div class="container-fluid">
-      <button class="btn btn-light d-md-none me-2" id="menuToggle">
-          ☰
-      </button>
-      <a class="navbar-brand fw-bold" href="/">
-        RetailPro
-      </a>
+<header class="app-header">
+    <nav class="app-topbar" aria-label="Основная панель">
+        <div class="app-topbar-inner">
+            <div class="app-topbar-start">
+                <button
+                    class="app-menu-toggle d-md-none"
+                    id="menuToggle"
+                    type="button"
+                    aria-label="Открыть меню"
+                    aria-controls="sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
 
-      <div class="ms-auto d-flex align-items-center gap-3">
-
-      <div class="btn-group">
-          <a href="/lang/ru"
-            class="btn <%= lang === 'ru' ? 'btn-primary' : 'btn-outline-secondary' %>">
-              RU
-          </a>
-
-          <a href="/lang/uk"
-            class="btn <%= lang === 'uk' ? 'btn-primary' : 'btn-outline-secondary' %>">
-              UA
-          </a>
-      </div>
-
-    <div class="dropdown ms-auto">
-
-    <a href="#"
-       class="d-flex align-items-center text-decoration-none text-white"
-       data-bs-toggle="dropdown">
-
-        <div class="text-end me-3">
-
-            <div class="fw-bold">
-                <%= user.name %>
+                <a class="app-brand" href="/">
+                    <span class="app-brand-mark"><i class="bi bi-shop-window"></i></span>
+                    <span class="app-brand-copy">
+                        <strong>RetailPro</strong>
+                        <small>CRM</small>
+                    </span>
+                </a>
             </div>
 
-            <small class="text-light">
-                <%= roles[user.role] %>
-            </small>
+            <div class="app-topbar-actions">
+                <div class="app-language" aria-label="Язык интерфейса">
+                    <a
+                        href="/lang/ru"
+                        class="<%= lang === 'ru' ? 'active' : '' %>"
+                        aria-current="<%= lang === 'ru' ? 'true' : 'false' %>">
+                        RU
+                    </a>
+                    <a
+                        href="/lang/uk"
+                        class="<%= lang === 'uk' ? 'active' : '' %>"
+                        aria-current="<%= lang === 'uk' ? 'true' : 'false' %>">
+                        UA
+                    </a>
+                </div>
 
+                <div class="dropdown">
+                    <button
+                        class="app-user-button"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <span class="app-user-copy">
+                            <strong><%= user.name %></strong>
+                            <small><%= roles[user.role] %></small>
+                        </span>
+                        <img
+                            src="<%= user.avatar %>"
+                            width="40"
+                            height="40"
+                            alt="Аватар пользователя <%= user.name %>">
+                        <i class="bi bi-chevron-down app-user-chevron"></i>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end app-user-menu">
+                        <li class="app-user-menu-heading">
+                            <strong><%= user.name %></strong>
+                            <small><%= roles[user.role] %></small>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/profile">
+                                <i class="bi bi-person"></i><span>Профиль</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/settings/profile">
+                                <i class="bi bi-gear"></i><span>Настройки</span>
+                            </a>
+                        </li>
+                        <% if (user && user.role === 'admin') { %>
+                            <li>
+                                <a class="dropdown-item" href="/settings?tab=users">
+                                    <i class="bi bi-people"></i><span>Пользователи</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item app-logout" href="/logout">
+                                <i class="bi bi-box-arrow-right"></i><span>Выход</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-
-        <img
-            src="<%= user.avatar %>"
-            class="rounded-circle border"
-            width="42"
-            height="42">
-
-    </a>
-
-    <ul class="dropdown-menu dropdown-menu-end shadow">
-        <li>
-            <a class="dropdown-item"
-               href="/profile">
-
-                <i class="bi bi-person"></i>
-                Профиль
-
-            </a>
-        </li>
-
-        <li>
-            <a class="dropdown-item"
-               href="/settings/profile">
-
-                <i class="bi bi-gear"></i>
-                Настройки
-
-            </a>
-        </li>
-
-        <li>
-            <a class="dropdown-item"
-               href="/settings?tab=users">
-
-                <i class="bi bi-people"></i>
-                Пользователи
-
-            </a>
-        </li>
-
-        <li>
-            <hr class="dropdown-divider">
-        </li>
-
-        <li>
-            <a class="dropdown-item text-danger"
-               href="/logout">
-
-                <i class="bi bi-box-arrow-right"></i>
-                Выход
-
-            </a>
-        </li>
-
-    </ul>
-
-</div>
-
-</div>
-
-    </div>
-  </nav>
+    </nav>
 </header>
 
 <% if (typeof breadcrumbs !== 'undefined' && breadcrumbs.length) { %>
-<div class="container-fluid">
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-
-    <% breadcrumbs.forEach((item, index) => { %>
-
-      <% if(index === breadcrumbs.length - 1) { %>
-
-        <li class="breadcrumb-item active">
-          <%= item.title %>
-        </li>
-
-      <% } else { %>
-
-        <li class="breadcrumb-item">
-          <a href="<%= item.url %>">
-            <%= item.title %>
-          </a>
-        </li>
-
-      <% } %>
-
-    <% }) %>
-
-  </ol>
-</nav>
-
-</div>
-
+    <div class="app-breadcrumb-wrap">
+        <nav aria-label="Навигационная цепочка">
+            <ol class="breadcrumb app-breadcrumb">
+                <% breadcrumbs.forEach((item, index) => { %>
+                    <% if (index === breadcrumbs.length - 1) { %>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <%= item.title %>
+                        </li>
+                    <% } else { %>
+                        <li class="breadcrumb-item">
+                            <a href="<%= item.url %>">
+                                <% if (index === 0) { %><i class="bi bi-house-door"></i><% } %>
+                                <%= item.title %>
+                            </a>
+                        </li>
+                    <% } %>
+                <% }) %>
+            </ol>
+        </nav>
+    </div>
 <% } %>
 
- <div class="container-fluid" id="cont">
+<div class="container-fluid" id="cont">
     <div class="row">

@@ -1,61 +1,53 @@
-<div class="col-md-2 sidebar" id="sidebar">
-    <ul class="nav flex-column">
+<aside class="col-md-2 sidebar app-sidebar" id="sidebar">
+    <div class="app-sidebar-inner">
+        <div class="app-sidebar-heading">
+            <span><i class="bi bi-compass"></i>Меню</span>
+            <button type="button" class="app-sidebar-close d-md-none" aria-label="Закрыть меню">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
 
-    <li class="nav-item">
-        <a class="nav-link <%= activeMenu === 'dashboard' ? 'active' : '' %>" href="/dashboard">
-            📊 <%= __('title.dashboard') %>
-        </a>
-    </li>
+        <nav class="app-sidebar-nav" aria-label="Разделы приложения">
+            <div class="app-nav-group">
+                <span class="app-nav-label">Работа</span>
+                <a class="app-nav-link <%= activeMenu === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+                    <i class="bi bi-grid-1x2"></i><span><%= __('title.dashboard') %></span>
+                </a>
+                <a class="app-nav-link <%= activeMenu === 'sales' ? 'active' : '' %>" href="/sales">
+                    <i class="bi bi-receipt"></i><span><%= __('title.sales') %></span>
+                </a>
+            </div>
 
-    <li class="nav-item">
-        <a class="nav-link <%= activeMenu === 'sales' ? 'active' : '' %>" href="/sales">
-            🛍️ <%= __('title.sales') %>
-        </a>
-    </li>
+            <% if (user && user.role === 'admin') { %>
+                <div class="app-nav-group">
+                    <span class="app-nav-label">Операции</span>
+                    <a class="app-nav-link <%= activeMenu === 'purchases' ? 'active' : '' %>" href="/purchases">
+                        <i class="bi bi-cart3"></i><span><%= __('title.purchases') %></span>
+                    </a>
+                    <a class="app-nav-link <%= activeMenu === 'transfers' ? 'active' : '' %>" href="/transfers">
+                        <i class="bi bi-arrow-left-right"></i><span><%= __('title.transfers') %></span>
+                    </a>
+                    <a class="app-nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">
+                        <i class="bi bi-boxes"></i><span><%= __('title.products') %></span>
+                    </a>
+                </div>
 
-    <% if (user && user.role === 'admin') { %>
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'purchases' ? 'active' : '' %>" href="/purchases">
-                🛒 <%= __('title.purchases') %>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'transfers' ? 'active' : '' %>" href="/transfers">
-                <i class="bi bi-arrow-left-right me-1"></i> <%= __('title.transfers') %>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'products' ? 'active' : '' %>" href="/products">
-                📦 <%= __('title.products') %>
-            </a>
-        </li>
-    
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'customers' ? 'active' : '' %>" href="/customers">
-                👥 <%= __('title.customers') %>
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'finance' ? 'active' : '' %>" href="/finance/cash">
-                💰 <%= __('title.finance') %>
-            </a>
-        </li>
-        
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'suppliers' ? 'active' : '' %>" href="/suppliers">
-                🚚 <%= __('title.suppliers') %>
-            </a>
-        </li>
-        
-        <li class="nav-item">
-            <a class="nav-link <%= activeMenu === 'settings' ? 'active' : '' %>" href="/settings">
-                ⚙️ <%= __('title.settings') %>
-            </a>
-        </li>
-    <% } %>
-
-    </ul>
-</div>
+                <div class="app-nav-group">
+                    <span class="app-nav-label">Компания</span>
+                    <a class="app-nav-link <%= activeMenu === 'customers' ? 'active' : '' %>" href="/customers">
+                        <i class="bi bi-people"></i><span><%= __('title.customers') %></span>
+                    </a>
+                    <a class="app-nav-link <%= activeMenu === 'finance' ? 'active' : '' %>" href="/finance/cash">
+                        <i class="bi bi-wallet2"></i><span><%= __('title.finance') %></span>
+                    </a>
+                    <a class="app-nav-link <%= activeMenu === 'suppliers' ? 'active' : '' %>" href="/suppliers">
+                        <i class="bi bi-truck"></i><span><%= __('title.suppliers') %></span>
+                    </a>
+                    <a class="app-nav-link <%= activeMenu === 'settings' ? 'active' : '' %>" href="/settings">
+                        <i class="bi bi-gear"></i><span><%= __('title.settings') %></span>
+                    </a>
+                </div>
+            <% } %>
+        </nav>
+    </div>
+</aside>

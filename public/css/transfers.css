@@ -1,6 +1,143 @@
 .transfers-page {
+    --transfers-primary: #2563eb;
+    --transfers-primary-dark: #1d4ed8;
+    --transfers-primary-soft: #eff6ff;
+    --transfers-success: #15803d;
+    --transfers-success-soft: #f0fdf4;
+    --transfers-warning: #b45309;
+    --transfers-warning-soft: #fffbeb;
+    --transfers-ink: #172033;
+    --transfers-muted: #64748b;
+    --transfers-border: #dbe3ee;
     min-width: 0;
-    padding-bottom: 2rem;
+    padding-top: 6px;
+    padding-bottom: 32px;
+    color: var(--transfers-ink);
+}
+
+.transfers-page :is(button, a, input, select):focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .24) !important;
+    outline-offset: 2px;
+}
+
+.transfers-shell {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.transfers-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.transfers-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--transfers-primary);
+    font-size: .75rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.transfers-header h1 {
+    margin: 0;
+    color: var(--transfers-ink);
+    font-size: clamp(1.75rem, 3vw, 2.35rem);
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.transfers-header p {
+    max-width: 700px;
+    margin: 8px 0 0;
+    color: var(--transfers-muted);
+    font-size: .95rem;
+    line-height: 1.55;
+}
+
+.transfers-primary-action {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid var(--transfers-primary);
+    border-radius: 10px;
+    background: var(--transfers-primary);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .2);
+}
+
+.transfers-primary-action:hover {
+    border-color: var(--transfers-primary-dark);
+    background: var(--transfers-primary-dark);
+    color: #fff;
+}
+
+.transfers-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.transfers-metric {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 13px;
+    padding: 15px 17px;
+    border: 1px solid var(--transfers-border);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, .04);
+}
+
+.transfers-metric-icon {
+    display: inline-flex;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.1rem;
+}
+
+.transfers-metric-icon--primary { color: var(--transfers-primary); background: var(--transfers-primary-soft); }
+.transfers-metric-icon--success { color: var(--transfers-success); background: var(--transfers-success-soft); }
+.transfers-metric-icon--warning { color: var(--transfers-warning); background: var(--transfers-warning-soft); }
+
+.transfers-metric-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.transfers-metric-copy span {
+    overflow: hidden;
+    color: var(--transfers-muted);
+    font-size: .76rem;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.transfers-metric-copy strong {
+    margin-top: 1px;
+    color: var(--transfers-ink);
+    font-size: 1.35rem;
+    line-height: 1.2;
 }
 
 .transfer-new-button {
@@ -10,7 +147,14 @@
 .transfer-filter-card,
 .transfer-history-card {
     overflow: hidden;
-    border-radius: .85rem;
+    border: 1px solid var(--transfers-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, .055);
+}
+
+.transfer-filter-card {
+    margin-bottom: 14px;
 }
 
 .transfer-filter-card .input-group-text,
@@ -130,6 +274,14 @@
 }
 
 @media (max-width: 767.98px) {
+    .transfers-header {
+        flex-direction: column;
+    }
+
+    .transfers-metrics {
+        grid-template-columns: 1fr;
+    }
+
     .transfer-new-button {
         width: 100%;
     }
@@ -139,3 +291,8 @@
     }
 }
 
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .transfers-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

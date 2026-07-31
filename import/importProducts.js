@@ -67,15 +67,24 @@ module.exports = async (
     // ВЫНЕСЛИ СЮДА, чтобы переменная была доступна во всем модуле, включая return
     const uniqueProducts = new Map();
     for (const product of products) {
-        const key = product.sku 
-            ? `sku:${String(product.sku).trim().toLowerCase()}` 
+        const key = product.sku
+            ? `sku:${String(product.sku).trim().toLowerCase()}`
             : `name:${String(product.name).trim().toLowerCase()}`;
         uniqueProducts.set(key, product);
+    }
+
+    if (!uniqueProducts.size) {
+        const emptyImportError = new Error(
+            'В файле импорта не найдено ни одного товара.'
+        );
+        emptyImportError.statusCode = 400;
+        throw emptyImportError;
     }
 
     let createdCount = 0;
     let updatedCount = 0;
     let categoriesCreated = 0;
+    let zeroedStockCount = 0;
     
     const connection = await db.getConnection();
 
@@ -149,6 +158,8 @@ module.exports = async (
         }
 
         // Шаг 5: Основной цикл обновления/создания записей
+        const importedProductIds = [];
+
         for (const product of uniqueProducts.values()) {
             const lookupKey = product.sku 
                 ? `sku:${String(product.sku).trim().toLowerCase()}` 
@@ -222,12 +233,28 @@ module.exports = async (
 
             // Шаг 6: Синхронизация количества товара на складе
             await connection.execute(
-                `INSERT INTO product_stores (product_id, store_id, quantity) 
-                 VALUES (?, ?, ?) 
+                `INSERT INTO product_stores (product_id, store_id, quantity)
+                 VALUES (?, ?, ?)
                  ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)`,
                 [productId, storeId, product.quantity]
             );
+            importedProductIds.push(productId);
         }
+
+        // Импорт является полной синхронизацией выбранного магазина.
+        // Обнуляем только те позиции, которых действительно нет в прайсе.
+        const placeholders = importedProductIds.map(() => '?').join(', ');
+        const [zeroedStocks] = await connection.execute(
+            `UPDATE product_stores ps
+             INNER JOIN products p ON p.id = ps.product_id
+             SET ps.quantity = 0
+             WHERE ps.store_id = ?
+               AND p.company_id = ?
+               AND ps.quantity <> 0
+               AND ps.product_id NOT IN (${placeholders})`,
+            [storeId, companyId, ...importedProductIds]
+        );
+        zeroedStockCount = zeroedStocks.affectedRows;
 
         await connection.commit();
 
@@ -242,6 +269,7 @@ module.exports = async (
         categoriesCreated,
         createdCount,
         updatedCount,
+        zeroedStockCount,
         totalProducts: uniqueProducts.size
     };
 };

@@ -8,6 +8,7 @@ const uploadImport = require('../config/upload-import');
 const page = require('../helpers/page');
 
 const importProducts = require('../import/importProducts');
+const previewProducts = require('../import/previewProducts');
 // const XLSX = require('xlsx');
 // const fs = require('fs');
 
@@ -57,34 +58,25 @@ router.post(
                 });
             }
 
-            const XLSX = require('xlsx');
-            const workbook = XLSX.readFile(req.file.path);
-            const sheet = workbook.Sheets['TDSheet'];
-
-            if (!sheet) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'В файле не найден обязательный лист TDSheet'
-                });
-            }
-
-            const rows = XLSX.utils.sheet_to_json(
-                sheet,
-                { range: 6, header: 1 }
+            const products = previewProducts(req.file.path);
+            const previewRows = products.slice(0, 20);
+            const totalQuantity = products.reduce(
+                (sum, product) => sum + product.quantity,
+                0
             );
-            const previewRows = rows.slice(0, 20);
 
             return res.json({
                 success: true,
                 rows: previewRows,
-                totalRows: rows.length
+                totalRows: products.length,
+                totalQuantity
             });
         } catch (error) {
             console.error(error);
 
             return res.status(400).json({
                 success: false,
-                error: 'Не удалось прочитать Excel-файл'
+                error: error.message || 'Не удалось прочитать Excel-файл'
             });
         } finally {
             const fs = require('fs');
@@ -170,7 +162,8 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
             req.session.importSuccess = {
                 categoriesCreated: result.categoriesCreated,
                 createdCount: result.createdCount,
-                updatedCount: result.updatedCount
+                updatedCount: result.updatedCount,
+                zeroedStockCount: result.zeroedStockCount
             };
             
             res.redirect('/products');

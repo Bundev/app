@@ -1,226 +1,164 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<div class="col content">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-        <h2>📊 <%= __('title.dashboard') %></h2>
-    </div>
-    <div class="row g-3 mb-4">
 
-        <div class="col-12 col-sm-6 col-xl-3">
+<%
+    const popularProducts = Array.isArray(topProducts) ? topProducts : [];
+    const recentInvoices = Array.isArray(invoices) ? invoices : [];
+    const maxQty = popularProducts.length
+        ? Math.max(...popularProducts.map(item => Number(item.total_qty || 0)), 1)
+        : 1;
+%>
 
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body">
-
-                    <div class="text-muted">
-                        Продажи сегодня
-                    </div>
-
-                    <h3 class="mt-2">
-                        <%= grossSalesToday.toFixed(2) %> ₴
-                    </h3>
-
+<div class="col content dashboard-page">
+    <div class="dashboard-shell">
+        <header class="dashboard-header">
+            <div>
+                <div class="dashboard-eyebrow">
+                    <i class="bi bi-grid-1x2"></i>Рабочая сводка
                 </div>
-
+                <h1><%= __('title.dashboard') %></h1>
+                <p>Продажи, возвраты и ключевые показатели за сегодня</p>
             </div>
+            <a href="/sales/new" class="dashboard-primary-action">
+                <i class="bi bi-plus-lg"></i>Новый чек
+            </a>
+        </header>
 
-        </div>
+        <section class="dashboard-metrics">
+            <article class="dashboard-metric">
+                <span class="dashboard-metric-icon dashboard-metric-icon--primary">
+                    <i class="bi bi-cart-check"></i>
+                </span>
+                <span class="dashboard-metric-copy">
+                    <span>Продажи сегодня</span>
+                    <strong><%= grossSalesToday.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong>
+                    <small><%= invoicesToday %> чеков</small>
+                </span>
+            </article>
 
-        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="dashboard-metric">
+                <span class="dashboard-metric-icon dashboard-metric-icon--danger">
+                    <i class="bi bi-arrow-return-left"></i>
+                </span>
+                <span class="dashboard-metric-copy">
+                    <span>Возвраты сегодня</span>
+                    <strong><%= returnsToday.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong>
+                    <small>Возвращено покупателям</small>
+                </span>
+            </article>
 
-            <div class="card border-0 shadow-sm">
+            <article class="dashboard-metric">
+                <span class="dashboard-metric-icon dashboard-metric-icon--success">
+                    <i class="bi bi-cash-stack"></i>
+                </span>
+                <span class="dashboard-metric-copy">
+                    <span>Чистая выручка</span>
+                    <strong><%= salesToday.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong>
+                    <small>После возвратов</small>
+                </span>
+            </article>
 
-                <div class="card-body">
-
-                    <div class="text-muted">
-                        Возвраты сегодня
-                    </div>
-
-                    <h3 class="mt-2">
-                        <%= returnsToday.toFixed(2) %> ₴
-                    </h3>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body">
-
-                    <div class="text-muted">
-                        Доход сегодня
-                    </div>
-
-                    <h3 class="mt-2">
-                        <%= salesToday.toFixed(2) %> ₴
-                    </h3>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-body">
-
+            <article class="dashboard-metric">
+                <span class="dashboard-metric-icon dashboard-metric-icon--warning">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </span>
+                <span class="dashboard-metric-copy">
                     <% if (user.role === 'admin') { %>
-
-                        <div class="text-muted">
-                            Маржа за сегодня
-                        </div>
-
-                        <h3 class="mt-2 text-success">
-                            <%= todayMargin.toFixed(2) %> ₴
-                        </h3>
-
+                        <span>Маржа сегодня</span>
+                        <strong><%= todayMargin.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</strong>
+                        <small>Расчётная прибыль</small>
                     <% } else { %>
+                        <span>Чеков сегодня</span>
+                        <strong><%= invoicesToday %></strong>
+                        <small>Проведённых операций</small>
+                    <% } %>
+                </span>
+            </article>
+        </section>
 
-                        <div class="text-muted">
-                            Чеков за сегодня
+        <section class="dashboard-secondary-metrics">
+            <div class="dashboard-secondary-metric">
+                <i class="bi bi-people"></i>
+                <span><small>Активных клиентов</small><strong><%= clientsCount %></strong></span>
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <a href="/sales" class="dashboard-secondary-metric">
+                <i class="bi bi-box-seam"></i>
+                <span><small>Продано товаров сегодня</small><strong><%= productsToday %></strong></span>
+                <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="/sales" class="dashboard-secondary-metric">
+                <i class="bi bi-clock-history"></i>
+                <span><small>Последних чеков</small><strong><%= recentInvoices.length %></strong></span>
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </section>
+
+        <div class="dashboard-grid">
+            <section class="dashboard-card dashboard-products-card">
+                <div class="dashboard-card-heading">
+                    <div>
+                        <h2>Популярные товары</h2>
+                        <p>Лидеры продаж за последние 7 дней</p>
+                    </div>
+                    <span class="dashboard-card-icon"><i class="bi bi-fire"></i></span>
+                </div>
+
+                <div class="dashboard-products-list">
+                    <% if (!popularProducts.length) { %>
+                        <div class="dashboard-empty">
+                            <i class="bi bi-bar-chart"></i>
+                            <strong>Пока недостаточно данных</strong>
+                            <span>Проданные товары появятся здесь автоматически</span>
                         </div>
-
-                        <h3 class="mt-2">
-                            <%= invoicesToday %>
-                        </h3>
-
                     <% } %>
 
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-    <div class="row g-3">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-
-                <div class="card-header bg-white fw-bold">
-
-                    🔥 Самые продаваемые товары
-                    <span class="text-muted">
-                        (7 дней)
-                    </span>
-
-                </div>
-
-                <div class="card-body top-products-body">
-
-                    <% const maxQty =
-                        topProducts.length
-                            ? topProducts[0].total_qty
-                            : 1;
-                    %>
-
-                    <% topProducts.forEach(item => { %>
-
-                        <div class="mb-3">
-
-                            <div class="d-flex justify-content-between">
-
-                                <div>
-
-                                    <strong>
-                                        <%= item.name %>
-                                    </strong>
-
+                    <% popularProducts.forEach((item, index) => { %>
+                        <div class="dashboard-product">
+                            <span class="dashboard-product-rank"><%= index + 1 %></span>
+                            <div class="dashboard-product-main">
+                                <div class="dashboard-product-line">
+                                    <strong><%= item.name %></strong>
+                                    <span><%= item.total_qty %> <%= item.unit %></span>
                                 </div>
-
-                                <div>
-
-                                    <span
-                                        class="badge bg-primary">
-
-                                        <%= item.total_qty %> <%= item.unit %>
-
-                                    </span>
-
+                                <div class="dashboard-product-progress">
+                                    <span style="width: <%= Math.min(100, Number(item.total_qty || 0) / maxQty * 100) %>%"></span>
                                 </div>
-
+                                <small>Продажи: <%= Number(item.total_sales).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> ₴</small>
                             </div>
-
-                            <div
-                                class="progress mt-2"
-                                style="height:8px;">
-
-                                <div
-                                    class="progress-bar"
-
-                                    style="
-                                        width:
-                                        <%= (item.total_qty / maxQty) * 100 %>%;
-                                    ">
-                                </div>
-
-                            </div>
-
-                            <small class="text-muted">
-
-                                Продажи:
-                                <%= Number(item.total_sales)
-                                    .toFixed(2) %> ₴
-
-                            </small>
-
                         </div>
-
                     <% }) %>
-
                 </div>
+            </section>
 
-            </div>
-
-
-        </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <%= __('dashboard.quickActions') %>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="/sales/new"
-                        class="btn btn-primary">
-
-                            🧾 Новый чек
-
-                        </a>
-                        <% if (user && user.role === 'admin') { %>
-                        <a href="/products"
-                        class="btn btn-outline-secondary">
-
-                            📦 Склад
-
-                        </a>
-
-                        <a href="/customers"
-                        class="btn btn-outline-secondary">
-
-                            👥 Клиенты
-
-                        </a>
-
-                        <a href="/finance/cash"
-                        class="btn btn-outline-secondary">
-
-                            💰 Касса
-
-                        </a>
-                        <%}%>
+            <aside class="dashboard-card dashboard-actions-card">
+                <div class="dashboard-card-heading">
+                    <div>
+                        <h2><%= __('dashboard.quickActions') %></h2>
+                        <p>Основные разделы системы</p>
                     </div>
+                    <span class="dashboard-card-icon"><i class="bi bi-lightning-charge"></i></span>
                 </div>
-            </div>
+                <div class="dashboard-actions-list">
+                    <a href="/sales/new" class="dashboard-action dashboard-action--primary">
+                        <i class="bi bi-receipt"></i><span><strong>Новый чек</strong><small>Оформить продажу</small></span><i class="bi bi-chevron-right"></i>
+                    </a>
+                    <% if (user && user.role === 'admin') { %>
+                        <a href="/products" class="dashboard-action">
+                            <i class="bi bi-boxes"></i><span><strong>Склад</strong><small>Товары и остатки</small></span><i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/customers" class="dashboard-action">
+                            <i class="bi bi-people"></i><span><strong>Клиенты</strong><small>Клиентская база</small></span><i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="/finance/cash" class="dashboard-action">
+                            <i class="bi bi-wallet2"></i><span><strong>Касса</strong><small>Движение средств</small></span><i class="bi bi-chevron-right"></i>
+                        </a>
+                    <% } %>
+                </div>
+            </aside>
         </div>
     </div>
 </div>
+
 <%- include('blocks/footer') -%>

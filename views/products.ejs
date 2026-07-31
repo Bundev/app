@@ -1,6 +1,19 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
+<%
+    const productRows = Array.isArray(products) ? products : [];
+    const stockTotal = productRows.reduce(
+        (total, product) => total + Number(product.quantity || 0),
+        0
+    );
+    const lowStockCount = productRows.filter(
+        product => Number(product.quantity || 0) > 0 && Number(product.quantity || 0) < 5
+    ).length;
+    const outOfStockCount = productRows.filter(
+        product => Number(product.quantity || 0) <= 0
+    ).length;
+%>
 <% if (importSuccess) { %>
 
 <div
@@ -34,6 +47,11 @@
 
             Товаров обновлено:
             <%= importSuccess.updatedCount %>
+
+            <br>
+
+            Остатков обнулено:
+            <%= importSuccess.zeroedStockCount || 0 %>
 
         </div>
 
@@ -102,54 +120,78 @@
     </div>
 
 </div>
-<div class="col content">
+<div class="col content products-page">
+    <div class="products-shell">
 
-    <div class="d-flex products-header justify-content-between align-items-center mb-4">
+    <header class="products-header">
+        <div>
+            <div class="products-eyebrow"><i class="bi bi-box-seam"></i>Управление товарами</div>
+            <h1>Склад</h1>
+            <p>Товары, цены и актуальные остатки по магазинам</p>
+        </div>
 
-        <h2 class="products-title">
-            📦 Склад
-        </h2>
-
-        <div class="d-flex gap-2 products-actions">
+        <div class="products-actions">
 
             <a
                 href="/products/add"
-                class="btn btn-primary" title="Добавить товар">
+                class="products-primary-action" title="Добавить товар">
 
                 <i class="bi bi-plus-lg"></i>
-                
+                <span>Добавить товар</span>
 
             </a>
 
             <a
                 href="/products/import"
-                class="btn btn-success" title="Импортировать Exlx">
+                class="products-secondary-action" title="Импортировать Excel">
 
                 <i class="bi bi-file-earmark-excel"></i>
-                
+                <span>Импорт Excel</span>
 
             </a>
 
         </div>
 
-    </div>
+    </header>
 
-    <div class="card shadow-sm border-0">
+    <section class="products-metrics">
+        <div class="products-metric">
+            <span class="products-metric-icon products-metric-icon--primary"><i class="bi bi-boxes"></i></span>
+            <span class="products-metric-copy"><span>Товаров</span><strong><%= productRows.length %></strong></span>
+        </div>
+        <div class="products-metric">
+            <span class="products-metric-icon products-metric-icon--success"><i class="bi bi-stack"></i></span>
+            <span class="products-metric-copy"><span>Единиц на складе</span><strong><%= stockTotal.toLocaleString(lang === 'uk' ? 'uk-UA' : 'ru-RU') %></strong></span>
+        </div>
+        <div class="products-metric">
+            <span class="products-metric-icon products-metric-icon--warning"><i class="bi bi-exclamation-triangle"></i></span>
+            <span class="products-metric-copy"><span>Заканчиваются</span><strong><%= lowStockCount %></strong></span>
+        </div>
+        <div class="products-metric">
+            <span class="products-metric-icon products-metric-icon--danger"><i class="bi bi-x-circle"></i></span>
+            <span class="products-metric-copy"><span>Нет в наличии</span><strong><%= outOfStockCount %></strong></span>
+        </div>
+    </section>
+
+    <div class="products-list-card">
 
         <div class="card-body">
 
-            <div class="d-flex justify-content-between mb-3">
+            <div class="products-toolbar">
 
-                <input
-                    type="text"
-                    class="form-control"
-                    id="search-product"
-                    placeholder="🔍 Поиск по названию, артикулу, штрихкоду..."
-                    oninput="filterProducts()">
+                <div class="products-search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        class="form-control"
+                        id="search-product"
+                        placeholder="Поиск по названию, артикулу или штрихкоду"
+                        oninput="filterProducts()">
+                </div>
 
                 <span
                     id="products-count"
-                    class="badge bg-primary align-self-center">
+                    class="products-count">
 
                     <%= products.length %>
 
@@ -157,13 +199,13 @@
 
             </div>
 
-            <div class="row mb-3 align-items-center g-2">
-                <div class="col-md-4 col-sm-12">
-                    <form method="GET" action="/products" class="d-flex align-items-center">
-                        <label for="categoryId" class="me-2 fw-medium text-muted small text-uppercase text-nowrap">
-                            <i class="bi bi-funnel me-1"></i>Категория:
+            <div class="products-filters">
+                <div class="products-category-filter">
+                    <form method="GET" action="/products">
+                        <label for="categoryId">
+                            <i class="bi bi-funnel"></i>Категория
                         </label>
-                        <select name="categoryId" id="categoryId" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select name="categoryId" id="categoryId" class="form-select" onchange="this.form.submit()">
                             <option value="all" <%= categoryId === 'all' ? 'selected' : '' %>>Все категорий (все)</option>
                             <% categories.forEach(cat => { %>
                                 <option value="<%= cat.id %>" <%= String(categoryId) === String(cat.id) ? 'selected' : '' %>>
@@ -176,31 +218,31 @@
             </div>
             <div class="table-responsive products-table-wrapper">
 
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle products-table">
                     <thead class="table-light">
 
                     <tr>
 
-                        <th width="120">
+                        <th class="products-code-column">
                             Артикул
                         </th>
-                        <th width="120">
+                        <th class="products-barcode-column">
                             Штрихкод
                         </th>
 
-                        <th>
+                        <th class="products-name-column">
                             Товар
                         </th>
 
-                        <th width="120">
+                        <th class="products-price-column">
                             Цена
                         </th>
 
-                        <th width="100">
+                        <th class="products-stock-column">
                             Остаток
                         </th>
 
-                        <th width="120">
+                        <th class="products-actions-column">
                             Действия
                         </th>
 
@@ -253,7 +295,7 @@
 
                         </td>
 
-                        <td>
+                        <td class="product-main-cell">
 
                             <div class="d-flex flex-column">
 
@@ -292,11 +334,11 @@
 
                         </td>
 
-                        <td>
+                        <td class="product-price-cell">
 
                             <button
                                 type="button"
-                                class="editable-value editable-number fw-bold text-success"
+                                class="editable-value editable-number product-sale-price"
                                 data-id="<%= product.id %>"
                                 data-field="sale_price"
                                 data-value="<%= product.sale_price %>"
@@ -308,7 +350,7 @@
 
                             <button
                                 type="button"
-                                class="editable-value editable-number small text-muted"
+                                class="editable-value editable-number product-purchase-price"
                                 data-id="<%= product.id %>"
                                 data-field="purchase_price"
                                 data-value="<%= product.purchase_price %>"
@@ -321,7 +363,7 @@
 
                         </td>
 
-                        <td>
+                        <td class="product-stock-cell">
 
                             <button
                                 type="button"
@@ -333,7 +375,7 @@
 
                             <% if (product.quantity <= 0) { %>
 
-                                <span class="badge bg-danger">
+                                <span class="product-stock product-stock--empty">
 
                                     Нет
 
@@ -341,7 +383,7 @@
 
                             <% } else if (product.quantity < 5) { %>
 
-                                <span class="badge bg-warning text-dark">
+                                <span class="product-stock product-stock--low">
 
                                     <%= product.quantity %>
 
@@ -349,7 +391,7 @@
 
                             <% } else { %>
 
-                                <span class="badge bg-success">
+                                <span class="product-stock product-stock--available">
 
                                     <%= product.quantity %>
 
@@ -361,39 +403,44 @@
 
                         </td>
 
-                        <td>
+                        <td class="product-actions-cell">
 
-                            <div class="btn-group">
+                            <div class="product-row-actions">
 
                                 <a
                                     href="/products/view/<%= product.id %>"
-                                    class="btn btn-outline-primary" target="_blank">
-
-                                    👁
+                                    class="product-row-action product-row-action--view"
+                                    target="_blank"
+                                    title="Просмотреть товар"
+                                    aria-label="Просмотреть товар <%= product.name %>">
+                                    <i class="bi bi-eye"></i>
 
                                 </a>
 
                                 <a
                                     href="/products/edit/<%= product.id %>"
-                                    class="btn btn-outline-secondary" >
-
-                                    ✏️
+                                    class="product-row-action"
+                                    title="Редактировать товар"
+                                    aria-label="Редактировать товар <%= product.name %>">
+                                    <i class="bi bi-pencil"></i>
 
                                 </a>
                                 <a
                                     href="/products/label/<%= product.id %>"
-                                    target="_blank" title="Ценник"
-                                    class="btn btn-sm btn-outline-secondary" target="_blank">
-
-                                    🏷 
+                                    target="_blank"
+                                    title="Открыть ценник"
+                                    class="product-row-action"
+                                    aria-label="Открыть ценник товара <%= product.name %>">
+                                    <i class="bi bi-tag"></i>
 
                                 </a>
                                 <a
                                     href="/products/archive/<%= product.id %>"
-                                    class="btn btn-outline-warning"
+                                    class="product-row-action product-row-action--archive"
+                                    title="Переместить в архив"
+                                    aria-label="Переместить товар <%= product.name %> в архив"
                                     onclick="return confirm('Переместить товар в архив?')">
-
-                                    📦
+                                    <i class="bi bi-archive"></i>
 
                                 </a>
 
@@ -413,6 +460,7 @@
 
         </div>
 
+    </div>
     </div>
 </div>
 

@@ -2,17 +2,19 @@
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
 <div class="col content finance-cash-page">
-<div class="d-flex justify-content-between align-items-center mb-4 finance-cash-header">
+<div class="finance-cash-shell">
+<header class="finance-cash-header">
         <div>
-            <h1 class="h3 mb-0 text-gray-800">Финансы и Касса</h1>
-            <p class="text-muted small mb-0">Оперативный учет денежных средств компании</p>
+            <div class="finance-eyebrow"><i class="bi bi-wallet2"></i>Финансовый центр</div>
+            <h1>Финансы и касса</h1>
+            <p>Оперативный учёт денежных средств компании</p>
         </div>
         <form method="GET" action="/finance/cash" class="d-flex align-items-center finance-period-filter">
             <input type="hidden" name="docType" value="<%= docType %>">
             <input type="hidden" name="employeeId" value="<%= employeeId %>">
             <input type="hidden" name="method" value="<%= method %>">
             
-            <label for="period" class="me-2 fw-medium">Период:</label>
+            <label for="period"><i class="bi bi-calendar3"></i>Период</label>
             <select name="period" id="period" class="form-select w-auto" onchange="this.form.submit()">
                 <option value="day" <%= period === 'day' ? 'selected' : '' %>>
                     За сегодня
@@ -51,19 +53,19 @@
                 </option>
             </select>
         </form>
-        <div class="btn-group shadow-sm finance-actions">
-            <button type="button" class="btn btn-success btn-sm px-3" data-bs-toggle="modal" data-bs-target="#transModal" onclick="setTransType('income')">
+        <div class="finance-actions">
+            <button type="button" class="finance-action finance-action--income" data-bs-toggle="modal" data-bs-target="#transModal" onclick="setTransType('income')">
                 <i class="bi bi-cash-coin me-1"></i> Внести деньги
             </button>
-            <button type="button" class="btn btn-danger btn-sm px-3" data-bs-toggle="modal" data-bs-target="#transModal" onclick="setTransType('expense')">
+            <button type="button" class="finance-action finance-action--expense" data-bs-toggle="modal" data-bs-target="#transModal" onclick="setTransType('expense')">
                 <i class="bi bi-box-arrow-right me-1"></i> Расход / Инкассация
             </button>
         </div>
-    </div>
+    </header>
 
     <div class="row g-3 mb-4 finance-summary">
         <div class="col-12 col-sm-6 col-xl">
-            <div class="card border-0 shadow-sm bg-primary text-white h-100">
+            <div class="card finance-metric finance-metric--total h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center">
                     <h6 class="text-uppercase small text-white-50 fw-bold mb-1">Всего в кассе</h6>
                     <h2 class="mb-0 fw-bold"><%= totalBalance.toFixed(2) %> ₴</h2>
@@ -71,7 +73,7 @@
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl">
-            <div class="card border-0 shadow-sm bg-white h-100">
+            <div class="card finance-metric finance-metric--cash h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-success border-4 rounded-start">
                     <h6 class="text-uppercase small text-muted fw-bold mb-1 text-success">Наличные (💵)</h6>
                     <h2 class="mb-0 fw-bold text-dark"><%= cashBalance.toFixed(2) %> ₴</h2>
@@ -79,7 +81,7 @@
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl">
-            <div class="card border-0 shadow-sm bg-white h-100">
+            <div class="card finance-metric finance-metric--cashless h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-info border-4 rounded-start">
                     <h6 class="text-uppercase small text-muted fw-bold mb-1 text-info">Безналичные / переводы (🏦)</h6>
                     <h2 class="mb-0 fw-bold text-dark"><%= (Number(cardBalance || 0) + Number(transferBalance || 0)).toFixed(2) %> ₴</h2>
@@ -91,7 +93,7 @@
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl">
-            <div class="card border-0 shadow-sm bg-white h-100">
+            <div class="card finance-metric finance-metric--cost h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-secondary border-4 rounded-start">
                     <h6 class="text-uppercase small text-muted fw-bold mb-1">Себестоимость продаж</h6>
                     <h2 class="mb-0 fw-bold text-dark"><%= Number(costTotal || 0).toFixed(2) %> ₴</h2>
@@ -100,7 +102,7 @@
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl">
-            <div class="card border-0 shadow-sm bg-white h-100">
+            <div class="card finance-metric finance-metric--margin h-100">
                 <div class="card-body py-3 d-flex flex-column justify-content-center border-start border-warning border-4 rounded-start">
                     <h6 class="text-uppercase small text-muted fw-bold mb-1 text-warning">Маржа продаж</h6>
                     <h2 class="mb-0 fw-bold <%= margin >= 0 ? 'text-success' : 'text-danger' %>"><%= Number(margin).toFixed(2) %> ₴</h2>
@@ -112,7 +114,7 @@
 
     <% if (currentUser.role === 'admin' || currentUser.role === 'Администратор') { %>
         <% const staffTotals = employeeTotals || {}; %>
-        <div class="card shadow-sm border-0 mb-4">
+        <div class="card finance-section-card mb-4">
             <div class="card-header bg-white fw-bold py-3 text-muted text-uppercase small d-flex flex-wrap gap-2 justify-content-between align-items-center border-bottom-0">
                 <span><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Кассы сотрудников (Контроль персонала)</span>
                 <div class="d-flex flex-wrap gap-2 finance-employee-totals">
@@ -201,7 +203,7 @@
             </div>
         </div>
     <% } %>
-    <div class="card shadow-sm border-0 mb-4">
+    <div class="card finance-section-card mb-4">
         <div class="card-header bg-white py-3 border-bottom-0">
             <div class="row align-items-center g-2">
                 <div class="col-xl-4 col-md-12">
@@ -311,6 +313,8 @@
             </div>
         </div>
     </div>
+</div>
+
 </div>
 
 <div class="modal fade" id="transModal" tabindex="-1" aria-hidden="true">

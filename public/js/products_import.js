@@ -150,14 +150,13 @@
     };
 
     const createPreviewTable = rows => {
-        const normalizedRows = rows.map(row =>
-            Array.isArray(row) ? row : [row]
-        );
-        const columnCount = Math.max(
-            ...normalizedRows.map(row => row.length),
-            1
-        );
-
+        const columns = [
+            { key: 'category', label: 'Категория' },
+            { key: 'name', label: 'Название товара' },
+            { key: 'unit', label: 'Ед.' },
+            { key: 'purchasePrice', label: 'Закупочная цена', numeric: true },
+            { key: 'quantity', label: 'Остаток', numeric: true }
+        ];
         const table = document.createElement('table');
         table.className = 'table table-hover align-middle';
 
@@ -169,38 +168,43 @@
         rowNumberHeader.textContent = '#';
         headerRow.append(rowNumberHeader);
 
-        for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
+        columns.forEach(column => {
             const header = document.createElement('th');
             header.scope = 'col';
-            header.textContent = `Колонка ${columnIndex + 1}`;
+            header.textContent = column.label;
+            if (column.numeric) {
+                header.classList.add('products-import-numeric');
+            }
             headerRow.append(header);
-        }
+        });
 
         thead.append(headerRow);
         table.append(thead);
 
         const tbody = document.createElement('tbody');
 
-        normalizedRows.forEach((row, rowIndex) => {
+        rows.forEach((row, rowIndex) => {
             const tableRow = document.createElement('tr');
             const rowNumber = document.createElement('td');
             rowNumber.className = 'products-import-row-number';
             rowNumber.textContent = String(rowIndex + 1);
             tableRow.append(rowNumber);
 
-            for (
-                let columnIndex = 0;
-                columnIndex < columnCount;
-                columnIndex += 1
-            ) {
+            columns.forEach(column => {
                 const cell = document.createElement('td');
-                const value = row[columnIndex];
+                const value = row[column.key];
                 cell.textContent =
                     value === null || value === undefined
                         ? ''
                         : String(value);
+                if (column.numeric) {
+                    cell.classList.add('products-import-numeric');
+                }
+                if (column.key === 'name') {
+                    cell.classList.add('products-import-product-name');
+                }
                 tableRow.append(cell);
-            }
+            });
 
             tbody.append(tableRow);
         });
@@ -347,13 +351,17 @@
 
             const table = createPreviewTable(result.rows);
             const totalRows = Number(result.totalRows);
+            const totalQuantity = Number(result.totalQuantity);
             const hasTotalRows =
                 Number.isFinite(totalRows) &&
                 totalRows >= result.rows.length;
 
             previewContainer.replaceChildren(table);
             previewMeta.textContent = hasTotalRows
-                ? `Показано ${result.rows.length} из ${totalRows} строк`
+                ? `Распознано ${totalRows} товаров · показаны первые ${result.rows.length}` +
+                    (Number.isFinite(totalQuantity)
+                        ? ` · общий остаток ${totalQuantity}`
+                        : '')
                 : `Показано строк: ${result.rows.length}`;
             previewSection.classList.remove('d-none');
             importButton.classList.remove('d-none');
