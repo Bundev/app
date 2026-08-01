@@ -54,7 +54,7 @@ exports.login = async (req, res) => {
 
             return res.render('login', {
                 titleKey: 'title.login',
-                error: 'Неверный логин или пароль',
+                error: req.__('auth.invalidCredentials'),
                 success: null,
                 ...page(req, 'login')
             });
@@ -72,7 +72,7 @@ exports.login = async (req, res) => {
 
             return res.render('login', {
                 titleKey: 'title.login',
-                error: 'Неверный логин или пароль',
+                error: req.__('auth.invalidCredentials'),
                 success: null,
                 ...page(req, 'login')
             });
@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
 
             return res.render('login', {
                 titleKey: 'title.login',
-                error: 'Ваш аккаунт заблокирован',
+                error: req.__('auth.accountBlocked'),
                 success: null,
                 ...page(req, 'login')
             });
@@ -112,7 +112,7 @@ exports.login = async (req, res) => {
     } catch (error) {
 
         console.error(error);
-        res.status(500).send('Ошибка входа');
+        res.status(500).send(req.__('auth.loginError'));
 
     }
 
@@ -124,6 +124,7 @@ exports.showRegister = (req, res) => {
         titleKey: 'title.register',
         error: null,
         success: null,
+        formData: {},
         ...page(req, 'register')
     });
 
@@ -131,92 +132,87 @@ exports.showRegister = (req, res) => {
 
 exports.register = async (req, res) => {
 
+    const formData = {
+        companyName: (req.body.company_name || '').trim(),
+        name: (req.body.name || '').trim(),
+        email: (req.body.email || '').trim(),
+        login: (req.body.login || '').trim()
+    };
+
+    const renderError = error => res.render('register', {
+        titleKey: 'title.register',
+        error,
+        success: null,
+        formData,
+        ...page(req, 'register')
+    });
+
+    if (!formData.companyName) {
+        return renderError(req.__('auth.companyRequired'));
+    }
+
+    if (formData.companyName.length > 255) {
+        return renderError(req.__('auth.companyTooLong'));
+    }
+
+    if (req.body.password !== req.body.password2) {
+        return renderError(req.__('auth.passwordMismatch'));
+    }
+
+    let connection;
+
     try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
 
-        const {
-            name,
-            login,
-            email,
-            password,
-            password2
-        } = req.body;
-
-        if (password !== password2) {
-
-            return res.render('register', {
-                titleKey: 'title.register',
-                error: 'Пароли не совпадают',
-                success: null,
-                ...page(req, 'register')
-            });
-
-        }
-
-        const [exists] = await db.execute(
-            `
-            SELECT id
-            FROM user
-            WHERE login = ?
-               OR email = ?
-            `,
-            [
-                login,
-                email
-            ]
+        const [exists] = await connection.execute(
+            `SELECT id FROM user WHERE login = ? OR email = ? LIMIT 1`,
+            [formData.login, formData.email]
         );
 
         if (exists.length) {
-
-            return res.render('register', {
-                titleKey: 'title.register',
-                error: 'Пользователь с таким логином или email уже существует',
-                success: null,
-                ...page(req, 'register')
-            });
-
+            await connection.rollback();
+            return renderError(req.__('auth.userExists'));
         }
 
-        const hashedPassword = await bcrypt.hash(
-            password,
-            10
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+        const [companyResult] = await connection.execute(
+            `INSERT INTO companies (name, status, created_at)
+             VALUES (?, 'active', NOW())`,
+            [formData.companyName]
         );
 
-        await db.execute(
-            `
-            INSERT INTO user
-            (
-                name,
-                email,
-                login,
-                password,
-                role,
-                avatar,
-                created_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            `,
+        await connection.execute(
+            `INSERT INTO user
+                (company_id, name, email, login, password, role, avatar, created_at)
+             VALUES (?, ?, ?, ?, ?, 'admin', ?, NOW())`,
             [
-                name,
-                email,
-                login,
+                companyResult.insertId,
+                formData.name,
+                formData.email,
+                formData.login,
                 hashedPassword,
-                'admin',
-                '/img/default-avatar.png',
-                new Date()
+                '/img/default-avatar.png'
             ]
         );
 
-        req.session.success =
-            'Пользователь успешно зарегистрирован';
-
-        res.redirect('/login');
+        await connection.commit();
+        req.session.success = req.__('auth.registrationSuccess');
+        return res.redirect('/login');
 
     } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
 
         console.error(error);
+        return renderError(req.__('auth.registrationError'));
 
-        res.status(500).send('Ошибка регистрации');
-
+    } finally {
+        if (connection) {
+            connection.release();
+        }
     }
 
 };

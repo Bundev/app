@@ -475,5 +475,33 @@ tr.selected-product-row td {
         border-radius: 3px 3px 0 0;
     }
 
+/* Unified checkout workspace */
+.new-sale-page { min-width: 0; padding: 20px 22px 34px !important; background: transparent; }
+.new-sale-page > .d-flex:first-child { min-height: 54px; margin-bottom: 18px !important; padding: 0 14px !important; border: 1px solid #e2e8f0 !important; border-radius: 13px; background: #fff !important; box-shadow: 0 6px 20px rgba(15,23,42,.045); }
+.new-sale-page .card { border: 1px solid #e2e8f0 !important; border-radius: 14px !important; background: #fff; box-shadow: 0 7px 24px rgba(15,23,42,.045) !important; }
+.new-sale-page .card-header { padding: 15px 17px; border-bottom: 1px solid #e8edf4; background: #fff !important; }
+.new-sale-page .form-label { color: #475569; font-size: .75rem; font-weight: 700; }
+.new-sale-page :is(.form-control,.form-select,.input-group-text) { min-height: 42px; border-color: #dbe3ee; font-size: .82rem; }
+.new-sale-page :is(.form-control,.form-select):focus { border-color: #93b4f8; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.new-sale-page .btn { border-radius: 8px; font-size: .78rem; font-weight: 700; }
+.new-sale-page #add-receipt-btn { min-height: 36px; padding: 7px 12px; border-color: #2563eb; background: #2563eb; }
+.new-sale-page .custom-material-tabs { gap: 8px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+.new-sale-page .custom-material-tabs::-webkit-scrollbar { display: none; }
+.new-sale-page .custom-material-tabs .nav-link { padding: 16px 8px 13px; white-space: nowrap; }
+.new-sale-page #receipt-items-scroll { height: min(58vh,610px); border-radius: 0 0 13px 13px; }
+.new-sale-page .table-sales thead th { padding: 11px 12px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; font-size: .66rem; letter-spacing: .055em; }
+.new-sale-page .table-sales tbody tr { height: 64px; }
+.new-sale-page .table-sales td { padding: 10px 12px; border-color: #edf1f5; }
+.new-sale-page .product-image { width: 54px; height: 54px; padding: 3px; border: 1px solid #edf1f5; border-radius: 9px; background: #fff; }
+.new-sale-page .qty-control .btn,.new-sale-page .qty-control .qty,.new-sale-page .btn-remove { height: 34px; }
+.new-sale-page .card-footer { padding: 15px 17px; border-top-color: #e2e8f0; box-shadow: 0 -6px 20px rgba(15,23,42,.045); }
+.new-sale-page :is(#total-sum,#subtotal-sum,#discount-sum,#change) { font-size: 1.2rem; }
+
+@media (max-width: 767.98px) {
+    .new-sale-page { padding: 12px 10px 24px !important; }
+    .new-sale-page > .d-flex:first-child { padding: 0 10px !important; }
+    .new-sale-page #receipt-items-scroll { height: auto; max-height: 55vh; }
+}
+
 
 

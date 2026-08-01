@@ -424,6 +424,121 @@ body {
     padding: 0;
 }
 
+/* Shared layout for settings-related forms and detail pages */
+.system-form-page {
+    min-width: 0;
+    padding: 26px 28px 42px !important;
+    background: transparent;
+}
+
+.system-form-page > .container-fluid {
+    max-width: 1120px;
+    padding: 0;
+}
+
+.system-form-page > .card,
+.system-form-page form > .card,
+.system-form-page .store-card {
+    overflow: hidden;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 15px !important;
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, .05) !important;
+}
+
+.system-form-page .card-header {
+    padding: 17px 20px;
+    border-bottom: 1px solid #e8edf4;
+    background: #fff !important;
+}
+
+.system-form-page .card-header h5,
+.system-form-page .card-header h4 {
+    color: #0f172a;
+    font-weight: 750;
+    letter-spacing: -.015em;
+}
+
+.system-form-page .card-header i {
+    color: #2563eb;
+}
+
+.system-form-page .card-body {
+    padding: 22px;
+}
+
+.system-form-page .form-label {
+    margin-bottom: 7px;
+    color: #334155;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.system-form-page :is(.form-control, .form-select) {
+    min-height: 43px;
+    border-color: #dbe3ee;
+    border-radius: 9px;
+    color: #1e293b;
+    font-size: .84rem;
+}
+
+.system-form-page :is(.form-control, .form-select):focus {
+    border-color: #93b4f8;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
+}
+
+.system-form-page .btn {
+    min-height: 40px;
+    border-radius: 9px;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.system-form-page .btn-primary {
+    border-color: #2563eb;
+    background: #2563eb;
+    box-shadow: 0 5px 12px rgba(37, 99, 235, .16);
+}
+
+.system-form-page > .container-fluid > .d-flex:first-child {
+    margin-bottom: 20px !important;
+    padding: 0 2px;
+}
+
+.system-form-page > .container-fluid > .d-flex:first-child h2 {
+    color: #0f172a;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -.03em;
+}
+
+.system-form-page > .container-fluid > .d-flex:first-child > span {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 1.15rem !important;
+}
+
+@media (max-width: 767.98px) {
+    .system-form-page {
+        padding: 18px 12px 30px !important;
+    }
+
+    .system-form-page .card-header,
+    .system-form-page .card-body {
+        padding: 16px;
+    }
+
+    .system-form-page > .container-fluid > .d-flex:first-child h2 {
+        font-size: 1.45rem;
+    }
+}
+
 .header,
 .topbar {
     width: 100%;

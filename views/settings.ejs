@@ -2,10 +2,22 @@
 <%- include('blocks/head') -%>
 <%- include('blocks/header') -%>
 <%- include('blocks/menu') -%>
-<div class="col content">
+<div class="col content settings-page">
+
+    <header class="settings-page-header">
+        <div>
+            <div class="settings-page-eyebrow"><i class="bi bi-sliders2"></i> Центр управления</div>
+            <h1>Настройки CRM</h1>
+            <p>Компания, сотрудники, магазины и параметры работы системы</p>
+        </div>
+        <div class="settings-page-status">
+            <span class="settings-page-status__icon"><i class="bi bi-shield-check"></i></span>
+            <span><small>Режим доступа</small><strong>Администратор</strong></span>
+        </div>
+    </header>
 
 
-    <h2 class="mb-4">
+    <h2 class="settings-legacy-title visually-hidden">
 
         <i class="bi bi-gear-fill"></i>
 
@@ -13,9 +25,9 @@
 
     </h2>
 
-    <div class="row">
+    <div class="row g-4 settings-layout">
 
-        <div class="col-md-3">
+        <div class="col-lg-3 settings-navigation-column">
 
             <div class="list-group shadow-sm settings-nav">
 
@@ -87,7 +99,7 @@
 
         </div>
 
-        <div class="col-md-9">
+        <div class="col-lg-9 settings-content-column">
 
             <div class="tab-content">
 
@@ -97,9 +109,14 @@
 
                     <div class="card shadow-sm border-0 settings-panel">
 
-                        <div class="card-header settings-panel__header">
-                            <h5 class="settings-panel__title"><i class="bi bi-building me-2"></i>Данные компании</h5>
-                            <p class="settings-panel__description">Основная информация об организации</p>
+                        <div class="card-header settings-panel__header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div>
+                                <h5 class="settings-panel__title"><i class="bi bi-building me-2"></i>Данные компании</h5>
+                                <p class="settings-panel__description">Основная информация об организации</p>
+                            </div>
+                            <a href="/settings/backup" class="btn btn-outline-primary btn-sm settings-backup-button">
+                                <i class="bi bi-cloud-arrow-down me-1"></i><%= __('backup.download') %>
+                            </a>
                         </div>
 
                         <div class="card-body">
@@ -116,7 +133,41 @@
                                 </div>
                             <% } %>
 
+                            <% if (backupSuccess) { %>
+                                <div class="alert alert-success" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i><%= backupSuccess %>
+                                </div>
+                            <% } %>
+
+                            <% if (backupError) { %>
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="bi bi-exclamation-circle-fill me-2"></i><%= backupError %>
+                                </div>
+                            <% } %>
+
                             <% if (company) { %>
+                            <div class="settings-backup-note">
+                                <span><i class="bi bi-shield-check"></i></span>
+                                <div>
+                                    <strong><%= __('backup.title') %></strong>
+                                    <small><%= __('backup.description') %></small>
+                                </div>
+                            </div>
+                            <form
+                                method="POST"
+                                action="/settings/backup/import"
+                                enctype="multipart/form-data"
+                                class="settings-backup-import"
+                                onsubmit="return confirm('<%= __('backup.importConfirm') %>');">
+                                <div>
+                                    <label for="companyBackupFile" class="form-label"><%= __('backup.importLabel') %></label>
+                                    <input id="companyBackupFile" type="file" name="backup" class="form-control" accept="application/json,.json" required>
+                                    <small><%= __('backup.importHint') %></small>
+                                </div>
+                                <button type="submit" class="btn btn-outline-success">
+                                    <i class="bi bi-cloud-arrow-up me-1"></i><%= __('backup.import') %>
+                                </button>
+                            </form>
                             <form method="POST" action="/settings/company">
                             <div class="mb-3">
 

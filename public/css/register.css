@@ -1,12 +1,1 @@
-body {
-    background:
-        linear-gradient(
-            135deg,
-            #1e3a8a,
-            #2563eb
-        );
-}
-
-.card {
-    border-radius: 16px;
-}
+@import url('/css/login.css');

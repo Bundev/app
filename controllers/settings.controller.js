@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const page = require('../helpers/page');
+const { createCompanyBackup } = require('../services/company-backup.service');
+const { restoreCompanyBackup } = require('../services/company-restore.service');
 
 exports.index = async (req, res) => {
 
@@ -55,6 +57,8 @@ exports.index = async (req, res) => {
         companyError: req.session.companyError || null,
         storeSuccess: req.session.storeSuccess || null,
         storeError: req.session.storeError || null,
+        backupSuccess: req.session.backupSuccess || null,
+        backupError: req.session.backupError || null,
         ...page(req, 'settings', [
             { title: req.__('title.settings') }
         ])
@@ -64,6 +68,8 @@ exports.index = async (req, res) => {
     delete req.session.companyError;
     delete req.session.storeSuccess;
     delete req.session.storeError;
+    delete req.session.backupSuccess;
+    delete req.session.backupError;
 
 };
 
@@ -110,4 +116,65 @@ exports.updateCompany = async (req, res) => {
         return res.redirect('/settings?tab=company');
     }
 
+};
+
+exports.downloadBackup = async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send(req.__('backup.forbidden'));
+    }
+
+    try {
+        const backup = await createCompanyBackup(req.session.user.company_id);
+        const safeName = String(backup.company.name || 'company')
+            .trim()
+            .replace(/[^a-zA-Z0-9а-яА-ЯёЁіІїЇєЄ_-]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 60) || 'company';
+        const date = new Date().toISOString().slice(0, 10);
+        const fileName = `retailpro-backup-${safeName}-${date}.json`;
+
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="retailpro-backup-${date}.json"; filename*=UTF-8''${encodeURIComponent(fileName)}`
+        );
+        res.setHeader('Cache-Control', 'no-store');
+        return res.send(JSON.stringify(backup, null, 2));
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send(req.__('backup.failed'));
+    }
+};
+
+exports.importBackup = async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).send(req.__('backup.forbidden'));
+    }
+
+    if (!req.file || !req.file.buffer) {
+        req.session.backupError = req.__('backup.fileRequired');
+        return res.redirect('/settings?tab=company');
+    }
+
+    try {
+        const backup = JSON.parse(req.file.buffer.toString('utf8'));
+        const report = await restoreCompanyBackup(
+            req.session.user.company_id,
+            req.session.user.id,
+            backup
+        );
+        const inserted = Object.values(report.inserted).reduce((sum, count) => sum + count, 0);
+        const skipped = Object.values(report.skipped).reduce((sum, count) => sum + count, 0);
+
+        req.session.backupSuccess = req.__('backup.importSuccess', inserted, skipped);
+        return res.redirect('/settings?tab=company');
+
+    } catch (error) {
+        console.error(error);
+        req.session.backupError = ['INVALID_BACKUP', 'BACKUP_TOO_LARGE'].includes(error.code)
+            ? req.__('backup.invalidFile')
+            : req.__('backup.importFailed');
+        return res.redirect('/settings?tab=company');
+    }
 };
