@@ -125,6 +125,69 @@ router.get('/latest', auth, async (req, res) => {
 
     }
 });
+
+// Товары, фактически проданные за текущий день.
+router.get('/today', auth, async (req, res) => {
+    try {
+        let sql = `
+            SELECT
+                p.id AS product_id,
+                p.name AS product_name,
+                p.sku,
+                si.purchase_price,
+                si.price AS sale_price,
+                SUM(GREATEST(si.quantity - COALESCE(returned.quantity, 0), 0)) AS quantity
+            FROM sale_items si
+            INNER JOIN sales s ON s.id = si.sale_id
+            INNER JOIN products p ON p.id = si.product_id
+            LEFT JOIN (
+                SELECT sale_item_id, SUM(quantity) AS quantity
+                FROM sale_return_items
+                GROUP BY sale_item_id
+            ) returned ON returned.sale_item_id = si.id
+            WHERE s.company_id = ?
+              AND s.created_at >= CURDATE()
+              AND s.created_at < CURDATE() + INTERVAL 1 DAY
+              AND s.status IN ('completed', 'partial_return')
+        `;
+        const params = [req.session.user.company_id];
+
+        if (req.session.user.role !== 'admin') {
+            sql += ' AND s.user_id = ?';
+            params.push(req.session.user.id);
+        }
+
+        sql += `
+            GROUP BY p.id, p.name, p.sku, si.purchase_price, si.price
+            HAVING quantity > 0
+            ORDER BY si.price DESC, p.name ASC
+        `;
+
+        const [items] = await db.query(sql, params);
+        const rows = items.map(item => ({
+            ...item,
+            quantity: Number(item.quantity || 0),
+            purchase_price: Number(item.purchase_price || 0),
+            sale_price: Number(item.sale_price || 0),
+            purchase_total: Number(item.quantity || 0) * Number(item.purchase_price || 0),
+            sale_total: Number(item.quantity || 0) * Number(item.sale_price || 0)
+        }));
+
+        res.render('sales-today', {
+            titleKey: 'Проданные товары за сегодня',
+            activeMenu: 'sales-today',
+            items: rows,
+            style: [{ href: 'sales-today.css' }],
+            ...page(req, 'sales-today', [
+                { title: req.__('title.sales'), url: '/sales' },
+                { title: 'Проданные товары за сегодня' }
+            ])
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send(error.message);
+    }
+});
 //Роут страницы нового чека
 router.get('/new', auth, async (req, res) => {
 

@@ -83,14 +83,14 @@
                 <span><small>Активных клиентов</small><strong><%= clientsCount %></strong></span>
                 <i class="bi bi-people-fill"></i>
             </div>
-            <a href="/sales" class="dashboard-secondary-metric">
+            <a href="/sales/today" class="dashboard-secondary-metric">
                 <i class="bi bi-box-seam"></i>
                 <span><small>Продано товаров сегодня</small><strong><%= productsToday %></strong></span>
                 <i class="bi bi-arrow-right"></i>
             </a>
             <a href="/sales" class="dashboard-secondary-metric">
                 <i class="bi bi-clock-history"></i>
-                <span><small>Последних чеков</small><strong><%= recentInvoices.length %></strong></span>
+                <span><small>Недавние продажи</small><strong><%= recentSalesCount %></strong></span>
                 <i class="bi bi-arrow-right"></i>
             </a>
         </section>

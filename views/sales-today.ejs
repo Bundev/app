@@ -1,0 +1,71 @@
+<%- include('blocks/head') -%>
+<%- include('blocks/header') -%>
+<%- include('blocks/menu') -%>
+<%
+    const rows = Array.isArray(items) ? items : [];
+    const totalQuantity = rows.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const totalPurchase = rows.reduce((sum, item) => sum + Number(item.purchase_total || 0), 0);
+    const totalSales = rows.reduce((sum, item) => sum + Number(item.sale_total || 0), 0);
+    const money = value => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+%>
+
+<div class="col content sold-today-page">
+    <div class="sold-today-shell">
+        <header class="sold-today-header">
+            <div>
+                <div class="sold-today-eyebrow"><i class="bi bi-calendar-check"></i> Ежедневный отчёт</div>
+                <h1>Проданные товары за сегодня</h1>
+                <p><%= new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+            </div>
+            <a href="/sales" class="sold-today-back"><i class="bi bi-arrow-left"></i> Все продажи</a>
+        </header>
+
+        <section class="sold-today-metrics">
+            <div class="sold-metric"><span>Наименований</span><strong><%= rows.length %></strong></div>
+            <div class="sold-metric"><span>Количество товаров</span><strong><%= totalQuantity.toLocaleString('ru-RU') %></strong></div>
+            <div class="sold-metric"><span>Сумма закупки</span><strong><%= money(totalPurchase) %> ₴</strong></div>
+            <div class="sold-metric sold-metric--accent"><span>Сумма продажи</span><strong><%= money(totalSales) %> ₴</strong></div>
+        </section>
+
+        <section class="sold-today-card">
+            <div class="sold-today-card-head">
+                <div><h2>Товары</h2><p>Фактические продажи с учётом оформленных возвратов</p></div>
+                <span><%= rows.length %> поз.</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 sold-today-table">
+                    <thead>
+                        <tr>
+                            <th>Название товара</th>
+                            <th class="text-end">Количество</th>
+                            <th class="text-end">Закупочная цена</th>
+                            <th class="text-end">Цена продажи</th>
+                            <th class="text-end">Сумма закупки</th>
+                            <th class="text-end">Сумма продажи</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (!rows.length) { %>
+                            <tr><td colspan="6" class="sold-today-empty"><i class="bi bi-bag-x"></i><strong>Сегодня продаж ещё нет</strong><span>Проданные товары появятся здесь после оформления чека.</span></td></tr>
+                        <% } %>
+                        <% rows.forEach(item => { %>
+                            <tr>
+                                <td><strong><%= item.product_name %></strong><% if (item.sku) { %><small>Артикул: <%= item.sku %></small><% } %></td>
+                                <td class="text-end"><span class="sold-qty"><%= Number(item.quantity).toLocaleString('ru-RU') %></span></td>
+                                <td class="text-end"><%= money(item.purchase_price) %> ₴</td>
+                                <td class="text-end"><%= money(item.sale_price) %> ₴</td>
+                                <td class="text-end"><%= money(item.purchase_total) %> ₴</td>
+                                <td class="text-end sold-total"><%= money(item.sale_total) %> ₴</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                    <% if (rows.length) { %>
+                        <tfoot><tr><td>Итого</td><td class="text-end"><%= totalQuantity.toLocaleString('ru-RU') %></td><td></td><td></td><td class="text-end"><%= money(totalPurchase) %> ₴</td><td class="text-end"><%= money(totalSales) %> ₴</td></tr></tfoot>
+                    <% } %>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+<%- include('blocks/footer') -%>

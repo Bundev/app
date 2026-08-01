@@ -73,6 +73,19 @@ async function renderDashboard(req, res) {
             [companyId, userId]
         );
 
+        // Количество недавних продаж за последние 7 дней (не ограничено списком из 10 чеков).
+        const [[recentSalesRow]] = await db.query(
+            `
+            SELECT COUNT(*) AS total
+            FROM sales
+            WHERE company_id = ?
+              AND user_id = ?
+              AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+              AND status IN ('completed', 'partial_return', 'returned')
+            `,
+            [companyId, userId]
+        );
+
 const [[todayMargin]] = await db.query(`
 SELECT
     COALESCE(
@@ -145,6 +158,7 @@ WHERE
             invoicesToday: salesTodayRow.invoices,
             clientsCount: clientsRow.total,
             productsToday: productsTodayRow.total,
+            recentSalesCount: Number(recentSalesRow.total || 0),
             invoices: latestSales,
             statuses,
             todayMargin: Number(todayMargin.margin || 0),

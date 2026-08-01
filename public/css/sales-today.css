@@ -1,0 +1,34 @@
+.sold-today-page { min-width: 0; min-height: calc(100vh - 70px); padding: 6px 0 32px; background: transparent; }
+.sold-today-shell { width: 100%; max-width: 1320px; margin: 0 auto; }
+.sold-today-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
+.sold-today-header h1 { margin: 5px 0 4px; color: #182230; font-size: 30px; font-weight: 750; }
+.sold-today-header p { margin: 0; color: #667085; }
+.sold-today-eyebrow { color: #667085; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.sold-today-eyebrow i { color: #4f46e5; margin-right: 6px; }
+.sold-today-back { padding: 10px 16px; color: #344054; background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; text-decoration: none; font-weight: 600; }
+.sold-today-back:hover { color: #4f46e5; border-color: #a5b4fc; }
+.sold-today-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.sold-metric { display: flex; flex-direction: column; padding: 19px 20px; border: 1px solid #eaecf0; border-radius: 14px; background: #fff; box-shadow: 0 2px 8px rgba(16,24,40,.04); }
+.sold-metric span { color: #667085; font-size: 13px; }
+.sold-metric strong { margin-top: 7px; color: #182230; font-size: 23px; }
+.sold-metric--accent { background: linear-gradient(135deg, #4f46e5, #6d5dfc); border: 0; }
+.sold-metric--accent span, .sold-metric--accent strong { color: #fff; }
+.sold-today-card { overflow: hidden; background: #fff; border: 1px solid #eaecf0; border-radius: 14px; box-shadow: 0 3px 12px rgba(16,24,40,.05); }
+.sold-today-card-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 22px; border-bottom: 1px solid #eaecf0; }
+.sold-today-card-head h2 { margin: 0; color: #182230; font-size: 18px; font-weight: 700; }
+.sold-today-card-head p { margin: 3px 0 0; color: #667085; font-size: 13px; }
+.sold-today-card-head > span { color: #4f46e5; background: #eef2ff; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.sold-today-table thead th { padding: 13px 16px; color: #667085; background: #f9fafb; border-bottom: 1px solid #eaecf0; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.sold-today-table tbody td { padding: 15px 16px; border-color: #f0f1f3; color: #344054; }
+.sold-today-table tbody td:first-child strong { display: block; color: #182230; }
+.sold-today-table tbody td:first-child small { display: block; color: #98a2b3; margin-top: 2px; }
+.sold-qty { display: inline-block; min-width: 38px; padding: 4px 8px; text-align: center; color: #4338ca; background: #eef2ff; border-radius: 7px; font-weight: 700; }
+.sold-total { color: #067647 !important; font-weight: 750; }
+.sold-today-table tfoot td { padding: 16px; color: #182230; background: #f9fafb; border-top: 2px solid #e4e7ec; font-weight: 750; }
+.sold-today-empty { padding: 60px 20px !important; text-align: center; color: #667085 !important; }
+.sold-today-empty i, .sold-today-empty strong, .sold-today-empty span { display: block; }
+.sold-today-empty i { margin-bottom: 10px; color: #98a2b3; font-size: 32px; }
+.sold-today-empty strong { color: #344054; font-size: 16px; }
+.sold-today-empty span { margin-top: 4px; font-size: 13px; }
+@media (max-width: 991px) { .sold-today-metrics { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 575px) { .sold-today-page { padding: 6px 0 24px; } .sold-today-header { align-items: flex-start; flex-direction: column; } .sold-today-metrics { grid-template-columns: 1fr; } .sold-today-header h1 { font-size: 25px; } }
