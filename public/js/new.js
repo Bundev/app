@@ -421,6 +421,15 @@ document.getElementById('item-products')?.addEventListener('click', (e) => {
     updateSideStockPanel(name, stock, stockInfo);
 });
 
+// Снимаем выделение товара, когда пользователь кликает вне корзины.
+document.addEventListener('click', (e) => {
+    if (e.target.closest('#item-products')) return;
+
+    document.querySelectorAll('#item-products tr').forEach(tr => {
+        tr.classList.remove('selected-product-row', 'table-active');
+    });
+});
+
 // =========================================================
 // 4. МУЛЬТИЧЕКИ (ВКЛАДКИ)
 // =========================================================
