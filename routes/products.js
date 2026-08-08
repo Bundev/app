@@ -867,7 +867,8 @@ router.get('/stocks/:id', auth, async (req, res) => {
             SELECT
                 s.id,
                 s.name,
-                COALESCE(ps.quantity, 0) AS quantity
+                COALESCE(ps.quantity, 0) AS quantity,
+                COALESCE(ps.location, '') AS location
             FROM stores s
             LEFT JOIN product_stores ps
                 ON ps.store_id = s.id AND ps.product_id = ?
@@ -887,6 +888,50 @@ router.get('/stocks/:id', auth, async (req, res) => {
             success: false,
             message: 'Не удалось загрузить остатки'
         });
+    }
+});
+
+router.post('/locations/:id', auth, async (req, res) => {
+    try {
+        const productId = Number(req.params.id);
+        const companyId = req.session.user.company_id;
+        const requestedLocations = req.body.locations;
+
+        if (!requestedLocations || typeof requestedLocations !== 'object') {
+            return res.status(400).json({ success: false, message: 'Укажите местонахождение товара' });
+        }
+
+        const [[product]] = await db.execute(
+            `SELECT p.id FROM products p
+             WHERE p.id = ? AND (p.company_id = ? OR EXISTS (
+                SELECT 1 FROM product_stores ps
+                INNER JOIN stores s ON s.id = ps.store_id
+                WHERE ps.product_id = p.id AND s.company_id = ?
+             ))`,
+            [productId, companyId, companyId]
+        );
+
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Товар не найден' });
+        }
+
+        const [stores] = await db.execute('SELECT id FROM stores WHERE company_id = ?', [companyId]);
+
+        for (const store of stores) {
+            const location = String(requestedLocations[store.id] || '').trim();
+
+            await db.execute(
+                `INSERT INTO product_stores (product_id, store_id, quantity, location)
+                 VALUES (?, ?, 0, ?)
+                 ON DUPLICATE KEY UPDATE location = VALUES(location)`,
+                [productId, store.id, location]
+            );
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Не удалось сохранить местонахождение' });
     }
 });
 
@@ -979,6 +1024,127 @@ router.post('/stocks/:id', auth, async (req, res) => {
             success: false,
             message: 'Не удалось сохранить остатки'
         });
+    }
+});
+
+router.get('/sticker/:id', auth, async (req, res) => {
+    try {
+        const productId = Number(req.params.id);
+        const companyId = req.session.user.company_id;
+        const [[product]] = await db.execute(
+            `SELECT p.id, p.name, p.sku, p.barcode
+             FROM products p
+             WHERE p.id = ? AND (p.company_id = ? OR EXISTS (
+                 SELECT 1 FROM product_stores ps
+                 INNER JOIN stores s ON s.id = ps.store_id
+                 WHERE ps.product_id = p.id AND s.company_id = ?
+             ))`,
+            [productId, companyId, companyId]
+        );
+
+        if (!product) {
+            return res.status(404).send('Товар не найден');
+        }
+
+        const [locations] = await db.execute(
+            `SELECT s.name, COALESCE(ps.location, '') AS location
+             FROM product_stores ps
+             INNER JOIN stores s ON s.id = ps.store_id
+             WHERE ps.product_id = ? AND s.company_id = ? AND COALESCE(ps.location, '') <> ''
+             ORDER BY s.name`,
+            [productId, companyId]
+        );
+
+        const stickerWidth = 164;
+        const stickerHeight = 113;
+        const doc = new PDFDocument({
+            size: [stickerWidth, stickerHeight],
+            margin: 0,
+            autoFirstPage: false
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="sticker-${productId}.pdf"`);
+        doc.pipe(res);
+        doc.font('./public/fonts/DejaVu_Sans.ttf');
+
+        const productCode = product.sku || product.barcode || `ID ${product.id}`;
+        let barcode = null;
+
+        if (product.barcode) {
+            barcode = await bwipjs.toBuffer({
+                bcid: 'code128',
+                text: String(product.barcode),
+                scale: 3,
+                height: 7,
+                includetext: false,
+                paddingwidth: 0,
+                paddingheight: 0
+            });
+        }
+
+        const stickers = locations.length
+            ? locations
+            : [{ name: 'Склад', location: 'Место не указано' }];
+
+        stickers.forEach(item => {
+            doc.addPage({ size: [stickerWidth, stickerHeight], margin: 0 });
+            doc.roundedRect(1, 1, 162, 111, 4).lineWidth(1).strokeColor('#111827').stroke();
+            doc.roundedRect(1.5, 1.5, 161, 17, 3).fill('#2563eb');
+            doc.rect(1.5, 13, 161, 6).fill('#2563eb');
+
+            doc.fontSize(6.5).fillColor('#ffffff').text('RETAILPRO  •  СТИКЕР', 7, 6, {
+                width: 96,
+                align: 'left'
+            });
+            doc.fontSize(6.5).fillColor('#ffffff').text(item.name, 105, 6, {
+                width: 52,
+                align: 'right',
+                ellipsis: true
+            });
+            doc.fontSize(8).fillColor('#111827').text(product.name, 7, 23, {
+                width: 150,
+                height: 20,
+                align: 'center',
+                ellipsis: true
+            });
+            doc.fontSize(6).fillColor('#64748b').text(`АРТИКУЛ: ${productCode}`, 7, 44, {
+                width: 150,
+                align: 'center',
+                ellipsis: true
+            });
+
+            if (barcode) {
+                doc.image(barcode, 20, 54, { width: 124, height: 25 });
+                doc.fontSize(6).fillColor('#111827').text(String(product.barcode), 7, 80, {
+                    width: 150,
+                    align: 'center'
+                });
+            } else {
+                doc.roundedRect(20, 55, 124, 27, 3).fill('#f1f5f9');
+                doc.fontSize(7).fillColor('#64748b').text('Штрихкод не указан', 20, 65, {
+                    width: 124,
+                    align: 'center'
+                });
+            }
+
+            doc.roundedRect(6, 90, 152, 17, 3).fill('#111827');
+            doc.fontSize(5.5).fillColor('#93c5fd').text('МЕСТО', 11, 96, {
+                width: 28,
+                align: 'left'
+            });
+            doc.fontSize(9).fillColor('#ffffff').text(item.location || 'Место не указано', 39, 94, {
+                width: 113,
+                height: 12,
+                align: 'center',
+                ellipsis: true
+            });
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error(error);
+        if (!res.headersSent) res.status(500).send('Не удалось создать стикер');
+        else res.end();
     }
 });
 

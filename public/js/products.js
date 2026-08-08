@@ -771,6 +771,89 @@ function enableProductFieldEditing() {
 
 document.addEventListener('DOMContentLoaded', enableProductFieldEditing);
 document.addEventListener('DOMContentLoaded', enableStockModal);
+document.addEventListener('DOMContentLoaded', enableLocationModal);
+
+function enableLocationModal() {
+    const modalElement = document.getElementById('locationModal');
+    if (!modalElement) return;
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+    const storesList = document.getElementById('locationStoresList');
+    const saveButton = document.getElementById('saveLocationButton');
+    let activeProductId = null;
+
+    document.querySelectorAll('.product-location-button').forEach(button => {
+        button.addEventListener('click', async () => {
+            activeProductId = button.dataset.id;
+            document.getElementById('locationProductName').textContent = button.dataset.name || '';
+            storesList.innerHTML = '<div class="text-center text-muted py-3">Загрузка складов...</div>';
+            saveButton.disabled = true;
+            modal.show();
+
+            try {
+                const response = await fetch(`/products/stocks/${activeProductId}`);
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.message || 'Не удалось загрузить склады');
+
+                storesList.replaceChildren();
+                result.stores.forEach(store => {
+                    const field = document.createElement('div');
+                    field.className = 'location-store-field';
+
+                    const label = document.createElement('label');
+                    label.className = 'form-label fw-semibold';
+                    label.htmlFor = `location-store-${store.id}`;
+                    label.textContent = store.name;
+
+                    const input = document.createElement('input');
+                    input.id = `location-store-${store.id}`;
+                    input.type = 'text';
+                    input.className = 'form-control location-store-input';
+                    input.value = store.location || '';
+                    input.placeholder = 'Например: ряд 2, стеллаж 4, полка 1';
+                    input.dataset.storeId = store.id;
+
+                    field.append(label, input);
+                    storesList.append(field);
+                });
+
+                if (!result.stores.length) {
+                    storesList.textContent = 'Для компании ещё не создано ни одного склада.';
+                } else {
+                    saveButton.disabled = false;
+                    storesList.querySelector('input')?.focus();
+                }
+            } catch (error) {
+                storesList.textContent = error.message;
+            }
+        });
+    });
+
+    saveButton.addEventListener('click', async () => {
+        if (!activeProductId) return;
+        const inputs = [...storesList.querySelectorAll('.location-store-input')];
+        const locations = {};
+        inputs.forEach(input => { locations[input.dataset.storeId] = input.value; });
+
+        saveButton.disabled = true;
+        try {
+            const response = await fetch(`/products/locations/${activeProductId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ locations })
+            });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || 'Не удалось сохранить местонахождение');
+            modal.hide();
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', () => { activeProductId = null; });
+}
 
 
 

@@ -434,6 +434,15 @@
                                     <i class="bi bi-tag"></i>
 
                                 </a>
+                                <button
+                                    type="button"
+                                    class="product-row-action product-location-button"
+                                    data-id="<%= product.id %>"
+                                    data-name="<%= product.name %>"
+                                    title="Местонахождение на складе"
+                                    aria-label="Местонахождение товара <%= product.name %> на складе">
+                                    <i class="bi bi-geo-alt"></i>
+                                </button>
                                 <a
                                     href="/products/archive/<%= product.id %>"
                                     class="product-row-action product-row-action--archive"
@@ -461,6 +470,25 @@
         </div>
 
     </div>
+    </div>
+</div>
+
+<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="locationModalTitle">Местонахождение на складе</h5>
+                    <small class="text-muted" id="locationProductName"></small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body" id="locationStoresList"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveLocationButton">Сохранить</button>
+            </div>
+        </div>
     </div>
 </div>
 

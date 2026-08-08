@@ -471,6 +471,16 @@
     color: #2563eb;
 }
 
+.product-location-button {
+    color: #7c3aed;
+}
+
+.product-location-button:hover {
+    border-color: #ddd6fe;
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+
 .product-row-action--archive:hover {
     border-color: #fed7aa;
     background: #fff7ed;
@@ -482,6 +492,17 @@
     border: 1px solid var(--products-border);
     border-radius: 16px;
     box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+}
+
+#locationModal .modal-content {
+    overflow: hidden;
+    border: 1px solid var(--products-border);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+}
+
+.location-store-field + .location-store-field {
+    margin-top: 16px;
 }
 
 @media (max-width: 991.98px) {
