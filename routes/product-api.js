@@ -77,6 +77,12 @@ router.get('/search', auth, async (req, res) => {
                 OR p.barcode LIKE ?
             )
             GROUP BY p.id
+            HAVING SUM(
+                CASE
+                    WHEN s.id IS NOT NULL THEN COALESCE(ps.quantity, 0)
+                    ELSE 0
+                END
+            ) > 0
             ORDER BY
                 CASE
                     WHEN p.barcode = ? THEN 0

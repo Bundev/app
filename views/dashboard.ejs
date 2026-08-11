@@ -4,6 +4,7 @@
 
 <%
     const popularProducts = Array.isArray(topProducts) ? topProducts : [];
+    const stockAlerts = Array.isArray(lowStockProducts) ? lowStockProducts : [];
     const recentInvoices = Array.isArray(invoices) ? invoices : [];
     const maxQty = popularProducts.length
         ? Math.max(...popularProducts.map(item => Number(item.total_qty || 0)), 1)
@@ -88,11 +89,6 @@
                 <span><small>Продано товаров сегодня</small><strong><%= productsToday %></strong></span>
                 <i class="bi bi-arrow-right"></i>
             </a>
-            <a href="/sales" class="dashboard-secondary-metric">
-                <i class="bi bi-clock-history"></i>
-                <span><small>Недавние продажи</small><strong><%= recentSalesCount %></strong></span>
-                <i class="bi bi-arrow-right"></i>
-            </a>
         </section>
 
         <div class="dashboard-grid">
@@ -157,6 +153,45 @@
                     <% } %>
                 </div>
             </aside>
+        </div>
+
+        <div class="dashboard-stock-row">
+        <section class="dashboard-card dashboard-stock-card">
+            <div class="dashboard-card-heading">
+                <div>
+                    <h2>Требуют пополнения</h2>
+                    <p>Товары без остатка или с остатком меньше 5 единиц</p>
+                </div>
+                <a href="/products" class="dashboard-card-link">
+                    Открыть склад<i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <% if (!stockAlerts.length) { %>
+                <div class="dashboard-stock-empty">
+                    <i class="bi bi-check-circle"></i>
+                    <span><strong>Остатки в норме</strong><small>Товаров для пополнения нет</small></span>
+                </div>
+            <% } else { %>
+                <div class="dashboard-stock-list">
+                    <% stockAlerts.forEach(product => { %>
+                        <% const quantity = Number(product.quantity || 0); %>
+                        <a href="/products/view/<%= product.id %>" class="dashboard-stock-item">
+                            <span class="dashboard-stock-icon dashboard-stock-icon--<%= quantity <= 0 ? 'danger' : 'warning' %>">
+                                <i class="bi bi-<%= quantity <= 0 ? 'x-circle' : 'exclamation-triangle' %>"></i>
+                            </span>
+                            <span class="dashboard-stock-copy">
+                                <strong><%= product.name %></strong>
+                                <small><%= quantity <= 0 ? 'Нет в наличии' : 'Заканчивается' %></small>
+                            </span>
+                            <span class="dashboard-stock-quantity dashboard-stock-quantity--<%= quantity <= 0 ? 'danger' : 'warning' %>">
+                                <%= quantity <= 0 ? 'Нет' : `${quantity} ${product.unit}` %>
+                            </span>
+                        </a>
+                    <% }) %>
+                </div>
+            <% } %>
+        </section>
         </div>
     </div>
 </div>

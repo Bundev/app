@@ -77,7 +77,7 @@ function enableSkuEditing() {
 
     document.querySelectorAll('.sku-cell').forEach(cell => {
 
-        cell.addEventListener('dblclick', event => {
+        cell.addEventListener('click', event => {
 
             if (event.target.closest('.sku-input')) return;
 
@@ -635,7 +635,7 @@ function enableProductFieldEditing() {
 
     document.querySelectorAll('.editable-value').forEach(button => {
 
-        button.addEventListener('dblclick', () => {
+        button.addEventListener('click', () => {
 
             if (button.dataset.editing === 'true') return;
 
@@ -948,7 +948,7 @@ document
     .forEach(cell => {
 
         cell.addEventListener(
-            'dblclick',
+            'click',
             () => {
 
                 currentProductId =

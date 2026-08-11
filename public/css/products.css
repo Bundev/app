@@ -612,3 +612,125 @@
     max-height: 180px;
     overflow-y: auto;
 }
+
+/* Сканер штрихкода на странице склада */
+#scannerModal {
+    padding: 20px;
+    background: rgba(2, 6, 23, .88);
+    backdrop-filter: blur(8px);
+}
+
+#scannerModal .scanner-content {
+    width: min(94vw, 560px);
+    max-width: 560px;
+    border: 1px solid rgba(148, 163, 184, .22);
+    border-radius: 22px;
+    background: #0f172a;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, .5);
+}
+
+#scannerModal .scanner-header {
+    min-height: 76px;
+    padding: 15px 18px;
+    background: #0f172a;
+}
+
+#scannerModal .scanner-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#scannerModal .scanner-title > i {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, .18);
+    color: #60a5fa;
+    font-size: 1.25rem;
+}
+
+#scannerModal .scanner-title > span,
+#scannerModal .scanner-footer > span {
+    display: flex;
+    flex-direction: column;
+}
+
+#scannerModal .scanner-title strong { font-size: 1rem; }
+#scannerModal .scanner-title small { margin-top: 2px; color: #4ade80; font-size: .7rem; }
+
+#scannerModal .scanner-header button {
+    display: inline-flex;
+    width: 38px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .08);
+    font-size: 1rem;
+}
+
+#scannerModal .scanner-header button:hover { background: rgba(255, 255, 255, .15); }
+
+#scannerModal .scanner-viewport {
+    position: relative;
+    min-height: 340px;
+    overflow: hidden;
+    background: #020617;
+}
+
+#scannerModal #reader { min-height: 340px; border: 0 !important; }
+#scannerModal #reader video { min-height: 340px; object-fit: cover; }
+
+#scannerModal .scanner-target {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(76%, 360px);
+    height: 160px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+#scannerModal .scanner-corner { position: absolute; width: 34px; height: 34px; border-color: #3b82f6; border-style: solid; filter: drop-shadow(0 0 5px rgba(59, 130, 246, .65)); }
+#scannerModal .scanner-corner--top-left { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 10px 0 0; }
+#scannerModal .scanner-corner--top-right { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 10px 0 0; }
+#scannerModal .scanner-corner--bottom-left { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 10px; }
+#scannerModal .scanner-corner--bottom-right { right: 0; bottom: 0; border-width: 0 3px 3px 0; border-radius: 0 0 10px; }
+
+#scannerModal .scanner-line {
+    position: absolute;
+    right: 8px;
+    left: 8px;
+    height: 2px;
+    background: #ef4444;
+    box-shadow: 0 0 10px 2px rgba(239, 68, 68, .65);
+    animation: warehouse-scanner-line 2.2s ease-in-out infinite;
+}
+
+#scannerModal .scanner-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    padding: 17px 20px 20px;
+    background: #0f172a;
+    color: #cbd5e1;
+    text-align: left;
+}
+
+#scannerModal .scanner-footer > i { color: #60a5fa; font-size: 1.2rem; }
+#scannerModal .scanner-footer strong { color: #f8fafc; font-size: .82rem; }
+#scannerModal .scanner-footer small { margin-top: 2px; color: #94a3b8; font-size: .7rem; }
+
+@keyframes warehouse-scanner-line {
+    0%, 100% { top: 12px; opacity: .65; }
+    50% { top: calc(100% - 14px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #scannerModal .scanner-line { animation: none; top: 50%; }
+}

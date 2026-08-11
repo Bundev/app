@@ -215,6 +215,11 @@ tr.selected-product-row td {
 }
 
 /* Выбор товаров в выпадающем списке */
+.product-search-card {
+    position: relative;
+    z-index: 1021;
+}
+
 #search-results .list-group-item.active {
     background-color: #f0f2f5 !important;
     border-color: #dee2e6 !important;

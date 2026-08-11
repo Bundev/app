@@ -21,23 +21,19 @@ router.get('/', auth, async (req, res) => {
         req.session.importSuccess = null;
         req.session.productSuccess = null;
 
-        // 2. Получаем ВСЕ категории компании для выпадающего списка в фильтре
-        const [categories] = await db.execute(
-            `SELECT id, name FROM categories WHERE company_id = ? ORDER BY name ASC`,
-            [companyId]
-        );
-
-        // 3. Динамически формируем условия SQL-запроса для товаров
+        // 2. Динамически формируем условия SQL-запроса для товаров
         let productsSql = `
             SELECT
-                p.*,
+                p.id,
+                p.category_id,
+                p.name,
+                p.unit,
+                p.sku,
+                p.barcode,
+                p.purchase_price,
+                p.sale_price,
                 c.name AS category_name,
-                SUM(COALESCE(ps.quantity, 0)) AS quantity,
-                GROUP_CONCAT(
-                    CONCAT(s.name, ': ', ps.quantity)
-                    ORDER BY s.name
-                    SEPARATOR ' | '
-                ) AS stock_info
+                SUM(COALESCE(ps.quantity, 0)) AS quantity
             FROM products p
             LEFT JOIN categories c ON c.id = p.category_id
             LEFT JOIN product_stores ps ON ps.product_id = p.id
@@ -55,8 +51,17 @@ router.get('/', auth, async (req, res) => {
 
         productsSql += ` GROUP BY p.id ORDER BY p.name`;
 
-        // Выполняем запрос товаров
-        const [products] = await db.execute(productsSql, queryParams);
+        // Независимые запросы выполняем параллельно, чтобы не ждать два
+        // последовательных обращения к удалённой базе данных.
+        const [categoriesResult, productsResult] = await Promise.all([
+            db.execute(
+                `SELECT id, name FROM categories WHERE company_id = ? ORDER BY name ASC`,
+                [companyId]
+            ),
+            db.execute(productsSql, queryParams)
+        ]);
+        const [categories] = categoriesResult;
+        const [products] = productsResult;
 
         // 4. Рендерим шаблон и передаем массив категорий и выбранный ID назад в EJS
         res.render('products', {

@@ -73,19 +73,6 @@ async function renderDashboard(req, res) {
             [companyId, userId]
         );
 
-        // Количество недавних продаж за последние 7 дней (не ограничено списком из 10 чеков).
-        const [[recentSalesRow]] = await db.query(
-            `
-            SELECT COUNT(*) AS total
-            FROM sales
-            WHERE company_id = ?
-              AND user_id = ?
-              AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-              AND status IN ('completed', 'partial_return', 'returned')
-            `,
-            [companyId, userId]
-        );
-
 const [[todayMargin]] = await db.query(`
 SELECT
     COALESCE(
@@ -144,6 +131,35 @@ WHERE
             [companyId, userId]
         );
 
+        // Товары, которые закончились или скоро закончатся.
+        const [lowStockProducts] = await db.query(
+            `
+            SELECT
+                p.id,
+                p.name,
+                p.unit,
+                SUM(
+                    CASE
+                        WHEN s.id IS NOT NULL THEN COALESCE(ps.quantity, 0)
+                        ELSE 0
+                    END
+                ) AS quantity
+            FROM products p
+            LEFT JOIN product_stores ps ON ps.product_id = p.id
+            LEFT JOIN stores s
+                ON s.id = ps.store_id
+               AND s.company_id = ?
+               AND s.status = 'active'
+            WHERE p.company_id = ?
+              AND p.archived = 0
+            GROUP BY p.id, p.name, p.unit
+            HAVING quantity < 5
+            ORDER BY quantity ASC, p.name ASC
+            LIMIT 10
+            `,
+            [companyId, companyId]
+        );
+
         const salesToday = Number(salesTodayRow.total);
         const returnsToday = Number(returnsTodayRow.total);
         const incomeToday = salesToday - returnsToday;
@@ -155,10 +171,10 @@ WHERE
             grossSalesToday: salesToday,
             returnsToday,
             topProducts,
+            lowStockProducts,
             invoicesToday: salesTodayRow.invoices,
             clientsCount: clientsRow.total,
             productsToday: productsTodayRow.total,
-            recentSalesCount: Number(recentSalesRow.total || 0),
             invoices: latestSales,
             statuses,
             todayMargin: Number(todayMargin.margin || 0),

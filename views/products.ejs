@@ -95,25 +95,40 @@
     <div class="scanner-content">
 
         <div class="scanner-header">
-
-            <span>
-                📷 Сканирование товара
+            <span class="scanner-title">
+                <i class="bi bi-upc-scan"></i>
+                <span>
+                    <strong>Сканер штрихкода</strong>
+                    <small>Камера активна</small>
+                </span>
             </span>
 
             <button
                 id="closeScanner"
                 type="button">
 
-                ✕
+                <i class="bi bi-x-lg"></i>
             </button>
 
         </div>
 
-        <div id="reader"></div>
+        <div class="scanner-viewport">
+            <div id="reader"></div>
+            <div class="scanner-target" aria-hidden="true">
+                <span class="scanner-corner scanner-corner--top-left"></span>
+                <span class="scanner-corner scanner-corner--top-right"></span>
+                <span class="scanner-corner scanner-corner--bottom-left"></span>
+                <span class="scanner-corner scanner-corner--bottom-right"></span>
+                <span class="scanner-line"></span>
+            </div>
+        </div>
 
         <div class="scanner-footer">
-
-            Наведите камеру на штрихкод
+            <i class="bi bi-bounding-box-circles"></i>
+            <span>
+                <strong>Поместите штрихкод в рамку</strong>
+                <small>Держите камеру неподвижно — код считается автоматически</small>
+            </span>
 
         </div>
 
