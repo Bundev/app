@@ -81,7 +81,10 @@ document
                 },
                 {
                     fps: 10,
-                    qrbox: 250
+                    qrbox: (viewfinderWidth, viewfinderHeight) => ({
+                        width: Math.min(360, Math.floor(viewfinderWidth * 0.76)),
+                        height: Math.min(160, Math.floor(viewfinderHeight * 0.4))
+                    })
                 },
                 async decodedText => {
                     document.getElementById('barcode').value = '';
