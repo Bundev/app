@@ -690,16 +690,10 @@
     top: 50%;
     left: 50%;
     width: min(76%, 360px);
-    height: 160px;
+    height: min(40%, 160px);
     pointer-events: none;
     transform: translate(-50%, -50%);
 }
-
-#scannerModal .scanner-corner { position: absolute; width: 34px; height: 34px; border-color: #3b82f6; border-style: solid; filter: drop-shadow(0 0 5px rgba(59, 130, 246, .65)); }
-#scannerModal .scanner-corner--top-left { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 10px 0 0; }
-#scannerModal .scanner-corner--top-right { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 10px 0 0; }
-#scannerModal .scanner-corner--bottom-left { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 10px; }
-#scannerModal .scanner-corner--bottom-right { right: 0; bottom: 0; border-width: 0 3px 3px 0; border-radius: 0 0 10px; }
 
 #scannerModal .scanner-line {
     position: absolute;
