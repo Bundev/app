@@ -1,4 +1,4 @@
-const scannerPages = new Set(['products', 'products-add', 'product-edit']);
+const scannerPages = new Set(['products', 'products-add', 'product-edit', 'new']);
 
 module.exports = (req, name, breadcrumbs = []) => ({
     script: [{ src: `${name}.js` }],

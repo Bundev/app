@@ -972,7 +972,13 @@ document.getElementById('scanBtn')?.addEventListener('click', async () => {
     if (reader) reader.innerHTML = '';
     scanner = new Html5Qrcode('reader');
 
-    await scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 }, async decodedText => {
+    await scanner.start({ facingMode: 'environment' }, {
+        fps: 10,
+        qrbox: (viewfinderWidth, viewfinderHeight) => ({
+            width: Math.min(360, Math.floor(viewfinderWidth * 0.76)),
+            height: Math.min(160, Math.floor(viewfinderHeight * 0.4))
+        })
+    }, async decodedText => {
         document.getElementById('product-search').value = decodedText;
         await scanner.stop();
         document.getElementById('scannerModal').style.display = 'none';
