@@ -366,6 +366,7 @@
     transform:scale(1.1);
     transition:.2s;
 }
+.barcode-input { min-width: 130px; text-align: center; }
 .barcode-icon{
     font-size:40px;
     color:#0d6efd;

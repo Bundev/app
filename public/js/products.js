@@ -1,62 +1,67 @@
 
-function filterProducts() {
+let productSearchRows = [];
+let productSearchFrame = null;
 
-    const search =
-        document
-            .getElementById(
-                'search-product'
-            )
-            .value
-            .toLowerCase()
-            .trim();
-
-    const rows =
-        document.querySelectorAll(
-            '#products-table tr'
-        );
-
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-
-        const name =
-            row.dataset.name
-                ?.toLowerCase() || '';
-
-        const sku =
-            row.dataset.sku
-                ?.toLowerCase() || '';
-
-        const barcode =
-            row.dataset.barcode
-                ?.toLowerCase() || '';
-
-        const category =
-            row.dataset.category
-                ?.toLowerCase() || '';
-
-        const found =
-            name.includes(search) ||
-            sku.includes(search) ||
-            barcode.includes(search) ||
-            category.includes(search);
-
-        row.style.display =
-            found
-                ? ''
-                : 'none';
-
-        if (found)
-            visibleCount++;
-
-    });
-
-    document.getElementById(
-        'products-count'
-    ).textContent =
-        visibleCount;
-
+function normalizeProductSearch(value) {
+    return String(value || '').toLocaleLowerCase().trim();
 }
+
+function refreshProductSearchRow(row) {
+    const cachedRow = productSearchRows.find(item => item.row === row);
+    if (!cachedRow) return;
+    cachedRow.searchableText = normalizeProductSearch([
+        row.dataset.name,
+        row.dataset.sku,
+        row.dataset.barcode,
+        row.dataset.category
+    ].join(' '));
+}
+
+function filterProducts() {
+    if (productSearchFrame) cancelAnimationFrame(productSearchFrame);
+
+    productSearchFrame = requestAnimationFrame(() => {
+        const input = document.getElementById('search-product');
+        const count = document.getElementById('products-count');
+        const search = normalizeProductSearch(input?.value);
+        let visibleCount = 0;
+
+        productSearchRows.forEach(({ row, searchableText }) => {
+            const found = !search || searchableText.includes(search);
+            row.hidden = !found;
+            if (found) visibleCount++;
+        });
+
+        if (count) count.textContent = visibleCount;
+        productSearchFrame = null;
+    });
+}
+
+function enableFastProductSearch() {
+    const input = document.getElementById('search-product');
+    if (!input) return;
+
+    productSearchRows = [...document.querySelectorAll('#products-table tr')].map(row => ({
+        row,
+        searchableText: normalizeProductSearch([
+            row.dataset.name,
+            row.dataset.sku,
+            row.dataset.barcode,
+            row.dataset.category
+        ].join(' '))
+    }));
+
+    input.addEventListener('input', filterProducts);
+    document.addEventListener('keydown', event => {
+        if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.target.matches('input, textarea, select, [contenteditable="true"]')) return;
+        event.preventDefault();
+        input.focus();
+        input.select();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', enableFastProductSearch);
 
 function renderSkuValue(cell, sku) {
 
@@ -141,6 +146,8 @@ function enableSkuEditing() {
                     const row = cell.closest('tr');
 
                     if (row) row.dataset.sku = sku;
+
+                    refreshProductSearchRow(row);
 
                     renderSkuValue(cell, sku);
 
@@ -735,6 +742,8 @@ function enableProductFieldEditing() {
                         renderProductField(button, savedValue);
                     }
 
+                    refreshProductSearchRow(row);
+
                     control.replaceWith(button);
 
                 } catch (error) {
@@ -949,7 +958,14 @@ document
 
         cell.addEventListener(
             'click',
-            () => {
+            event => {
+
+                if (event.target.closest('.barcode-input')) return;
+
+                if (!window.matchMedia('(max-width: 767.98px)').matches) {
+                    openBarcodeInput(cell);
+                    return;
+                }
 
                 currentProductId =
                     cell.dataset.id;
@@ -967,6 +983,65 @@ document
         );
 
     });
+
+function renderBarcodeCell(cell, barcode) {
+    const code = document.createElement('code');
+    code.textContent = barcode || 'Штрихкод';
+    cell.replaceChildren(code);
+}
+
+function openBarcodeInput(cell) {
+    if (cell.querySelector('.barcode-input')) return;
+
+    const row = cell.closest('tr');
+    const originalBarcode = row?.dataset.barcode || '';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-control form-control-sm barcode-input';
+    input.value = originalBarcode;
+    input.placeholder = 'Штрихкод';
+    input.setAttribute('aria-label', 'Штрихкод товара');
+    cell.replaceChildren(input);
+    input.focus();
+    input.select();
+
+    let completed = false;
+    const restore = () => {
+        if (completed) return;
+        completed = true;
+        renderBarcodeCell(cell, originalBarcode);
+    };
+    const save = async () => {
+        if (completed) return;
+        const barcode = input.value.trim();
+        if (barcode === originalBarcode) {
+            restore();
+            return;
+        }
+
+        completed = true;
+        input.disabled = true;
+        try {
+            await saveBarcode(cell.dataset.id, barcode, false);
+        } catch (error) {
+            completed = false;
+            input.disabled = false;
+            input.focus();
+            alert(error.message);
+        }
+    };
+
+    input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            save();
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            restore();
+        }
+    });
+    input.addEventListener('blur', save);
+}
 
 let currentProductId = null;
 let scanner = null;
@@ -1003,7 +1078,8 @@ function startBarcodeScanner() {
 }
 async function saveBarcode(
     productId,
-    barcode
+    barcode,
+    closeScanner = true
 ) {
 
     const response =
@@ -1026,26 +1102,25 @@ async function saveBarcode(
     const result =
         await response.json();
 
-    if (result.success) {
+    if (!response.ok || !result.success) {
+        throw new Error('Не удалось сохранить штрихкод');
+    }
 
         const cell =
             document.querySelector(
                 `.barcode-cell[data-id="${productId}"]`
             );
 
-        cell.innerHTML =
-            '<code>'+barcode+'</code>';
+        renderBarcodeCell(cell, barcode);
 
-        await scanner.stop();
+        cell.closest('tr').dataset.barcode = barcode;
+        refreshProductSearchRow(cell.closest('tr'));
 
-        document
-            .getElementById(
-                'scannerModal'
-            )
-            .style.display =
-            'none';
+        if (closeScanner && scanner) await scanner.stop();
 
-    }
+        if (closeScanner) {
+            document.getElementById('scannerModal').style.display = 'none';
+        }
 
 }
 document
