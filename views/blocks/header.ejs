@@ -61,19 +61,19 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="/profile">
+                            <a class="dropdown-item" href="/user/profile">
                                 <i class="bi bi-person"></i><span>Профиль</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/settings/profile">
-                                <i class="bi bi-gear"></i><span>Настройки</span>
                             </a>
                         </li>
                         <% if (user && user.role === 'admin') { %>
                             <li>
                                 <a class="dropdown-item" href="/settings?tab=users">
-                                    <i class="bi bi-people"></i><span>Пользователи</span>
+                                    <i class="bi bi-people"></i><span>Сотрудники</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/settings">
+                                    <i class="bi bi-gear"></i><span>Настройки</span>
                                 </a>
                             </li>
                         <% } %>

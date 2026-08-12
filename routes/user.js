@@ -9,6 +9,45 @@ const userEditController = require('../controllers/user-edit.controller');
 
 const requireAdmin = require('../middleware/requireAdmin');
 
+router.get('/profile', auth, async (req, res) => {
+    try {
+        const [users] = await db.execute(
+            `SELECT * FROM user WHERE id = ? AND company_id = ? LIMIT 1`,
+            [req.session.user.id, req.session.user.company_id]
+        );
+
+        if (!users.length) return res.redirect('/dashboard');
+
+        const user_st = users[0];
+        const [stores] = await db.execute(
+            `
+            SELECT s.*
+            FROM stores s
+            INNER JOIN user_stores us ON us.store_id = s.id
+            WHERE us.user_id = ? AND s.company_id = ?
+            ORDER BY s.name
+            `,
+            [user_st.id, req.session.user.company_id]
+        );
+
+        const userSuccess = req.session.userSuccess || null;
+        delete req.session.userSuccess;
+
+        return res.render('user', {
+            titleKey: 'title.user',
+            activeMenu: '',
+            user_st,
+            stores,
+            userSuccess,
+            isOwnProfile: true,
+            ...page(req, 'user', [{ title: 'Профиль' }])
+        });
+    } catch (error) {
+        console.error('Ошибка при загрузке профиля:', error);
+        return res.status(500).send('Не удалось загрузить профиль');
+    }
+});
+
 
 
 router.get('/new', auth, requireAdmin, async (req, res) => {
@@ -530,6 +569,7 @@ router.get('/:id', auth, requireAdmin, async (req, res) => {
         user_st,
         stores,
         userSuccess,
+        isOwnProfile: false,
         ...page(req, 'user', [
             { title: req.__('title.settings'), url: '/settings' },
             { title: req.__('title.user') }
