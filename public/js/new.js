@@ -200,7 +200,7 @@ function addProductToInvoice(product) {
     }
 
     // Сразу обновляем панель остатков для этого товара
-    updateSideStockPanel(product.name, productStock, productStockInfo);
+    updateSideStockPanel(product.name, productStock, productStockInfo, product.unit);
     calculateTotals();
 }
 
@@ -229,6 +229,7 @@ function renderItemsTable(items) {
         tr.style.cursor = "pointer";
         tr.dataset.stock = item.stock || 0;
         tr.dataset.stockInfo = item.stock_info || '';
+        tr.dataset.unit = item.unit || 'шт';
         
         tr.innerHTML = `
             <td class="ps-3 text-muted text-center">${rowNumber}</td>
@@ -265,7 +266,7 @@ function renderItemsTable(items) {
     const lastItem = items[items.length - 1];
     
     // Обновляем боковую панель данными последнего добавленного/измененного товара
-    updateSideStockPanel(lastItem.name, lastItem.stock || 0, lastItem.stock_info || '');
+    updateSideStockPanel(lastItem.name, lastItem.stock || 0, lastItem.stock_info || '', lastItem.unit);
     
     // Автоматически подсвечиваем активную строку в таблице
     setTimeout(() => {
@@ -385,18 +386,15 @@ function calculateTotals() {
     saveCurrentUIToState();
 }
 
-function updateSideStockPanel(name, stock, stockInfo) {
-    const panelName = document.getElementById('stock-panel-product-name'); // ID твоего заголовка товара
+function updateSideStockPanel(name, stock, stockInfo, unit = 'шт') {
     const panelQty = document.getElementById('stock-panel-qty'); // ID общего количества (например, "4 шт")
     const panelDetails = document.getElementById('stock-panel-details'); // ID блока с разбивкой по складам ("Южный (-): 4")
-
-    if (panelName) panelName.textContent = name;
     
     if (panelQty) {
         if (name === 'Товар не выбран') {
             panelQty.innerHTML = ''; // Если товар не выбран, не пишем "0 шт" крупным зеленым цветом
         } else {
-            panelQty.innerHTML = `Всего доступно: <span class="fw-bold text-success">${stock} шт</span>`; // Сделай под свой HTML layout
+            panelQty.innerHTML = `Всего доступно: <span class="fw-bold text-success">${stock} ${unit === 'м' ? 'м' : 'шт'}</span>`; // Сделай под свой HTML layout
         }
     }
     
@@ -414,11 +412,12 @@ document.getElementById('item-products')?.addEventListener('click', (e) => {
     const name = nameEl ? nameEl.getAttribute('title') : 'Товар';
     const stock = parseFloat(row.dataset.stock) || 0;
     const stockInfo = row.dataset.stockInfo || '';
+    const unit = row.dataset.unit || 'шт';
 
     document.querySelectorAll('#item-products tr').forEach(tr => tr.classList.remove('selected-product-row', 'table-active'));
     row.classList.add('selected-product-row');
 
-    updateSideStockPanel(name, stock, stockInfo);
+    updateSideStockPanel(name, stock, stockInfo, unit);
 });
 
 // Снимаем выделение товара, когда пользователь кликает вне корзины.
@@ -573,7 +572,7 @@ function loadReceiptToUI(id) {
     // При переключении на вкладку показываем остатки последнего товара (или сбрасываем, если чек пустой)
     if (current.items.length > 0) {
         const lastItem = current.items[current.items.length - 1];
-        updateSideStockPanel(lastItem.name, lastItem.stock || 0, lastItem.stock_info || '');
+        updateSideStockPanel(lastItem.name, lastItem.stock || 0, lastItem.stock_info || '', lastItem.unit);
     } else {
         updateSideStockPanel('Товар не выбран', 0, 'В чеке нет товаров');
     }
