@@ -4,8 +4,8 @@ const db = require('../config/db');
 const auth = require('../middleware/auth');
 const statuses = require('../config/statuses');
 const roles = require('../config/roles');
-const https = require('https');
 const page = require('../helpers/page');
+const telegram = require('../services/telegram.service');
 // Продажи
 router.get('/', auth, async (req, res) => {
     try {
@@ -867,13 +867,6 @@ router.post('/:id/return',auth, async (req, res) => {
 
 //Роут Сохранение чека
 router.post('/save', auth, async (req, res) => {
-    const https = require('https');
-
-    // Токены вашего бота (лучше вынести в .env файл)
-    const TELEGRAM_BOT_TOKEN = '8627452539:AAEVgdXq8q_g9JAWCKaovvcCbknewx1pHYk';
-    // ВНИМАНИЕ: Здесь должен быть ID вашего личного чата с ботом или ID группы (число), а не юзернейм самого бота!
-    const TELEGRAM_CHAT_ID = '218308591'; 
-
     const connection = await db.getConnection();
 
     try {
@@ -1010,9 +1003,9 @@ router.post('/save', auth, async (req, res) => {
                 customer_id,
                 user_id,
                 store_id,
-                validatedTotal,
-                validatedDiscountPercent,
-                validatedDiscountAmount,
+                total,
+                discount_percent,
+                discount_amount,
                 payment_method,
                 status,
                 created_at,
@@ -1029,9 +1022,9 @@ router.post('/save', auth, async (req, res) => {
                 customer_id > 0 ? customer_id : null,
                 req.session.user.id,
                 store_id,
-                total,
-                discount_percent,
-                discount_amount,
+                validatedTotal,
+                validatedDiscountPercent,
+                validatedDiscountAmount,
                 payment_method,
                 'completed',
                 created_at,
@@ -1053,9 +1046,7 @@ router.post('/save', auth, async (req, res) => {
         const saleId = saleResult.insertId;
 
         // ПЕРЕМЕННЫЕ ДЛЯ СБОРА ДАННЫХ В ТЕЛЕГРАМ
-        let totalPurchaseTotal = 0;
-        let itemsTextForTelegram = '';
-        let itemIndex = 1;
+        const telegramItems = [];
 
         for (const item of items) {
 
@@ -1083,17 +1074,12 @@ router.post('/save', auth, async (req, res) => {
             const purchasePrice = Number(productInfo?.purchase_price) || 0;
 
             const subtotal = Number(item.quantity) * Number(item.price);
-            const subtotalPurchase = Number(item.quantity) * purchasePrice;
-
-            totalPurchaseTotal += subtotalPurchase;
-
-            
-            // Формируем текст по каждому товару прямо в цикле
-            itemsTextForTelegram += `${itemIndex}. *${productName}*\n`;
-            itemsTextForTelegram += `    🔹 Кол-во: ${item.quantity} ${productInfo.unit}\n`;
-            // itemsTextForTelegram += `    🔹 Продажа: ${item.price} ₴ | Сумма: ${subtotal} ₴\n`;
-            itemsTextForTelegram += `    🔸 Продажа: ${purchasePrice} ₴ | Сумма: ${subtotalPurchase} ₴\n`; //закупочная цена
-            itemIndex++;
+            telegramItems.push({
+                name: productName,
+                quantity: item.quantity,
+                unit: productInfo?.unit || '',
+                price: purchasePrice
+            });
             const share =
                 subtotalBeforeDiscount > 0
                     ? subtotal / subtotalBeforeDiscount
@@ -1146,66 +1132,14 @@ router.post('/save', auth, async (req, res) => {
         // Подтверждаем транзакцию в БД
         await connection.commit();
 
-        // ========================================================
-        // НАЧАЛО БЛОКА: ОТПРАВКА В ТЕЛЕГРАМ С БЭКЕНДА
-        // ========================================================
         try {
-            const cashierName = req.body.merchant || req.session?.user?.name || 'Администратор';
-            
-            // Получаем имя текущего склада для отчета Telegram
-            const [[storeInfo]] = await connection.query(
-                `SELECT name FROM stores WHERE id = ? LIMIT 1`, 
-                [store_id]
-            );
-            const storeName = storeInfo?.name || `Склад №${store_id}`;
-            
-            let message = `🧾 *Чек №${invoiceNumber}*\n`;
-            message += `👨‍💼 Кассир: ${cashierName}\n`;
-            message += `📦 Склад: ${storeName}\n`;
-            message += `-------------------------------------\n`;
-
-            // Вставляем сгенерированный в цикле текст товаров
-            message += itemsTextForTelegram;
-
-            message += `-------------------------------------\n`;
-            //message += `💰 *Итого Продажа: ${total} ₴*`;
-            message += `💰 *Итого Продажа: ${totalPurchaseTotal} ₴*`;
-            // if (Number(discount_percent) > 0) message += ` (Скидка ${discount_percent}%)`;
-            // message += `\n📉 *Итого Закупка: ${totalPurchaseTotal} ₴*\n`;
-            
-            // const profit = total - totalPurchaseTotal;
-            // message += `📈 *Чистая маржа: ${profit} ₴*`;
-            
-            if (comment) message += `\n💬 Комментарий: _${comment}_`;
-
-            const tgData = JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'Markdown'
-            });
-
-            const tgOptions = {
-                hostname: 'api.telegram.org',
-                port: 443,
-                path: `/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(tgData)
-                }
-            };
-
-            const tgReq = https.request(tgOptions);
-            tgReq.on('error', (tgErr) => console.error('Ошибка сети Telegram:', tgErr));
-            tgReq.write(tgData);
-            tgReq.end();
+            telegram.sendSaleReceipt({
+                items: telegramItems
+            }).catch(tgError => console.error('Ошибка отправки в Telegram:', tgError));
 
         } catch (tgError) {
             console.error('Ошибка формирования отчета в Telegram:', tgError);
         }
-        // ========================================================
-        // КОНЕЦ БЛОКА: ОТПРАВКА В ТЕЛЕГРАМ
-        // ========================================================
 
         res.json({
             success: true,

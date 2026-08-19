@@ -1,3 +1,9 @@
+const fs = require('fs');
+
+if (fs.existsSync('.env')) {
+    process.loadEnvFile('.env');
+}
+
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const db = require('./config/db');
