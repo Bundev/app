@@ -183,6 +183,7 @@ function addProductToInvoice(product) {
             unit: product.unit,
             qty: 1,
             price: price,
+            purchasePrice: Number(product.purchase_price || 0),
             originalPrice: price,
             stock: productStock,
             stock_info: productStockInfo,
@@ -337,9 +338,22 @@ function calculateTotals() {
     if (!current) return;
     
     let subtotal = 0; 
+    let purchaseTotal = 0;
     current.items.forEach(i => { 
-        subtotal += (parseFloat(i.qty) || 0) * (parseFloat(i.price) || 0); 
+        const quantity = parseFloat(i.qty) || 0;
+        subtotal += quantity * (parseFloat(i.price) || 0);
+        purchaseTotal += quantity * (parseFloat(i.purchasePrice) || 0);
     });
+
+    const maxDiscountAmount = Math.max(0, subtotal - purchaseTotal);
+    const maxDiscountPercent = subtotal > 0
+        ? Math.min(100, maxDiscountAmount / subtotal * 100)
+        : 0;
+    const discountInput = document.getElementById('discount');
+    const discountAmountInputElement = document.getElementById('discountAmount');
+
+    if (discountInput) discountInput.max = maxDiscountPercent.toFixed(2);
+    if (discountAmountInputElement) discountAmountInputElement.max = maxDiscountAmount.toFixed(2);
     
     const discountPercentRaw = document.getElementById('discount')?.value?.trim();
     const discountPercentInput = parseFloat(discountPercentRaw);
@@ -351,9 +365,12 @@ function calculateTotals() {
 
     if (discountInputMode === 'amount') {
         if (Number.isFinite(discountAmountInput)) {
-            discountAmount = Math.max(0, discountAmountInput);
+            discountAmount = Math.min(maxDiscountAmount, Math.max(0, discountAmountInput));
             discountPercent = subtotal > 0 ? (discountAmount / subtotal) * 100 : 0;
-            if (document.getElementById('discount')) document.getElementById('discount').value = discountPercent.toFixed(2);
+            if (discountAmountInputElement && discountAmountInput !== discountAmount) {
+                discountAmountInputElement.value = discountAmount.toFixed(2);
+            }
+            if (discountInput) discountInput.value = discountPercent.toFixed(2);
             shouldShowAmount = true;
         } else {
             discountAmount = 0;
@@ -363,14 +380,17 @@ function calculateTotals() {
     } else {
         discountInputMode = 'percent';
         if (discountPercentRaw !== '' && Number.isFinite(discountPercentInput)) {
-            discountPercent = Math.min(100, Math.max(0, discountPercent));
+            discountPercent = Math.min(maxDiscountPercent, Math.max(0, discountPercent));
             discountAmount = subtotal * (discountPercent / 100);
+            if (discountInput && discountPercentInput !== discountPercent) {
+                discountInput.value = discountPercent.toFixed(2);
+            }
             shouldShowAmount = true;
         } else {
             discountPercent = 0;
             discountAmount = 0;
         }
-        if (document.getElementById('discountAmount')) document.getElementById('discountAmount').value = shouldShowAmount ? discountAmount.toFixed(2) : '';
+        if (discountAmountInputElement) discountAmountInputElement.value = shouldShowAmount ? discountAmount.toFixed(2) : '';
     }
 
     const total = subtotal - discountAmount;

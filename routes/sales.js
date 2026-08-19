@@ -947,6 +947,60 @@ router.post('/save', auth, async (req, res) => {
             timeZone: 'Europe/Kyiv'
         });
 
+        if (!Array.isArray(items) || items.length === 0) {
+            const itemsError = new Error('Добавьте товары в чек.');
+            itemsError.statusCode = 400;
+            throw itemsError;
+        }
+
+        const productIds = [...new Set(items.map(item => Number(item.product_id)))];
+        if (productIds.some(productId => !Number.isInteger(productId) || productId <= 0)) {
+            const productError = new Error('В чеке указан некорректный товар.');
+            productError.statusCode = 400;
+            throw productError;
+        }
+
+        const placeholders = productIds.map(() => '?').join(', ');
+        const [discountProducts] = await connection.query(
+            `SELECT id, purchase_price FROM products WHERE company_id = ? AND id IN (${placeholders})`,
+            [company_id, ...productIds]
+        );
+        const purchasePrices = new Map(
+            discountProducts.map(product => [Number(product.id), Number(product.purchase_price) || 0])
+        );
+
+        let validatedSubtotal = 0;
+        let validatedPurchaseTotal = 0;
+        for (const item of items) {
+            const productId = Number(item.product_id);
+            const quantity = Number(item.quantity);
+            const price = Number(item.price);
+
+            if (!purchasePrices.has(productId) || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || price < 0) {
+                const itemError = new Error('Проверьте товары, количество и цены в чеке.');
+                itemError.statusCode = 400;
+                throw itemError;
+            }
+
+            validatedSubtotal += quantity * price;
+            validatedPurchaseTotal += quantity * purchasePrices.get(productId);
+        }
+
+        const validatedDiscountAmount = Number(discount_amount) || 0;
+        const maxDiscountAmount = Math.max(0, validatedSubtotal - validatedPurchaseTotal);
+        if (validatedDiscountAmount < 0 || validatedDiscountAmount > maxDiscountAmount + 0.005) {
+            const discountError = new Error(
+                `Скидка не может превышать ${maxDiscountAmount.toFixed(2)} ₴: итоговая сумма не должна быть ниже закупочной стоимости.`
+            );
+            discountError.statusCode = 400;
+            throw discountError;
+        }
+
+        const validatedTotal = validatedSubtotal - validatedDiscountAmount;
+        const validatedDiscountPercent = validatedSubtotal > 0
+            ? validatedDiscountAmount / validatedSubtotal * 100
+            : 0;
+
         const [saleResult] = await connection.execute(
             `
             INSERT INTO sales
@@ -956,9 +1010,9 @@ router.post('/save', auth, async (req, res) => {
                 customer_id,
                 user_id,
                 store_id,
-                total,
-                discount_percent,
-                discount_amount,
+                validatedTotal,
+                validatedDiscountPercent,
+                validatedDiscountAmount,
                 payment_method,
                 status,
                 created_at,
@@ -1046,7 +1100,7 @@ router.post('/save', auth, async (req, res) => {
                     : 0;
 
             const itemDiscount =
-                Number(discount_amount || 0) * share;
+                validatedDiscountAmount * share;
 
             const finalSubtotal =
                 subtotal - itemDiscount;
