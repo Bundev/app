@@ -13,7 +13,7 @@ const configs = {
     }
 };
 
-const num = 2;
+const num = 1;
 
 const db = mysql.createPool({
     host: 'srv1798.hstgr.io',
