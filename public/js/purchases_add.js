@@ -180,18 +180,24 @@
     };
 
     const matchingProducts = query => {
-        const normalizedQuery = normalize(query);
-        const compactQuery = compact(query);
+        const queryVariants = window.KeyboardLayout.variants(query);
 
-        if (!normalizedQuery) {
+        if (!queryVariants.length) {
             return products.slice(0, 50);
         }
 
         return products
             .filter(product => {
                 const searchable = normalize(`${product.name} ${product.sku || ''}`);
-                return searchable.includes(normalizedQuery)
-                    || (compactQuery && compact(searchable).includes(compactQuery));
+                const compactSearchable = compact(searchable);
+
+                return queryVariants.some(variant => {
+                    const normalizedQuery = normalize(variant);
+                    const compactQuery = compact(variant);
+
+                    return searchable.includes(normalizedQuery)
+                        || (compactQuery && compactSearchable.includes(compactQuery));
+                });
             })
             .slice(0, 50);
     };
@@ -330,6 +336,8 @@
                     option.click();
                 }
             } else if (event.key === 'Escape') {
+                event.preventDefault();
+                clearProduct(row);
                 closeOptions(row);
             }
         });

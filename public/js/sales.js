@@ -1,3 +1,10 @@
+document.addEventListener('keydown', event => {
+    if (event.repeat || !event.altKey || event.ctrlKey || event.metaKey || event.code !== 'KeyN') return;
+
+    event.preventDefault();
+    window.location.assign('/sales/new');
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const filterInvoice = document.getElementById('filterInvoice');
     const filterCustomer = document.getElementById('filterCustomer');

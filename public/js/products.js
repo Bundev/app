@@ -23,11 +23,14 @@ function filterProducts() {
     productSearchFrame = requestAnimationFrame(() => {
         const input = document.getElementById('search-product');
         const count = document.getElementById('products-count');
-        const search = normalizeProductSearch(input?.value);
+        const searches = window.KeyboardLayout
+            .variants(input?.value)
+            .map(normalizeProductSearch);
         let visibleCount = 0;
 
         productSearchRows.forEach(({ row, searchableText }) => {
-            const found = !search || searchableText.includes(search);
+            const found = !searches.length
+                || searches.some(search => searchableText.includes(search));
             row.hidden = !found;
             if (found) visibleCount++;
         });
@@ -52,6 +55,13 @@ function enableFastProductSearch() {
     }));
 
     input.addEventListener('input', filterProducts);
+    input.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !input.value) return;
+
+        event.preventDefault();
+        input.value = '';
+        filterProducts();
+    });
     document.addEventListener('keydown', event => {
         if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return;
         if (event.target.matches('input, textarea, select, [contenteditable="true"]')) return;

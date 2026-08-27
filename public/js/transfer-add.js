@@ -534,6 +534,8 @@
             ];
 
             if (event.key === 'Escape') {
+                event.preventDefault();
+                resetProductSelection(row, false);
                 closeResults(row);
                 return;
             }

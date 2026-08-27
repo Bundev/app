@@ -9,6 +9,199 @@ let receiptCounter = 1;
 let currentReceiptNum = 1; 
 let heldReceipts = [];
 let discountInputMode = 'percent';
+const productSearchHistoryKey = 'retailpro:product-search-history:v1';
+const productSearchHistoryLimit = 8;
+
+function getProductSearchHistory() {
+    try {
+        const stored = JSON.parse(localStorage.getItem(productSearchHistoryKey) || '[]');
+        return Array.isArray(stored)
+            ? stored.filter(item => typeof item === 'string' && item.trim()).slice(0, productSearchHistoryLimit)
+            : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function rememberProductSearch(query) {
+    const value = String(query || '').trim();
+    if (value.length < 2) return;
+
+    const history = getProductSearchHistory().filter(
+        item => item.toLocaleLowerCase() !== value.toLocaleLowerCase()
+    );
+
+    try {
+        localStorage.setItem(
+            productSearchHistoryKey,
+            JSON.stringify([value, ...history].slice(0, productSearchHistoryLimit))
+        );
+    } catch (error) {
+        // Поиск должен работать, даже если хранилище браузера недоступно.
+    }
+}
+
+function renderProductSearchHistory(filterText = '') {
+    const filters = window.KeyboardLayout
+        .variants(filterText)
+        .map(value => value.toLocaleLowerCase());
+    const history = getProductSearchHistory().filter(item => (
+        !filters.length || filters.some(filter => item.toLocaleLowerCase().includes(filter))
+    ));
+
+    searchResults.replaceChildren();
+    searchResults.classList.add('search-history-mode');
+    currentFocus = -1;
+
+    if (!history.length) {
+        searchResults.style.display = 'none';
+        return;
+    }
+
+    const header = document.createElement('div');
+    const title = document.createElement('span');
+    const clearButton = document.createElement('button');
+
+    header.className = 'product-search-history-header';
+    title.textContent = 'Недавние запросы';
+    clearButton.type = 'button';
+    clearButton.className = 'product-search-history-clear';
+    clearButton.textContent = 'Очистить';
+    clearButton.addEventListener('click', event => {
+        event.stopPropagation();
+        try {
+            localStorage.removeItem(productSearchHistoryKey);
+        } catch (error) {
+            // Игнорируем ограничения хранилища.
+        }
+        closeSearchPopup();
+        searchInput.focus();
+    });
+    header.append(title, clearButton);
+    searchResults.append(header);
+
+    history.forEach(query => {
+        const item = document.createElement('button');
+        const icon = document.createElement('i');
+        const text = document.createElement('span');
+
+        item.type = 'button';
+        item.className = 'list-group-item list-group-item-action product-search-history-item';
+        icon.className = 'bi bi-clock-history';
+        icon.setAttribute('aria-hidden', 'true');
+        text.textContent = query;
+        item.append(icon, text);
+        item.addEventListener('click', () => {
+            searchInput.value = query;
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            searchInput.focus();
+        });
+        searchResults.append(item);
+    });
+
+    searchResults.style.display = 'block';
+}
+
+const offlineCatalogScope = searchInput.dataset.offlineScope || 'default';
+
+function openOfflineCatalogDatabase() {
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+            reject(new Error('IndexedDB is unavailable'));
+            return;
+        }
+
+        const request = indexedDB.open('retailpro-offline', 1);
+        request.onupgradeneeded = () => {
+            const database = request.result;
+            if (!database.objectStoreNames.contains('catalogs')) {
+                database.createObjectStore('catalogs', { keyPath: 'scope' });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function writeOfflineProductCatalog(products) {
+    const database = await openOfflineCatalogDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = database.transaction('catalogs', 'readwrite');
+        transaction.objectStore('catalogs').put({
+            scope: offlineCatalogScope,
+            updatedAt: Date.now(),
+            products
+        });
+        transaction.oncomplete = () => {
+            database.close();
+            resolve();
+        };
+        transaction.onerror = () => {
+            database.close();
+            reject(transaction.error);
+        };
+    });
+}
+
+async function readOfflineProductCatalog() {
+    const database = await openOfflineCatalogDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = database.transaction('catalogs', 'readonly');
+        const request = transaction.objectStore('catalogs').get(offlineCatalogScope);
+        request.onsuccess = () => resolve(request.result?.products || []);
+        request.onerror = () => reject(request.error);
+        transaction.oncomplete = () => database.close();
+    });
+}
+
+async function refreshOfflineProductCatalog() {
+    try {
+        const response = await fetch('/api/products/catalog');
+        if (!response.ok) return;
+        const products = await response.json();
+        if (Array.isArray(products)) await writeOfflineProductCatalog(products);
+    } catch (error) {
+        // Сохраняем предыдущую копию каталога до восстановления связи.
+    }
+}
+
+async function searchOfflineProducts(query) {
+    try {
+        const products = await readOfflineProductCatalog();
+        const variants = window.KeyboardLayout
+            .variants(query)
+            .map(value => value.toLocaleLowerCase());
+
+        return products
+            .filter(product => {
+                const searchable = `${product.name || ''} ${product.sku || ''} ${product.barcode || ''}`.toLocaleLowerCase();
+                return variants.some(value => searchable.includes(value));
+            })
+            .sort((left, right) => {
+                const normalized = query.toLocaleLowerCase();
+                const leftBarcode = String(left.barcode || '').toLocaleLowerCase();
+                const rightBarcode = String(right.barcode || '').toLocaleLowerCase();
+                const leftSku = String(left.sku || '').toLocaleLowerCase();
+                const rightSku = String(right.sku || '').toLocaleLowerCase();
+                const leftName = String(left.name || '').toLocaleLowerCase();
+                const rightName = String(right.name || '').toLocaleLowerCase();
+                const rank = (barcode, sku, name) => (
+                    barcode === normalized ? 0
+                        : sku === normalized ? 1
+                            : name.startsWith(normalized) ? 2 : 3
+                );
+                return rank(leftBarcode, leftSku, leftName) - rank(rightBarcode, rightSku, rightName)
+                    || leftName.localeCompare(rightName);
+            })
+            .slice(0, 30);
+    } catch (error) {
+        return [];
+    }
+}
+
+refreshOfflineProductCatalog();
 
 // =========================================================
 // 1. ПОИСК И ВЫБОР ТОВАРОВ
@@ -17,21 +210,37 @@ searchInput.addEventListener('input', async () => {
     const query = searchInput.value.trim();
     
     if (query.length < 2) {
-        searchResults.style.display = 'none';
-        searchResults.innerHTML = '';
+        renderProductSearchHistory(query);
         imagePreview.style.display = 'none';
-        currentFocus = -1;
         return;
     }
 
     const currentQuery = query;
-    const response = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);
-    const products = await response.json();
+    let products = [];
+    let offlineSearch = false;
+
+    try {
+        const response = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error('Product search is unavailable');
+        products = await response.json();
+        if (!Array.isArray(products)) throw new Error('Invalid product search response');
+    } catch (error) {
+        offlineSearch = true;
+        products = await searchOfflineProducts(query);
+    }
     
     if (currentQuery !== searchInput.value.trim()) return;
     
     searchResults.innerHTML = '';
+    searchResults.classList.remove('search-history-mode');
     currentFocus = -1;
+
+    if (offlineSearch) {
+        const notice = document.createElement('div');
+        notice.className = 'offline-search-notice';
+        notice.innerHTML = '<i class="bi bi-cloud-slash" aria-hidden="true"></i><span>Офлайн-поиск по последней копии каталога</span>';
+        searchResults.append(notice);
+    }
 
     products.forEach(product => {
         const item = document.createElement('button');
@@ -56,6 +265,7 @@ searchInput.addEventListener('input', async () => {
 
         // ИЗМЕНЕННЫЙ ОБРАБОТЧИК КЛИКА (Для множественного добавления)
         item.addEventListener('click', () => {
+            rememberProductSearch(currentQuery);
             addProductToInvoice(product);
             
             // UX-фишка: подсвечиваем строку зелёным на 300мс, чтобы кассир видел отклик интерфейса
@@ -87,13 +297,21 @@ searchInput.addEventListener('input', async () => {
         }
     });
 
-    searchResults.style.display = products.length > 0 ? 'block' : 'none';
+    searchResults.style.display = products.length > 0 || offlineSearch ? 'block' : 'none';
+});
+
+searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim().length < 2) {
+        renderProductSearchHistory(searchInput.value);
+    }
 });
 
 searchInput.addEventListener('keydown', function(e) {
     // ДОБАВИЛИ: Закрытие поиска по кнопке Escape
     if (e.key === 'Escape') {
         e.preventDefault();
+        e.stopPropagation();
+        searchInput.value = '';
         closeSearchPopup();
         return;
     }
@@ -132,6 +350,7 @@ document.addEventListener('click', function(e) {
 function closeSearchPopup() {
     searchResults.style.display = 'none';
     searchResults.innerHTML = '';
+    searchResults.classList.remove('search-history-mode');
     imagePreview.style.display = 'none';
     currentFocus = -1;
     // Если нужно полностью сбросить поле при закрытии — раскомментируй строку ниже:
@@ -563,6 +782,7 @@ function loadReceiptToUI(id) {
     // Заполнение полей чека
     if (document.getElementById('customer_id')) document.getElementById('customer_id').value = current.customer.id;
     if (document.getElementById('customer_name')) document.getElementById('customer_name').value = current.customer.name;
+    window.syncCustomerPicker?.();
     if (document.getElementById('cash')) document.getElementById('cash').value = current.cashReceived;
     if (document.getElementById('discount')) document.getElementById('discount').value = current.discountPercent || '';
     if (document.getElementById('discountAmount')) document.getElementById('discountAmount').value = current.discountAmount || '';
@@ -608,58 +828,94 @@ document.addEventListener('DOMContentLoaded', () => {
     const listContainer = document.getElementById('customerList');
     const clearBtn = document.getElementById('clearCustomerBtn');
     const editBtn = document.getElementById('editCustomerBtn');
-    
-    let customersData = []; 
+
+    if (!inputName || !inputId || !listContainer) return;
+
+    const defaultCustomerName = 'Основной покупатель';
+    let customersData = [];
     let custFocus = -1;
 
     async function fetchCustomers() {
         try {
             const response = await fetch('/api/customers');
             const result = await response.json();
-            if (response.ok && result.success) customersData = result.customers;
+            if (response.ok && result.success) {
+                customersData = Array.isArray(result.customers) ? result.customers : [];
+                if (document.activeElement === inputName) {
+                    renderCustomerList(inputName.value);
+                }
+            }
         } catch (error) {
-            console.error(error);
+            console.error('Не удалось загрузить покупателей:', error);
         }
     }
     fetchCustomers();
 
     function renderCustomerList(filterText = '') {
-        const text = filterText.toLowerCase().trim();
+        const variants = window.KeyboardLayout
+            .variants(filterText)
+            .map(value => value.toLocaleLowerCase());
         custFocus = -1;
-        
-        const filtered = customersData.filter(cust => 
-            cust.name.toLowerCase().includes(text) || (cust.phone && cust.phone.includes(text))
-        );
 
-        if (filtered.length === 0 || text === '') {
-            listContainer.innerHTML = '';
-            listContainer.classList.add('d-none');
-            toggleClearButton();
-            return;
+        const filtered = customersData.filter(customer => {
+            if (!variants.length) return true;
+            const searchable = `${customer.name || ''} ${customer.phone || ''}`.toLocaleLowerCase();
+            return variants.some(value => searchable.includes(value));
+        }).slice(0, 50);
+
+        listContainer.replaceChildren();
+
+        if (!variants.length) {
+            listContainer.append(createCustomerOption({ name: defaultCustomerName }, 'Без привязки к клиентской базе'));
         }
 
-        listContainer.innerHTML = filtered.map(cust => {
-            const displayPhone = cust.phone ? ` (${cust.phone})` : '';
-            return `
-                <button type="button" class="list-group-item list-group-item-action text-start py-2 customer-item" 
-                        data-id="${cust.id}" data-name="${cust.name}${displayPhone}" data-discount="${cust.discount_percentage || 0}">
-                    ${cust.name}${displayPhone}
-                </button>
-            `;
-        }).join('');
+        filtered.forEach(customer => listContainer.append(createCustomerOption(customer)));
+
+        if (!listContainer.children.length) {
+            const empty = document.createElement('div');
+            empty.className = 'list-group-item text-muted py-3';
+            empty.textContent = 'Покупатели не найдены';
+            listContainer.append(empty);
+        }
 
         listContainer.classList.remove('d-none');
-        toggleClearButton();
+        inputName.setAttribute('aria-expanded', 'true');
+    }
+
+    function createCustomerOption(customer, customMeta = '') {
+        const button = document.createElement('button');
+        const title = document.createElement('span');
+        const meta = document.createElement('span');
+        const discount = Number(customer.discount_percentage) || 0;
+
+        button.type = 'button';
+        button.className = 'list-group-item list-group-item-action text-start customer-item py-2 px-3';
+        button.dataset.id = String(customer.id || '');
+        button.dataset.name = String(customer.name || defaultCustomerName);
+        button.dataset.discount = String(discount);
+        button.setAttribute('role', 'option');
+        title.className = 'd-block fw-semibold';
+        title.textContent = customer.name || defaultCustomerName;
+        meta.className = 'customer-meta d-block mt-1';
+        meta.textContent = customMeta || [
+            customer.phone || '',
+            discount > 0 ? `Скидка ${discount}%` : ''
+        ].filter(Boolean).join(' • ') || 'Без телефона';
+        button.append(title, meta);
+        return button;
+    }
+
+    function closeCustomerList() {
+        listContainer.classList.add('d-none');
+        inputName.setAttribute('aria-expanded', 'false');
+        custFocus = -1;
     }
 
     function selectCustomer(id, name, discount) {
-        if(inputName) inputName.value = name;
-        if(inputId) inputId.value = id;
-        if(listContainer) {
-            listContainer.innerHTML = '';
-            listContainer.classList.add('d-none');
-        }
-        toggleClearButton();
+        inputName.value = name || defaultCustomerName;
+        inputId.value = id || '';
+        closeCustomerList();
+        toggleCustomerActions();
         
         const orderDiscountInput = document.getElementById('discount');
         if (orderDiscountInput) {
@@ -669,15 +925,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('product-search')?.focus();
     }
 
-    function toggleClearButton() {
-        if (!inputName || !clearBtn || !editBtn) return;
-        if (inputName.value && inputName.value !== 'Основной покупатель') {
-            clearBtn.style.display = 'block';
-            editBtn.style.display = 'block';
-        } else {
-            clearBtn.style.display = 'none';
-            editBtn.style.display = 'none';
-        }
+    function toggleCustomerActions() {
+        const hasCustomer = Boolean(inputId.value);
+        clearBtn?.classList.toggle('d-none', !hasCustomer);
+        editBtn?.classList.toggle('d-none', !hasCustomer);
     }
 
     if (editBtn) {
@@ -720,19 +971,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    if(inputName) {
-        inputName.addEventListener('keydown', function(e) {
-            const items = listContainer.querySelectorAll('.customer-item');
-            if (listContainer.classList.contains('d-none') || items.length === 0) return;
+    inputName.addEventListener('keydown', function(e) {
+        const items = listContainer.querySelectorAll('.customer-item');
 
-            if (e.key === 'ArrowDown') { e.preventDefault(); custFocus++; addActiveCust(items); }
-            else if (e.key === 'ArrowUp') { e.preventDefault(); custFocus--; addActiveCust(items); }
-            else if (e.key === 'Enter') { e.preventDefault(); if (custFocus > -1 && items[custFocus]) items[custFocus].click(); }
-        });
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            selectCustomer('', defaultCustomerName, 0);
+            return;
+        }
 
-        inputName.addEventListener('input', (e) => { inputId.value = ''; renderCustomerList(e.target.value); });
-        inputName.addEventListener('focus', (e) => { if (e.target.value === 'Основной покупатель') e.target.value = ''; });
-    }
+        if (listContainer.classList.contains('d-none') || items.length === 0) return;
+
+        if (e.key === 'ArrowDown') { e.preventDefault(); custFocus++; addActiveCust(items); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); custFocus--; addActiveCust(items); }
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            (items[custFocus > -1 ? custFocus : 0])?.click();
+        }
+    });
+
+    inputName.addEventListener('input', event => {
+        inputId.value = '';
+        toggleCustomerActions();
+        renderCustomerList(event.target.value);
+    });
+
+    inputName.addEventListener('focus', event => {
+        toggleCustomerActions();
+        if (inputId.value) {
+            event.target.select();
+            renderCustomerList('');
+            return;
+        }
+        if (!inputId.value && event.target.value === defaultCustomerName) {
+            event.target.value = '';
+        }
+        renderCustomerList(event.target.value);
+    });
 
     function addActiveCust(items) {
         for (let i = 0; i < items.length; i++) items[i].classList.remove('active');
@@ -742,18 +1018,28 @@ document.addEventListener('DOMContentLoaded', () => {
         items[custFocus].scrollIntoView({ block: 'nearest' });
     }
 
-    listContainer?.addEventListener('click', (e) => {
-        const button = e.target.closest('.list-group-item');
+    listContainer.addEventListener('click', (e) => {
+        const button = e.target.closest('.customer-item');
         if (button) selectCustomer(button.getAttribute('data-id'), button.getAttribute('data-name'), parseFloat(button.getAttribute('data-discount')) || 0);
     });
 
-    clearBtn?.addEventListener('click', () => selectCustomer('', 'Основной покупатель', 0));
+    clearBtn?.addEventListener('click', () => selectCustomer('', defaultCustomerName, 0));
+
+    document.addEventListener('click', event => {
+        if (event.target.closest('.customer-picker')) return;
+        closeCustomerList();
+        if (!inputId.value) {
+            inputName.value = defaultCustomerName;
+        }
+    });
 
     window.refreshCustomersData = async function(client) {
         await fetchCustomers();
-        const displayPhone = client.phone ? ` (${client.phone})` : '';
-        selectCustomer(client.id, `${client.name}${displayPhone}`, parseFloat(client.discount_percentage) || 0);
-    }
+        selectCustomer(client.id, client.name, parseFloat(client.discount_percentage) || 0);
+    };
+
+    window.syncCustomerPicker = toggleCustomerActions;
+    toggleCustomerActions();
 });
 
 // =========================================================

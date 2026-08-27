@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= unavailable ? 'Связь временно недоступна' : 'Ошибка' %></title>
+    <link rel="stylesheet" href="/css/service-unavailable.css">
+</head>
+<body data-retry-url="<%= retryUrl %>" data-auto-retry="<%= unavailable ? 'true' : 'false' %>">
+    <main class="service-state">
+        <section class="service-card" aria-labelledby="service-title">
+            <div class="service-illustration" aria-hidden="true">
+                <span class="service-signal service-signal--one"></span>
+                <span class="service-signal service-signal--two"></span>
+                <span class="service-signal service-signal--three"></span>
+                <span class="service-terminal"></span>
+            </div>
+
+            <div class="service-status">
+                <span class="service-status-dot" aria-hidden="true"></span>
+                <%= unavailable ? 'Нет связи с сервером' : 'Ошибка системы' %>
+            </div>
+
+            <h1 id="service-title">
+                <%= unavailable ? 'Связь временно недоступна' : 'Что-то пошло не так' %>
+            </h1>
+            <p>
+                <%= unavailable
+                    ? 'Мы автоматически проверяем соединение. Страница откроется, как только связь восстановится.'
+                    : 'Повторите действие. Если ошибка повторится, обратитесь к администратору.' %>
+            </p>
+
+            <button type="button" id="retryConnection" class="service-retry">
+                <span class="service-retry-icon" aria-hidden="true">↻</span>
+                Повторить
+            </button>
+
+            <% if (unavailable) { %>
+                <div class="service-checking" id="connectionProgress">
+                    <span class="service-spinner" aria-hidden="true"></span>
+                    <span>Следующая проверка через <strong id="retryCountdown">5</strong> с</span>
+                </div>
+            <% } %>
+
+            <small>Ваши данные не потеряны</small>
+        </section>
+    </main>
+    <script src="/js/service-unavailable.js"></script>
+</body>
+</html>

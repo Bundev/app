@@ -12,6 +12,7 @@
 </script>
 
 <% if (typeof script !== 'undefined') { %>
+<script src="/js/keyboard-layout.js"></script>
 <% (script || []).forEach(item => { %>
 <script src="/js/<%= item.src %>"></script>
 <% }) %>

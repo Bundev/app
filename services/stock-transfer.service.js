@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const db = require('../config/db');
+const { variants: keyboardLayoutVariants } = require('../public/js/keyboard-layout');
 
 const MAX_INT = 2147483647;
 const MAX_ITEMS = 200;
@@ -643,18 +644,21 @@ async function searchProducts({ companyId, storeId, query }) {
         );
     }
 
-    const like = `%${search}%`;
+    const searchVariants = keyboardLayoutVariants(search);
     const searchClause = search
         ? `
           AND (
-              p.name LIKE ?
-              OR p.sku LIKE ?
-              OR p.barcode LIKE ?
+              ${searchVariants
+                  .map(() => '(p.name LIKE ? OR p.sku LIKE ? OR p.barcode LIKE ?)')
+                  .join(' OR ')}
           )
         `
         : '';
     const searchParams = search
-        ? [like, like, like]
+        ? searchVariants.flatMap(variant => {
+            const like = `%${variant}%`;
+            return [like, like, like];
+        })
         : [];
     const [products] = await db.execute(
         `

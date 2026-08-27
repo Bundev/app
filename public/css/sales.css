@@ -27,8 +27,8 @@
 .sales-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--sales-primary); font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .sales-header h1 { margin: 0; color: var(--sales-ink); font-size: clamp(1.75rem,3vw,2.35rem); font-weight: 750; letter-spacing: -.035em; }
 .sales-header p { margin: 8px 0 0; color: var(--sales-muted); font-size: .95rem; }
-.sales-actions { display: flex; gap: 10px; }
-.sales-primary-action,.sales-secondary-action { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border: 1px solid; border-radius: 10px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.sales-actions { display: flex; gap: 7px; }
+.sales-primary-action,.sales-secondary-action { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 6px; padding: 7px 11px; border: 1px solid; border-radius: 8px; font-size: .86rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .sales-primary-action { border-color: var(--sales-primary); background: var(--sales-primary); color: #fff; box-shadow: 0 8px 18px rgba(37,99,235,.2); }
 .sales-primary-action:hover { border-color: var(--sales-primary-dark); background: var(--sales-primary-dark); color: #fff; }
 .sales-secondary-action { border-color: var(--sales-border); background: #fff; color: #475569; }

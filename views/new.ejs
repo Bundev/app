@@ -37,27 +37,31 @@
                         <div class="card-body p-3">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <label class="form-label text-muted small fw-bold text-uppercase mb-2" title="[F3]">Покупатель / Клиент</label>
-                                    
-                                    <div class="input-group position-relative shadow-sm" style="border-radius: 6px;">
+                                    <label for="customer_name" class="form-label text-muted small fw-bold text-uppercase mb-2">
+                                        Покупатель <span class="fw-normal text-lowercase">(F3)</span>
+                                    </label>
+
+                                    <div class="customer-picker position-relative">
                                         <input type="hidden" id="customer_id" name="customer_id" value="">
-                                        
-                                        <input type="text" id="customer_name" class="form-control form-control-lg pe-5 fw-medium fs-6" autocomplete="off" value="Основной покупатель" title="F3" required style="border-right: none; border-radius: 6px 0 0 6px;">
-                                        
-                                        <div class="position-absolute d-flex gap-1 pe-2" style="z-index: 5; right: 55px; top: 50%; transform: translateY(-50%);">
-                                            <button type="button" id="editCustomerBtn" class="btn p-1 text-primary border-0 bg-transparent" style="display: none;" title="Редактировать клиента">
+
+                                        <div class="input-group shadow-sm">
+                                            <span class="input-group-text bg-white text-muted border-end-0">
+                                                <i class="bi bi-person" aria-hidden="true"></i>
+                                            </span>
+                                            <input type="text" id="customer_name" class="form-control form-control-lg border-start-0 fw-medium fs-6" autocomplete="off" value="Основной покупатель" placeholder="Имя или номер телефона" title="Выбрать покупателя — F3" aria-autocomplete="list" aria-controls="customerList" aria-expanded="false">
+
+                                            <button type="button" id="editCustomerBtn" class="btn btn-outline-secondary customer-picker-action d-none" title="Редактировать покупателя" aria-label="Редактировать покупателя">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
-                                            <button type="button" id="clearCustomerBtn" class="btn p-1 text-muted border-0 bg-transparent" style="display: none;">
+                                            <button type="button" id="clearCustomerBtn" class="btn btn-outline-secondary customer-picker-action d-none" title="Выбрать основного покупателя" aria-label="Сбросить выбранного покупателя">
                                                 <i class="bi bi-x-lg"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-success px-3" data-bs-toggle="modal" data-bs-target="#addCustomerModal" title="Добавить покупателя — F4">
+                                                <i class="bi bi-person-plus me-sm-2" aria-hidden="true"></i><span class="d-none d-sm-inline">Добавить</span>
                                             </button>
                                         </div>
 
-                                        <div id="customerList" class="list-group position-absolute w-100 d-none shadow" style="z-index: 1050; max-height: 250px; overflow-y: auto; top: 100%; left: 0; border-radius: 0 0 6px 6px;"></div>
-                                        
-                                        <button type="button" class="btn btn-success px-3 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#addCustomerModal" title="Добавить клиента [F4]" style="border-radius: 0 6px 6px 0; border-left: none;">
-                                            <i class="bi bi-plus-lg fs-5"></i>
-                                        </button>
+                                        <div id="customerList" class="list-group position-absolute w-100 d-none shadow" role="listbox"></div>
                                     </div>
                                 </div>
                                 <div class="mt-2">
@@ -77,7 +81,7 @@
                                     <span class="input-group-text bg-white border-end-0 text-muted">
                                         <i class="bi bi-search"></i>
                                     </span>
-                                    <input type="text" id="product-search" class="form-control border-start-0 ps-0" placeholder="Название, артикул или штрихкод...">
+                                    <input type="text" id="product-search" class="form-control border-start-0 ps-0" placeholder="Название, артикул или штрихкод..." data-offline-scope="<%= user.company_id %>:<%= user.role === 'admin' ? 'admin' : user.id %>">
                                     <button type="button" id="scanBtn" class="btn btn-outline-primary d-md-none">
                                         <i class="bi bi-upc-scan"></i>
                                     </button>
