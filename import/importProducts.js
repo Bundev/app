@@ -176,11 +176,12 @@ module.exports = async (
             const markupPercent = product.purchase_price < 100
                 ? markupBelow100
                 : markupFrom100;
-            const salePrice = [87, 88, 90, 91].includes(categoryId)
-                ? Math.round(product.purchase_price * 100) / 100
-                : Math.round(
-                    product.purchase_price * (1 + markupPercent / 100) * 100
-                ) / 100;
+            const calculatedSalePrice = [87, 88, 90, 91].includes(categoryId)
+                ? product.purchase_price
+                : product.purchase_price * (1 + markupPercent / 100);
+            // При импорте цена продажи всегда округляется
+            // до целой гривны по обычным математическим правилам.
+            const salePrice = Math.round(calculatedSalePrice);
 
             if (dbProduct) {
                 // Проверяем изменения

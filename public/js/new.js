@@ -258,6 +258,7 @@ searchInput.addEventListener('input', async () => {
 
         item.type = 'button';
         item.className = 'list-group-item list-group-item-action py-3 position-relative';
+        item.title = 'Клик — добавить в чек. Колёсико — вставить название в поиск';
         item.innerHTML = `
         <div class="d-flex align-items-center">
             <img src="${product.image || '/img/no-photo.png'}" alt="${product.name}" class="product-image" style="width:80px;height:80px;object-fit:contain;background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px;">
@@ -288,6 +289,21 @@ searchInput.addEventListener('input', async () => {
             //searchInput.focus();
         });
 
+        item.addEventListener('mousedown', event => {
+            if (event.button === 1) event.preventDefault();
+        });
+
+        item.addEventListener('auxclick', event => {
+            if (event.button !== 1) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            searchInput.value = String(product.name || '');
+            closeSearchPopup();
+            searchInput.focus();
+            searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+        });
+
         searchResults.appendChild(item);
 
         const img = item.querySelector('.product-image');
@@ -316,12 +332,21 @@ searchInput.addEventListener('focus', () => {
 });
 
 searchInput.addEventListener('keydown', function(e) {
-    // ДОБАВИЛИ: Закрытие поиска по кнопке Escape
+    if (e.key === 'Delete' && searchInput.value) {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInput.value = '';
+        imagePreview.style.display = 'none';
+        renderProductSearchHistory();
+        return;
+    }
+
     if (e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
         searchInput.value = '';
         closeSearchPopup();
+        searchInput.blur();
         return;
     }
 

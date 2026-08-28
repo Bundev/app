@@ -136,12 +136,12 @@ router.post('/import', auth, requireAdmin, uploadImport.single('excel'),async (r
             }
 
             if (
-                !Number.isFinite(markupBelow100) || markupBelow100 < 0 ||
-                !Number.isFinite(markupFrom100) || markupFrom100 < 0
+                !Number.isSafeInteger(markupBelow100) || markupBelow100 < 0 ||
+                !Number.isSafeInteger(markupFrom100) || markupFrom100 < 0
             ) {
 
                 return res.status(400).send(
-                    'Наценка должна быть числом не меньше 0'
+                    'Наценка должна быть целым числом не меньше 0'
                 );
 
             }
