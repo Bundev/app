@@ -729,3 +729,184 @@
 @media (prefers-reduced-motion: reduce) {
     #scannerModal .scanner-line { animation: none; top: 50%; }
 }
+
+/* Mobile warehouse table */
+@media (max-width: 767.98px) {
+    .products-page .products-table-wrapper {
+        max-height: none;
+        overflow: visible;
+        border-top: 0;
+    }
+
+    .products-page .products-table,
+    .products-page .products-table tbody {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .products-page .products-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .products-page .products-table tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "name name"
+            "price stock"
+            "sku sku"
+            "barcode barcode"
+            "actions actions";
+        gap: .8rem 1rem;
+        width: auto;
+        min-width: 0;
+        margin: 0 0 .8rem;
+        padding: 1rem;
+        border: 1px solid var(--products-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+    }
+
+    .products-page .products-table tbody tr:hover {
+        background: #fff;
+    }
+
+    .products-page .products-table tbody tr > td,
+    .products-page .products-table tbody tr:nth-child(even) > td:not(.product-actions-cell),
+    .products-page .products-table tbody tr:hover > td {
+        display: block;
+        width: auto !important;
+        min-width: 0;
+        max-width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent !important;
+        box-shadow: none;
+    }
+
+    .products-page .product-main-cell {
+        grid-area: name;
+        padding-right: .25rem !important;
+    }
+
+    .products-page .product-name {
+        display: block;
+        overflow-wrap: anywhere;
+        font-size: .92rem;
+        line-height: 1.35;
+    }
+
+    .products-page .product-main-cell .editable-category {
+        max-width: 100%;
+    }
+
+    .products-page .product-price-cell {
+        grid-area: price;
+        align-self: center;
+        white-space: normal;
+    }
+
+    .products-page .product-sale-price {
+        font-size: 1rem;
+    }
+
+    .products-page .product-purchase-price {
+        white-space: normal;
+    }
+
+    .products-page .product-stock-cell {
+        grid-area: stock;
+        align-self: center;
+        text-align: right;
+    }
+
+    .products-page .product-stock-cell::before {
+        content: "Остаток";
+        display: block;
+        margin-bottom: .3rem;
+        color: var(--products-muted);
+        font-size: .65rem;
+        font-weight: 750;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .products-page .sku-cell {
+        grid-area: sku;
+    }
+
+    .products-page .barcode-cell {
+        grid-area: barcode;
+        text-align: left;
+    }
+
+    .products-page .sku-cell,
+    .products-page .barcode-cell {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding-top: .7rem !important;
+        border-top: 1px solid #edf1f5 !important;
+    }
+
+    .products-page .sku-cell::before,
+    .products-page .barcode-cell::before {
+        flex: 0 0 auto;
+        color: var(--products-muted);
+        font-size: .68rem;
+        font-weight: 750;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .products-page .sku-cell::before { content: "Артикул"; }
+    .products-page .barcode-cell::before { content: "Штрихкод"; }
+
+    .products-page .sku-value,
+    .products-page .barcode-cell code {
+        min-width: 0;
+        max-width: 70%;
+    }
+
+    .products-page .barcode-cell code {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .products-page .product-actions-cell {
+        grid-area: actions;
+        padding-top: .75rem !important;
+        border-top: 1px solid #edf1f5 !important;
+    }
+
+    .products-page .product-row-actions {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: .45rem;
+        width: 100%;
+    }
+
+    .products-page .product-row-action {
+        width: 100%;
+        height: 40px;
+    }
+
+    .products-page :is(.editable-input, .sku-input, .category-inline-editor) {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+}

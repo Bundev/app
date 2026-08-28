@@ -152,6 +152,7 @@ router.get('/catalog', auth, async (req, res) => {
                 p.unit,
                 p.sku,
                 p.barcode,
+                p.purchase_price,
                 p.sale_price,
                 p.image,
                 SUM(

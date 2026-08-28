@@ -201,7 +201,13 @@ async function searchOfflineProducts(query) {
     }
 }
 
-refreshOfflineProductCatalog();
+if (navigator.onLine) {
+    refreshOfflineProductCatalog();
+}
+
+// Refresh prices and stock after the connection is restored without requiring
+// the cashier to reload an active receipt.
+window.addEventListener('online', refreshOfflineProductCatalog);
 
 // =========================================================
 // 1. ПОИСК И ВЫБОР ТОВАРОВ
@@ -220,6 +226,7 @@ searchInput.addEventListener('input', async () => {
     let offlineSearch = false;
 
     try {
+        if (!navigator.onLine) throw new Error('Browser is offline');
         const response = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error('Product search is unavailable');
         products = await response.json();
@@ -238,7 +245,9 @@ searchInput.addEventListener('input', async () => {
     if (offlineSearch) {
         const notice = document.createElement('div');
         notice.className = 'offline-search-notice';
-        notice.innerHTML = '<i class="bi bi-cloud-slash" aria-hidden="true"></i><span>Офлайн-поиск по последней копии каталога</span>';
+        notice.innerHTML = products.length
+            ? '<i class="bi bi-cloud-slash" aria-hidden="true"></i><span>Офлайн-поиск по последней копии каталога</span>'
+            : '<i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>Офлайн-каталог пуст. Подключитесь к сети для синхронизации</span>';
         searchResults.append(notice);
     }
 
@@ -710,10 +719,10 @@ function renderReceiptTabs() {
         li.className = 'nav-item';
         const isActive = r.id === activeReceiptId;
         const closeBtn = receipts.length > 1 
-            ? `<button type="button" class="close-receipt" onclick="closeReceipt(event, '${r.id}')"><i class="bi bi-x-lg"></i></button>` 
+            ? `<button type="button" class="close-receipt" onclick="closeReceipt(event, '${r.id}')" aria-label="Закрыть чек №${index + 1}" title="Закрыть чек"><i class="bi bi-x-lg" aria-hidden="true"></i></button>`
             : '';
         
-        li.innerHTML = `<button class="nav-link ${isActive ? 'active' : ''}" onclick="switchReceipt('${r.id}')">Чек #${index + 1} ${closeBtn}</button>`;
+        li.innerHTML = `<button type="button" class="nav-link ${isActive ? 'active' : ''}" onclick="switchReceipt('${r.id}')">Чек №${index + 1}</button>${closeBtn}`;
         container.appendChild(li);
     });
 }

@@ -63,7 +63,7 @@ sidebarClose?.addEventListener('click', closeSidebar);
                 showNotification('online', 'Соединение восстановлено');
             }
         } else {
-            showNotification('offline', 'Нет соединения. Доступен офлайн-режим');
+            showNotification('offline', 'Нет сети — офлайн-режим');
         }
     };
 
@@ -100,7 +100,7 @@ sidebarClose?.addEventListener('click', closeSidebar);
     });
 
     if (connectionState === 'offline') {
-        showNotification('offline', 'Нет соединения. Доступен офлайн-режим');
+        showNotification('offline', 'Нет сети — офлайн-режим');
     } else {
         checkConnection();
     }

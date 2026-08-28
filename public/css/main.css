@@ -830,9 +830,20 @@ button:focus {
 @media (max-width: 575.98px) {
     .connection-notification {
         top: 8px;
-        width: calc(100vw - 16px);
+        width: max-content;
+        max-width: calc(100vw - 120px);
+        min-height: 32px;
+        gap: 6px;
+        padding: 5px 9px;
+        border-radius: 8px;
         justify-content: center;
         text-align: center;
+        font-size: .7rem;
+        line-height: 1.15;
+    }
+
+    .connection-notification i {
+        font-size: .8rem;
     }
 }
 

@@ -320,6 +320,267 @@ tr.selected-product-row td {
     width: 110px;
 }
 
+/* Mobile cart: turn the wide desktop table into readable product cards. */
+@media (max-width: 767.98px) {
+    .new-sale-page {
+        padding-left: .75rem;
+        padding-right: .75rem;
+    }
+
+    .new-sale-page > .d-flex:first-child {
+        flex-wrap: wrap;
+        gap: .5rem;
+        padding: .5rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .new-sale-page #receipt-tabs {
+        flex: 1 0 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .new-sale-page #add-receipt-btn,
+    .new-sale-page #held-receipts-btn {
+        flex: 1 1 0;
+        justify-content: center;
+        margin-left: 0 !important;
+        white-space: nowrap;
+    }
+
+    .new-sale-page .row.g-4 {
+        --bs-gutter-y: 1rem;
+    }
+
+    .new-sale-page .product-search-card .card-body {
+        padding: .75rem !important;
+    }
+
+    .new-sale-page #product-search {
+        min-width: 0;
+        font-size: 1rem;
+    }
+
+    .new-sale-page #receipt-items-scroll {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible;
+        border-radius: 0;
+    }
+
+    .new-sale-page .table-sales,
+    .new-sale-page .table-sales tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .new-sale-page .table-sales thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .65rem .75rem;
+        height: auto;
+        min-height: 0;
+        margin: .75rem;
+        padding: .85rem;
+        border: 1px solid #e5e7eb;
+        border-radius: .85rem;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td {
+        display: block;
+        width: auto !important;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: transparent !important;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(1) {
+        position: absolute;
+        top: .95rem;
+        left: .85rem;
+        width: 1.5rem !important;
+        color: #94a3b8;
+        font-size: .75rem;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(2) {
+        grid-column: 1 / -1;
+        padding-left: 1.75rem;
+        padding-right: 2.75rem;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(3) {
+        grid-column: 1;
+        align-self: center;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: center;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(5) {
+        position: absolute;
+        top: .7rem;
+        right: .7rem;
+    }
+
+    .new-sale-page .product-name {
+        display: block;
+        overflow-wrap: anywhere;
+        line-height: 1.3;
+    }
+
+    .new-sale-page .qty-control {
+        justify-content: flex-start;
+        width: auto;
+    }
+
+    .new-sale-page .qty-control .btn,
+    .new-sale-page .btn-remove {
+        width: 40px;
+        height: 40px;
+    }
+
+    .new-sale-page .qty-control .qty {
+        width: 52px !important;
+        min-width: 52px !important;
+        height: 40px;
+    }
+
+    .new-sale-page .empty-receipt {
+        display: block;
+        width: 100%;
+        height: auto;
+        min-height: 12rem;
+        padding: 4rem 1.25rem !important;
+        border: 0;
+    }
+
+    .new-sale-page #payment-panel {
+        position: static !important;
+    }
+}
+
+/* Detailed mobile cart layout. */
+@media (max-width: 767.98px) {
+    .new-sale-page #pills-profile > .card.h-100 {
+        height: auto !important;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row {
+        grid-template-columns: minmax(0, 1fr) minmax(7rem, auto);
+        align-items: center;
+        gap: .85rem 1rem;
+        min-height: 7.25rem;
+        padding: 1rem;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(1) {
+        display: none;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(2) {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        padding: 0 3rem 0 0;
+        font-size: .95rem;
+        line-height: 1.35;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(3) {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) {
+        grid-column: 2;
+        grid-row: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        text-align: right;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) .pricepoduct {
+        font-size: .85rem;
+        line-height: 1.2;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) small {
+        display: flex;
+        align-items: baseline;
+        gap: .3rem;
+        margin-top: .25rem;
+        white-space: nowrap;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) small br {
+        display: none;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(5) {
+        top: .75rem;
+        right: .75rem;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row .btn-remove {
+        width: 38px;
+        height: 38px;
+        background: #fff;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row.selected-product-row {
+        border-left: 4px solid #0d6efd !important;
+        padding-left: calc(1rem - 3px);
+    }
+}
+
+@media (max-width: 420px) {
+    .new-sale-page .table-sales tbody tr.receipt-item-row {
+        grid-template-columns: 1fr;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(3),
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) {
+        grid-column: 1;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row td:nth-child(4) {
+        grid-row: 3;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: baseline;
+        padding-top: .7rem;
+        border-top: 1px solid #eef2f7;
+    }
+
+    .new-sale-page .qty-control {
+        width: 100%;
+    }
+}
+
 /* ==========================================================================
    5. АДАПТИВНОСТЬ (МОБИЛЬНАЯ ВЕРСИЯ)
    ========================================================================== */
@@ -613,6 +874,207 @@ tr.selected-product-row td {
     .new-sale-page { padding: 12px 10px 24px !important; }
     .new-sale-page > .d-flex:first-child { padding: 0 10px !important; }
     .new-sale-page #receipt-items-scroll { height: auto; max-height: 55vh; }
+
+    /* Final mobile cart overrides must follow the unified desktop theme. */
+    .new-sale-page #receipt-items-scroll {
+        display: block;
+        flex: 0 0 clamp(300px, 68svh, 560px);
+        height: clamp(300px, 68svh, 560px) !important;
+        max-height: clamp(300px, 68svh, 560px);
+        overflow-x: hidden !important;
+        overflow-y: scroll !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-gutter: stable;
+        scrollbar-width: thin;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .new-sale-page #pills-profile,
+    .new-sale-page #pills-profile > .card,
+    .new-sale-page #pills-profile > .card > .card-body,
+    .new-sale-page .sales-table,
+    .new-sale-page .table-sales,
+    .new-sale-page .table-sales tbody {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .new-sale-page #receipt-items-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .new-sale-page #receipt-items-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: #94a3b8;
+    }
+
+    .new-sale-page #receipt-items-scroll::-webkit-scrollbar-track {
+        background: #eef2f7;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row {
+        width: auto;
+        max-width: calc(100% - 1.5rem);
+        box-sizing: border-box;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row .product-name {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .new-sale-page #pills-profile > .card.h-100 {
+        height: auto !important;
+    }
+
+    .new-sale-page .qty-control .btn,
+    .new-sale-page .qty-control .qty {
+        height: 40px;
+    }
+
+    .new-sale-page .table-sales tbody tr.receipt-item-row .btn-remove {
+        width: 38px;
+        height: 38px;
+    }
+
+    .new-sale-page #search-results {
+        right: 0;
+        left: 0;
+        width: 100% !important;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .new-sale-page #search-results .list-group-item > .d-flex {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: .6rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .new-sale-page #search-results .product-image {
+        display: none !important;
+    }
+
+    .new-sale-page #search-results .flex-grow-1 {
+        grid-column: 1;
+        min-width: 0;
+        width: 100%;
+        padding: 0 !important;
+        overflow-wrap: anywhere;
+    }
+
+    .new-sale-page #search-results .text-end {
+        grid-column: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        text-align: left !important;
+    }
+
+    .new-sale-page #search-results .text-end .fs-5 {
+        font-size: .95rem !important;
+    }
+
+    .new-sale-page #search-results .text-end .badge {
+        margin-top: 0 !important;
+        white-space: normal;
+        text-align: right;
+    }
+
+    .new-sale-page .offline-search-notice {
+        align-items: flex-start;
+        overflow-wrap: anywhere;
+    }
+
+    .new-sale-page > .d-flex:first-child {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: .55rem;
+        min-height: 0;
+        padding: .65rem !important;
+    }
+
+    .new-sale-page #receipt-tabs {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        gap: .4rem;
+        padding: 0;
+        overflow-x: auto;
+    }
+
+    .new-sale-page #receipt-tabs .nav-item {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        min-height: 40px;
+        padding: 3px;
+        border: 1px solid #dbe3ee;
+        border-radius: 9px;
+        background: #f8fafc;
+    }
+
+    .new-sale-page #receipt-tabs .nav-link {
+        min-height: 32px;
+        padding: .4rem .65rem;
+        border-radius: 7px !important;
+        font-size: .78rem;
+        line-height: 1;
+    }
+
+    .new-sale-page #receipt-tabs .nav-link.active {
+        background: #eaf1ff !important;
+    }
+
+    .new-sale-page #receipt-tabs .nav-link.active::after {
+        display: none;
+    }
+
+    .new-sale-page #receipt-tabs .close-receipt {
+        display: inline-flex;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .new-sale-page #add-receipt-btn,
+    .new-sale-page #held-receipts-btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 42px;
+        margin: 0 !important;
+        padding: .55rem .45rem;
+        justify-content: center;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .new-sale-page #add-receipt-btn {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .new-sale-page #held-receipts-btn {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .new-sale-page #held-receipts-btn .badge {
+        flex: 0 0 auto;
+    }
 }
 
 
