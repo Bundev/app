@@ -207,9 +207,34 @@
 
 .products-search .form-control {
     min-height: 42px;
+    padding-right: 14px;
     padding-left: 40px;
     border-color: var(--products-border);
     border-radius: 10px;
+}
+
+.products-qr-scan {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    z-index: 3;
+    display: none;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 8px;
+    background: var(--products-primary-soft);
+    color: var(--products-primary);
+    transform: translateY(-50%);
+}
+
+.products-qr-scan:hover,
+.products-qr-scan:focus-visible {
+    background: #dbeafe;
+    color: #1d4ed8;
+    outline: none;
 }
 
 .products-count {
@@ -544,6 +569,131 @@
     }
 }
 
+/* Use the same scanner dialog appearance as the New receipt page. */
+#scannerModal {
+    padding: 0;
+    background: rgba(0, 0, 0, .85);
+    backdrop-filter: none;
+}
+
+#scannerModal .scanner-content {
+    width: 95%;
+    max-width: 500px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: none;
+}
+
+#scannerModal .scanner-header {
+    min-height: 0;
+    padding: 15px 20px;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 18px;
+}
+
+#scannerModal .scanner-title {
+    gap: 8px;
+}
+
+#scannerModal .scanner-title > i {
+    display: inline;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+}
+
+#scannerModal .scanner-title > span {
+    display: inline;
+}
+
+#scannerModal .scanner-title strong {
+    font-size: inherit;
+}
+
+#scannerModal .scanner-title small {
+    display: none;
+}
+
+#scannerModal .scanner-header button {
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 24px;
+}
+
+#scannerModal .scanner-header button:hover {
+    background: transparent;
+}
+
+#scannerModal .scanner-viewport {
+    min-height: 300px;
+    background: #fff;
+}
+
+#scannerModal #reader,
+#scannerModal #reader video {
+    min-height: 300px;
+}
+
+#scannerModal .scanner-target {
+    width: min(70%, 280px);
+    height: min(70%, 280px);
+}
+
+#scannerModal .scanner-footer {
+    display: block;
+    padding: 12px;
+    background: #fff;
+    color: #666;
+    text-align: center;
+}
+
+#scannerModal .scanner-footer > i {
+    margin-right: 5px;
+    color: #666;
+    font-size: 1rem;
+}
+
+#scannerModal .scanner-footer > span {
+    display: inline;
+}
+
+#scannerModal .scanner-footer strong {
+    color: #666;
+    font-size: inherit;
+}
+
+#scannerModal .scanner-footer small {
+    display: none;
+}
+
+@media (max-width: 575.98px) {
+    #scannerModal .scanner-content {
+        width: calc(100% - 20px);
+    }
+
+    #scannerModal .scanner-header {
+        padding: 12px 14px;
+        font-size: 15px;
+    }
+
+    #scannerModal .scanner-viewport,
+    #scannerModal #reader,
+    #scannerModal #reader video {
+        min-height: 280px;
+    }
+}
+
 .sku-cell {
     min-width: 120px;
 }
@@ -732,6 +882,14 @@
 
 /* Mobile warehouse table */
 @media (max-width: 767.98px) {
+    .products-qr-scan {
+        display: inline-flex;
+    }
+
+    .products-search .form-control {
+        padding-right: 48px;
+    }
+
     .products-page .products-table-wrapper {
         max-height: none;
         overflow: visible;
@@ -772,7 +930,7 @@
         min-width: 0;
         margin: 0 0 .8rem;
         padding: 1rem;
-        border: 1px solid var(--products-border);
+        border: 0;
         border-radius: 14px;
         background: #fff;
         box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
@@ -909,4 +1067,40 @@
         min-width: 0;
         max-width: 100%;
     }
+}
+
+/* Final scanner theme override; keep after warehouse-specific scanner rules. */
+#scannerModal { padding: 0; background: rgba(0,0,0,.85); backdrop-filter: none; }
+#scannerModal .scanner-content { width: 95%; max-width: 500px; overflow: hidden; border: 0; border-radius: 16px; background: #fff; box-shadow: none; }
+#scannerModal .scanner-header { min-height: 0; padding: 15px 20px; background: #0d6efd; color: #fff; font-size: 18px; }
+#scannerModal .scanner-title { display: inline; }
+#scannerModal .scanner-title > i { display: inline; width: auto; height: auto; border-radius: 0; background: transparent; color: inherit; font-size: inherit; }
+#scannerModal .scanner-title > span { display: inline; }
+#scannerModal .scanner-title strong { font-size: inherit; }
+#scannerModal .scanner-title small { display: inline; margin: 0; color: inherit; font-size: smaller; }
+#scannerModal .scanner-header button { width: auto; height: auto; padding: 0; border: 0; border-radius: 0; background: transparent; color: #fff; font-size: 24px; }
+#scannerModal .scanner-header button:hover { background: transparent; }
+#scannerModal .scanner-viewport { position: relative; min-height: 300px; overflow: hidden; background: transparent; }
+#scannerModal #reader { min-height: 300px; }
+#scannerModal #reader video { min-height: 0; object-fit: fill; }
+#scannerModal .scanner-target {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: block;
+    width: min(76%, 360px);
+    height: min(40%, 160px);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+#scannerModal .scanner-footer { display: block; padding: 12px; background: #fff; color: #666; text-align: center; }
+#scannerModal .scanner-footer > i { margin: 0; color: inherit; font-size: inherit; }
+#scannerModal .scanner-footer > span { display: inline; }
+#scannerModal .scanner-footer strong { color: inherit; font-size: inherit; }
+#scannerModal .scanner-footer small { display: inline; margin: 0; color: inherit; font-size: smaller; }
+
+@media (max-width: 575.98px) {
+    #scannerModal .scanner-content { width: 95%; }
+    #scannerModal .scanner-header { padding: 15px 20px; font-size: 18px; }
+    #scannerModal #reader { min-height: 300px; }
 }

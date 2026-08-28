@@ -105,7 +105,8 @@
 
             <button
                 id="closeScanner"
-                type="button">
+                type="button"
+                aria-label="Закрыть сканер">
 
                 <i class="bi bi-x-lg"></i>
             </button>
@@ -198,6 +199,14 @@
                         id="search-product"
                         placeholder="Поиск по названию, артикулу или штрихкоду — клавиша /"
                         autocomplete="off">
+                    <button
+                        type="button"
+                        class="products-qr-scan"
+                        id="productsQrScan"
+                        title="Сканировать QR-код или штрихкод"
+                        aria-label="Сканировать QR-код или штрихкод">
+                        <i class="bi bi-upc-scan" aria-hidden="true"></i>
+                    </button>
                 </div>
 
                 <span

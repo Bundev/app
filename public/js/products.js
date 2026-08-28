@@ -977,17 +977,7 @@ document
                     return;
                 }
 
-                currentProductId =
-                    cell.dataset.id;
-
-                document
-                    .getElementById(
-                        'scannerModal'
-                    )
-                    .style.display =
-                    'flex';
-
-                startBarcodeScanner();
+                openWarehouseScanner('edit', cell.dataset.id);
 
             }
         );
@@ -1055,15 +1045,65 @@ function openBarcodeInput(cell) {
 
 let currentProductId = null;
 let scanner = null;
+let scannerMode = 'edit';
+let scannerProcessing = false;
+let scannerStarting = false;
 
-function startBarcodeScanner() {
+async function openWarehouseScanner(mode, productId = null) {
+    if (scannerStarting) return;
+
+    if (scanner) {
+        await closeWarehouseScanner();
+    }
+
+    scannerMode = mode;
+    currentProductId = productId;
+    scannerProcessing = false;
+    document.getElementById('scannerModal').style.display = 'flex';
+    const reader = document.getElementById('reader');
+    if (reader) reader.innerHTML = '';
+
+    scannerStarting = true;
+    try {
+        await startBarcodeScanner();
+    } catch (error) {
+        await closeWarehouseScanner();
+        const isTimeout = error?.name === 'AbortError'
+            || String(error?.message || error).includes('Timeout starting video source');
+        alert(isTimeout
+            ? 'Камера не успела запуститься. Закройте другие приложения или вкладки, использующие камеру, и попробуйте снова.'
+            : 'Не удалось запустить камеру. Проверьте разрешение на доступ к камере.');
+    } finally {
+        scannerStarting = false;
+    }
+}
+
+async function closeWarehouseScanner() {
+    if (scanner) {
+        try {
+            await scanner.stop();
+        } catch (error) {}
+
+        try {
+            await scanner.clear();
+        } catch (error) {}
+
+        scanner = null;
+    }
+
+    scannerProcessing = false;
+    scannerStarting = false;
+    document.getElementById('scannerModal').style.display = 'none';
+}
+
+async function startBarcodeScanner() {
 
     scanner =
         new Html5Qrcode(
             'reader'
         );
 
-    scanner.start(
+    return scanner.start(
         {
             facingMode:
                 'environment'
@@ -1076,12 +1116,25 @@ function startBarcodeScanner() {
             })
         },
         async (barcode) => {
+            if (scannerProcessing) return;
+            scannerProcessing = true;
 
-            await saveBarcode(
-                currentProductId,
-                barcode
-            );
+            try {
+                if (scannerMode === 'search') {
+                    const input = document.getElementById('search-product');
+                    input.value = barcode.trim();
+                    filterProducts();
+                    await closeWarehouseScanner();
+                    input.focus();
+                    return;
+                }
 
+                await saveBarcode(currentProductId, barcode, false);
+                await closeWarehouseScanner();
+            } catch (error) {
+                scannerProcessing = false;
+                alert(error.message || 'Не удалось обработать код');
+            }
         }
     );
 
@@ -1139,24 +1192,9 @@ document
     )
     .addEventListener(
         'click',
-        async () => {
-
-            if (scanner) {
-
-                try {
-
-                    await scanner.stop();
-
-                } catch (e) {}
-
-            }
-
-            document
-                .getElementById(
-                    'scannerModal'
-                )
-                .style.display =
-                'none';
-
-        }
+        closeWarehouseScanner
     );
+
+document.getElementById('productsQrScan')?.addEventListener('click', () => {
+    openWarehouseScanner('search');
+});
