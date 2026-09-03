@@ -5,6 +5,12 @@
 <div class="col content sale-view-page">
     <div class="sale-view-shell">
 
+    <% if (paymentUpdated) { %>
+        <div class="alert alert-success" role="status">
+            Метод оплаты изменён.
+        </div>
+    <% } %>
+
     <div class="card sale-document-card">
 
         <div class="card-body">
@@ -216,17 +222,14 @@
                                 Оплата
                             </small>
 
-                            <div class="fw-bold">
-
-                                <% if(sale.payment_method === 'cash') { %>
-                                    💵 Наличные
-                                <% } else if(sale.payment_method === 'card'){%>
-                                    💳 Карта
-                                <%} else if(sale.payment_method === 'transfer'){%>
-                                    🏦 Перевод
-                                <%}%>
-
-                            </div>
+                            <form method="POST" action="/sales/<%= sale.id %>/payment-method" class="sale-payment-form">
+                                <select name="payment_method" class="form-select form-select-sm" aria-label="Метод оплаты">
+                                    <option value="cash" <%= sale.payment_method === 'cash' ? 'selected' : '' %>>Наличные</option>
+                                    <option value="card" <%= sale.payment_method === 'card' ? 'selected' : '' %>>Карта</option>
+                                    <option value="transfer" <%= sale.payment_method === 'transfer' ? 'selected' : '' %>>Перевод</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                            </form>
 
                         </div>
 

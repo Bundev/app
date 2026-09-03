@@ -398,6 +398,41 @@ router.get('/receipt/:id', auth, async (req, res) => {
 });
 
 // Роут просмотра продажи
+router.post('/:id/payment-method', auth, async (req, res) => {
+    const saleId = Number(req.params.id);
+    const paymentMethod = String(req.body.payment_method || '');
+    const allowedPaymentMethods = ['cash', 'card', 'transfer'];
+
+    if (!Number.isInteger(saleId) || saleId <= 0 || !allowedPaymentMethods.includes(paymentMethod)) {
+        return res.status(400).send('Некорректный метод оплаты');
+    }
+
+    try {
+        let sql = `
+            UPDATE sales
+            SET payment_method = ?
+            WHERE id = ? AND company_id = ?
+        `;
+        const params = [paymentMethod, saleId, req.session.user.company_id];
+
+        if (req.session.user.role !== 'admin') {
+            sql += ' AND user_id = ?';
+            params.push(req.session.user.id);
+        }
+
+        const [result] = await db.query(sql, params);
+
+        if (!result.affectedRows) {
+            return res.status(404).send('Чек не найден');
+        }
+
+        return res.redirect(`/sales/${saleId}?payment_updated=1`);
+    } catch (error) {
+        console.error('Ошибка изменения метода оплаты:', error);
+        return res.status(500).send('Не удалось изменить метод оплаты');
+    }
+});
+
 router.get('/:id', auth, async (req, res) => {
 
     const saleId = req.params.id;
@@ -494,6 +529,7 @@ sale.return_percent =
         returns,
         returnTotal,
         subtotal, 
+        paymentUpdated: req.query.payment_updated === '1',
         activeMenu: 'sales',
         ...page(req, 'sale-view', [
             {title: req.__('title.sales'),url: '/sales'},

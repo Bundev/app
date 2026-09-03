@@ -1136,7 +1136,9 @@ async function saveInvoice() {
             loadReceiptToUI(activeReceiptId);
             renderReceiptTabs();
         }
-        document.getElementById('product-search')?.focus();
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
     } catch (error) {
         alert('Ошибка соединения с сервером');
     } finally {
