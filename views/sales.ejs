@@ -7,6 +7,13 @@
             const returnedSales = saleRows.filter(sale => sale.status === 'returned' || sale.status === 'partial_return');
             const salesTotal = completedSales.reduce((total, sale) => total + Number(sale.total || 0), 0);
             const averageSale = completedSales.length ? salesTotal / completedSales.length : 0;
+            const kyivDateFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Europe/Kyiv',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            const kyivToday = kyivDateFormatter.format(new Date());
         %>
         <div class="col content sales-page">
             <div class="sales-shell">
@@ -17,6 +24,9 @@
                     <p>Чеки, покупатели, суммы и возвраты в одном журнале</p>
                 </div>
                 <div class="sales-actions">
+                <a href="/sales/today" class="sales-secondary-action">
+                    <i class="bi bi-box-seam"></i>Продано сегодня
+                </a>
                 <a href="/return" class="sales-secondary-action">
                     <i class="bi bi-arrow-counterclockwise"></i>Возвраты
                 </a>
@@ -188,7 +198,7 @@
                 data-items="<%= sale.item_count || 0 %>"
                 data-total="<%= sale.total %>"
                 data-status="<%= sale.status %>"
-                data-date="<%= new Date(sale.created_at).toISOString().split('T')[0] %>">
+                data-date="<%= kyivDateFormatter.format(new Date(sale.created_at)) %>">
                 
                 <td class="ps-3">
                     <span class="badge bg-light text-dark border fw-medium px-2 py-1.5">
@@ -198,8 +208,11 @@
 
                 <td>
                     <span class="fw-semibold text-dark">
-                        <%= new Date(sale.created_at).toLocaleDateString('ru-RU') %>
-                        <i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i><%= new Date(sale.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }) %>
+                        <% if (kyivDateFormatter.format(new Date(sale.created_at)) !== kyivToday) { %>
+                            <%= new Date(sale.created_at).toLocaleDateString('ru-RU', { timeZone: 'Europe/Kyiv' }) %>
+                        <% } %>
+                        <i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i>
+                        <%= new Date(sale.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }) %>
                     </span>
                 </td>
 

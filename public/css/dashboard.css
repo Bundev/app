@@ -12,7 +12,10 @@
     --dashboard-muted: #64748b;
     --dashboard-border: #dbe3ee;
     min-width: 0;
-    padding: 6px 0 32px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 6px 18px 32px;
     color: var(--dashboard-ink);
 }
 
@@ -290,6 +293,7 @@
 }
 
 @media (max-width: 767.98px) {
+    .dashboard-page { padding: 2px 10px 24px; }
     .dashboard-header { align-items: stretch; flex-direction: column; }
     .dashboard-primary-action { width: 100%; }
     .dashboard-metrics,

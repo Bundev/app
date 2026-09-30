@@ -72,6 +72,33 @@ document.addEventListener('DOMContentLoaded', () => {
     filterDate.addEventListener('change', filterSales);
 });
 
+function getKyivDateKey(value) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Kyiv',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(new Date(value));
+    const date = Object.fromEntries(parts.map(({ type, value: partValue }) => [type, partValue]));
+
+    return `${date.year}-${date.month}-${date.day}`;
+}
+
+function formatSaleDateTime(value) {
+    const saleDate = new Date(value);
+    const time = saleDate.toLocaleTimeString('ru-RU', {
+        timeZone: 'Europe/Kyiv',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    if (getKyivDateKey(saleDate) === getKyivDateKey(new Date())) {
+        return `<i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i>${time}`;
+    }
+
+    return `${saleDate.toLocaleDateString('ru-RU', { timeZone: 'Europe/Kyiv' })} <i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i>${time}`;
+}
+
 
 // Автообновление чеков
 let lastSaleId = Number(document.querySelector('#salesTable')?.dataset.lastId || 0);
@@ -123,7 +150,7 @@ async function loadLatestSales() {
                     data-items="${sale.item_count || 0}"
                     data-total="${sale.total}"
                     data-status="${sale.status}"
-                    data-date="${new Date(sale.created_at).toISOString().split('T')[0]}">
+                    data-date="${getKyivDateKey(sale.created_at)}">
                     
                     <td class="ps-3">
                         <span class="badge bg-light text-dark border fw-medium px-2 py-1.5">
@@ -133,8 +160,7 @@ async function loadLatestSales() {
 
                     <td>
                         <span class="fw-semibold text-dark">
-                            ${new Date(sale.created_at).toLocaleDateString('ru-RU')}
-                            <i class="bi bi-clock ms-1 me-1" style="font-size: 11px;"></i>${new Date(sale.created_at).toLocaleTimeString('ru-RU', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' })}
+                            ${formatSaleDateTime(sale.created_at)}
                         </span>
                     </td>
 

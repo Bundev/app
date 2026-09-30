@@ -50,7 +50,12 @@
                         <% } %>
                         <% rows.forEach(item => { %>
                             <tr>
-                                <td><strong><%= item.product_name %></strong><% if (item.sku) { %><small>Артикул: <%= item.sku %></small><% } %></td>
+                                <td>
+                                    <button type="button" class="sold-product-name" data-copy-product-name="<%= item.product_name %>" title="Скопировать название товара">
+                                        <span><%= item.product_name %></span><i class="bi bi-copy" aria-hidden="true"></i>
+                                    </button>
+                                    <% if (item.sku) { %><small>Артикул: <%= item.sku %></small><% } %>
+                                </td>
                                 <td class="text-end"><span class="sold-qty"><%= Number(item.quantity).toLocaleString('ru-RU') %></span></td>
                                 <td class="text-end"><%= money(item.purchase_price) %> ₴</td>
                                 <td class="text-end"><%= money(item.sale_price) %> ₴</td>

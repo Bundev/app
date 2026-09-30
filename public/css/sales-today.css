@@ -20,7 +20,12 @@
 .sold-today-card-head > span { color: #4f46e5; background: #eef2ff; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 .sold-today-table thead th { padding: 13px 16px; color: #667085; background: #f9fafb; border-bottom: 1px solid #eaecf0; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 .sold-today-table tbody td { padding: 15px 16px; border-color: #f0f1f3; color: #344054; }
-.sold-today-table tbody td:first-child strong { display: block; color: #182230; }
+.sold-product-name { display: inline-flex; max-width: 100%; align-items: center; gap: 8px; padding: 0; border: 0; background: transparent; color: #182230; font: inherit; font-weight: 700; text-align: left; }
+.sold-product-name > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sold-product-name i { flex: 0 0 auto; color: #98a2b3; font-size: .82rem; opacity: 0; transition: color .15s ease, opacity .15s ease; }
+.sold-product-name:hover, .sold-product-name:focus-visible { color: #4f46e5; }
+.sold-product-name:hover i, .sold-product-name:focus-visible i, .sold-product-name.is-copied i { color: #4f46e5; opacity: 1; }
+.sold-product-name:focus-visible { outline: 3px solid rgba(79,70,229,.2); outline-offset: 3px; border-radius: 3px; }
 .sold-today-table tbody td:first-child small { display: block; color: #98a2b3; margin-top: 2px; }
 .sold-qty { display: inline-block; min-width: 38px; padding: 4px 8px; text-align: center; color: #4338ca; background: #eef2ff; border-radius: 7px; font-weight: 700; }
 .sold-total { color: #067647 !important; font-weight: 750; }
@@ -30,5 +35,149 @@
 .sold-today-empty i { margin-bottom: 10px; color: #98a2b3; font-size: 32px; }
 .sold-today-empty strong { color: #344054; font-size: 16px; }
 .sold-today-empty span { margin-top: 4px; font-size: 13px; }
+
+@media (min-width: 768px) {
+    .sold-today-card .table-responsive {
+        overflow-x: visible;
+    }
+
+    .sold-today-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .sold-today-table th,
+    .sold-today-table td {
+        padding-right: 9px;
+        padding-left: 9px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .sold-today-table th:first-child,
+    .sold-today-table td:first-child {
+        width: 34%;
+        padding-left: 16px;
+        text-align: left;
+    }
+
+    .sold-today-table th:not(:first-child),
+    .sold-today-table td:not(:first-child) {
+        width: 13.2%;
+    }
+
+    .sold-today-table th:last-child,
+    .sold-today-table td:last-child {
+        padding-right: 16px;
+    }
+}
+
 @media (max-width: 991px) { .sold-today-metrics { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 575px) { .sold-today-page { padding: 6px 0 24px; } .sold-today-header { align-items: flex-start; flex-direction: column; } .sold-today-metrics { grid-template-columns: 1fr; } .sold-today-header h1 { font-size: 25px; } }
+
+@media (max-width: 767.98px) {
+    .sold-today-card .table-responsive {
+        overflow: visible;
+    }
+
+    .sold-today-table,
+    .sold-today-table tbody,
+    .sold-today-table tfoot {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .sold-today-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .sold-today-table tbody tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        margin: 10px;
+        overflow: hidden;
+        border: 1px solid #eaecf0;
+        border-radius: 11px;
+        background: #fff;
+    }
+
+    .sold-today-table tbody td {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 0;
+        border-bottom: 1px solid #f0f1f3;
+        text-align: right !important;
+        white-space: normal;
+    }
+
+    .sold-today-table tbody td::before,
+    .sold-today-table tfoot td[data-label]::before {
+        flex: 0 0 auto;
+        color: #667085;
+        font-size: .66rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .sold-today-table tbody td:nth-child(1) { grid-column: 1 / -1; }
+    .sold-today-table tbody td:nth-child(2)::before { content: 'Количество'; }
+    .sold-today-table tbody td:nth-child(3)::before { content: 'Закупочная цена'; }
+    .sold-today-table tbody td:nth-child(4)::before { content: 'Цена продажи'; }
+    .sold-today-table tbody td:nth-child(5)::before { content: 'Сумма закупки'; }
+    .sold-today-table tbody td:nth-child(6) { grid-column: 1 / -1; border-bottom: 0; }
+    .sold-today-table tbody td:nth-child(6)::before { content: 'Сумма продажи'; }
+
+    .sold-today-table .sold-product-name { max-width: 100%; }
+    .sold-today-table .sold-today-empty { display: block; grid-column: 1 / -1; padding: 42px 16px !important; text-align: center !important; }
+
+    .sold-today-table tfoot {
+        padding: 0 10px 10px;
+    }
+
+    .sold-today-table tfoot tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        overflow: hidden;
+        border: 1px solid #e4e7ec;
+        border-radius: 11px;
+    }
+
+    .sold-today-table tfoot td {
+        display: none;
+        padding: 10px 12px;
+        border: 0;
+        border-bottom: 1px solid #e4e7ec;
+        text-align: right !important;
+    }
+
+    .sold-today-table tfoot td:nth-child(1),
+    .sold-today-table tfoot td:nth-child(2),
+    .sold-today-table tfoot td:nth-child(5),
+    .sold-today-table tfoot td:nth-child(6) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .sold-today-table tfoot td:nth-child(1) { grid-column: 1 / -1; text-align: left !important; }
+    .sold-today-table tfoot td:nth-child(2)::before { content: 'Количество'; }
+    .sold-today-table tfoot td:nth-child(5)::before { content: 'Сумма закупки'; }
+    .sold-today-table tfoot td:nth-child(6) { grid-column: 1 / -1; border-bottom: 0; }
+    .sold-today-table tfoot td:nth-child(6)::before { content: 'Сумма продажи'; }
+}

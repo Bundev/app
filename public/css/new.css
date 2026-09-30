@@ -878,9 +878,10 @@ tr.selected-product-row td {
     /* Final mobile cart overrides must follow the unified desktop theme. */
     .new-sale-page #receipt-items-scroll {
         display: block;
-        flex: 0 0 clamp(300px, 68svh, 560px);
-        height: clamp(300px, 68svh, 560px) !important;
-        max-height: clamp(300px, 68svh, 560px);
+        /* Two product cards stay visible; additional items scroll inside the cart. */
+        flex: 0 0 18rem;
+        height: 18rem !important;
+        max-height: 18rem;
         overflow-x: hidden !important;
         overflow-y: scroll !important;
         overscroll-behavior: contain;
@@ -1074,6 +1075,14 @@ tr.selected-product-row td {
 
     .new-sale-page #held-receipts-btn .badge {
         flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 420px) {
+    .new-sale-page #receipt-items-scroll {
+        flex-basis: 22rem;
+        height: 22rem !important;
+        max-height: 22rem;
     }
 }
 

@@ -918,6 +918,12 @@ router.post('/save', auth, async (req, res) => {
             comment
         } = req.body;
 
+        if (!['cash', 'card', 'transfer'].includes(payment_method)) {
+            const paymentError = new Error('Выберите способ расчёта.');
+            paymentError.statusCode = 400;
+            throw paymentError;
+        }
+
         const company_id = req.session.user.company_id;
 
         const [[userStore]] = await connection.query(
@@ -999,7 +1005,6 @@ router.post('/save', auth, async (req, res) => {
         );
 
         let validatedSubtotal = 0;
-        let validatedPurchaseTotal = 0;
         for (const item of items) {
             const productId = Number(item.product_id);
             const quantity = Number(item.quantity);
@@ -1012,14 +1017,13 @@ router.post('/save', auth, async (req, res) => {
             }
 
             validatedSubtotal += quantity * price;
-            validatedPurchaseTotal += quantity * purchasePrices.get(productId);
         }
 
         const validatedDiscountAmount = Number(discount_amount) || 0;
-        const maxDiscountAmount = Math.max(0, validatedSubtotal - validatedPurchaseTotal);
+        const maxDiscountAmount = Math.max(0, validatedSubtotal);
         if (validatedDiscountAmount < 0 || validatedDiscountAmount > maxDiscountAmount + 0.005) {
             const discountError = new Error(
-                `Скидка не может превышать ${maxDiscountAmount.toFixed(2)} ₴: итоговая сумма не должна быть ниже закупочной стоимости.`
+                `Скидка не может превышать сумму чека — ${maxDiscountAmount.toFixed(2)} ₴.`
             );
             discountError.statusCode = 400;
             throw discountError;
