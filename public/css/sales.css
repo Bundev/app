@@ -23,7 +23,7 @@
 }
 
 .sales-shell { width: 100%; max-width: 1320px; margin: 0 auto; }
-.sales-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.sales-header { display: flex; align-items: flex-start; justify-content: flex-end; gap: 24px; margin-bottom: 22px; }
 .sales-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--sales-primary); font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .sales-header h1 { margin: 0; color: var(--sales-ink); font-size: clamp(1.75rem,3vw,2.35rem); font-weight: 750; letter-spacing: -.035em; }
 .sales-header p { margin: 8px 0 0; color: var(--sales-muted); font-size: .95rem; }
